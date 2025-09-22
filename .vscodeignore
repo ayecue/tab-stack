@@ -1,0 +1,16 @@
+.vscode
+.vscode-test-web
+out
+grammar
+src
+.git
+tsconfig.json
+.gitignore
+.eslintrc
+.npmignore
+.npmrc
+.circleci
+.env
+package-lock.json
+assets
+node_modules

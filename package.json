@@ -1,0 +1,103 @@
+{
+  "name": "tab-manager-vs",
+  "displayName": "Tab Manager VS",
+  "description": "Utility to improve tab management.",
+  "publisher": "ayecue",
+  "author": {
+    "name": "ayecue",
+    "email": "soerenwehmeier@googlemail.com"
+  },
+  "icon": "icon.png",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ayecue/tab-manager-vs.git"
+  },
+  "devDependencies": {
+    "@monaco-editor/loader": "^1.3.2",
+    "@types/color-convert": "^2.0.0",
+    "@types/node": "^12.12.0",
+    "@types/react": "^18.0.17",
+    "@types/react-dom": "^18.0.6",
+    "@types/vscode": "^1.90.0",
+    "@typescript-eslint/eslint-plugin": "^5.27.1",
+    "@typescript-eslint/parser": "^5.27.1",
+    "@vscode/test-electron": "^2.0.3",
+    "@vscode/test-web": "^0.0.56",
+    "dotenv": "^16.4.5",
+    "esbuild": "0.21.0",
+    "esbuild-plugin-globals": "0.2.0",
+    "esbuild-plugin-polyfill-node": "0.3.0",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-security": "^1.5.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "ovsx": "^0.10.1",
+    "source-map-support": "^0.5.12",
+    "typescript": "^4.5.4",
+    "vsce": "^2.15.0"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm run compile:ts && npm run compile:node && npm run compile:browser",
+    "compile:ts": "tsc -p ./",
+    "compile:node": "node build-node.cjs",
+    "compile:browser": "node build-browser.cjs",
+    "compile:extension": "vsce package --out extension.vsix",
+    "lint": "eslint ./src/**/*.ts",
+    "lint:fix": "eslint --fix ./src/**/*.ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test:browser": "npm run compile:ts && npm run compile:browser && vscode-test-web --extensionDevelopmentPath=. ."
+  },
+  "homepage": "https://github.com/ayecue/tab-manager-vs",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Programming Languages",
+    "Formatters"
+  ],
+  "main": "extension.js",
+  "browser": "extension.browser.js",
+  "qna": "false",
+  "bugs": {
+    "url": "https://github.com/ayecue/tab-manager-vs/issues"
+  },
+  "contributes": {
+    "menus": {
+      "editor/title/run": [
+        
+      ],
+      "editor/context": [
+        
+      ],
+      "explorer/context": [
+        
+      ],
+      "commandPalette": [
+        
+      ]
+    },
+    "submenus": [
+
+    ],
+    "commands": [
+      
+    ],
+    "configuration": [
+      
+    ]
+  },
+  "dependencies": {
+    "@vscode/debugadapter": "^1.68.0",
+    "@vscode/debugprotocol": "^1.68.0"
+  },
+  "browserslist": "> 0.25%, not dead"
+}

@@ -1,0 +1,12 @@
+.DS_Store
+node_modules
+out
+test.src
+node_modules
+extension.browser.js
+extension.js
+extension.browser.mjs
+extension.cjs
+*.vsix
+.vscode-test-web
+system.pem
