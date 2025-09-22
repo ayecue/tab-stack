@@ -14,3 +14,10 @@ tsconfig.json
 package-lock.json
 assets
 node_modules
+copy-assets.cjs
+build-node.cjs
+build-webview.cjs
+!webview.js
+!webview.html
+!webview.css
+!extension.js

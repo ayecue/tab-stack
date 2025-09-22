@@ -1,7 +1,7 @@
 {
-  "name": "tab-manager-vs",
-  "displayName": "Tab Manager VS",
-  "description": "Utility to improve tab management.",
+  "name": "tab-stack",
+  "displayName": "Tab Stack",
+  "description": "Utility to improve tab management. Enables saving, restoring and quick switching between tab groups and snapshots.",
   "publisher": "ayecue",
   "author": {
     "name": "ayecue",
@@ -14,17 +14,15 @@
     "url": "git@github.com:ayecue/tab-manager-vs.git"
   },
   "devDependencies": {
-    "@monaco-editor/loader": "^1.3.2",
     "@types/color-convert": "^2.0.0",
     "@types/node": "^12.12.0",
-    "@types/react": "^18.0.17",
-    "@types/react-dom": "^18.0.6",
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
     "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "@vscode/test-electron": "^2.0.3",
     "@vscode/test-web": "^0.0.56",
-    "dotenv": "^16.4.5",
     "esbuild": "0.21.0",
     "esbuild-plugin-globals": "0.2.0",
     "esbuild-plugin-polyfill-node": "0.3.0",
@@ -44,13 +42,13 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run compile:ts && npm run compile:node && npm run compile:browser",
+    "compile": "npm run compile:ts && npm run compile:node && npm run compile:webview",
     "compile:ts": "tsc -p ./",
     "compile:node": "node build-node.cjs",
-    "compile:browser": "node build-browser.cjs",
+    "compile:webview": "node build-webview.cjs",
     "compile:extension": "vsce package --out extension.vsix",
-    "lint": "eslint ./src/**/*.ts",
-    "lint:fix": "eslint --fix ./src/**/*.ts",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
     "test:browser": "npm run compile:ts && npm run compile:browser && vscode-test-web --extensionDevelopmentPath=. ."
@@ -60,44 +58,195 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Debuggers",
-    "Programming Languages",
-    "Formatters"
+    "Visualization",
+    "Other"
   ],
   "main": "extension.js",
-  "browser": "extension.browser.js",
+  "browser": "extension.js",
   "qna": "false",
   "bugs": {
     "url": "https://github.com/ayecue/tab-manager-vs/issues"
   },
   "contributes": {
-    "menus": {
-      "editor/title/run": [
-        
-      ],
-      "editor/context": [
-        
-      ],
-      "explorer/context": [
-        
-      ],
-      "commandPalette": [
-        
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tabStack",
+          "title": "Tab Stack",
+          "icon": "icons/activitybar.svg"
+        }
       ]
     },
-    "submenus": [
-
-    ],
+    "views": {
+      "tabStack": [
+        {
+          "type": "webview",
+          "id": "tabStackView",
+          "name": "Tab Stack",
+          "when": "true",
+          "icon": "icons/activitybar.svg"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title/run": [],
+      "editor/context": [],
+      "explorer/context": [],
+      "commandPalette": []
+    },
+    "submenus": [],
     "commands": [
-      
+      {
+        "command": "tabStack.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tabStack.quickSwitch",
+        "title": "Quick Switch Between Last Two States",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.clearSelection",
+        "title": "Clear Current Selection",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.switchGroup",
+        "title": "Apply Saved Group",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.createGroup",
+        "title": "Save Current Tabs as Group",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.deleteGroup",
+        "title": "Delete Saved Group",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.snapshot",
+        "title": "Capture Tabs Snapshot",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.restoreSnapshot",
+        "title": "Restore Tabs Snapshot",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.deleteSnapshot",
+        "title": "Delete Tabs Snapshot",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot1",
+        "title": "Apply Quick Slot 1",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot2",
+        "title": "Apply Quick Slot 2",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot3",
+        "title": "Apply Quick Slot 3",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot4",
+        "title": "Apply Quick Slot 4",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot5",
+        "title": "Apply Quick Slot 5",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot6",
+        "title": "Apply Quick Slot 6",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot7",
+        "title": "Apply Quick Slot 7",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot8",
+        "title": "Apply Quick Slot 8",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.quickSlot9",
+        "title": "Apply Quick Slot 9",
+        "category": "Tab Stack"
+      }
     ],
-    "configuration": [
-      
-    ]
+    "keybindings": [
+      {
+        "command": "tabStack.quickSlot1",
+        "key": "ctrl+alt+shift+1",
+        "mac": "cmd+alt+shift+1"
+      },
+      {
+        "command": "tabStack.quickSlot2",
+        "key": "ctrl+alt+shift+2",
+        "mac": "cmd+alt+shift+2"
+      },
+      {
+        "command": "tabStack.quickSlot3",
+        "key": "ctrl+alt+shift+3",
+        "mac": "cmd+alt+shift+3"
+      },
+      {
+        "command": "tabStack.quickSlot4",
+        "key": "ctrl+alt+shift+4",
+        "mac": "cmd+alt+shift+4"
+      },
+      {
+        "command": "tabStack.quickSlot5",
+        "key": "ctrl+alt+shift+5",
+        "mac": "cmd+alt+shift+5"
+      },
+      {
+        "command": "tabStack.quickSlot6",
+        "key": "ctrl+alt+shift+6",
+        "mac": "cmd+alt+shift+6"
+      },
+      {
+        "command": "tabStack.quickSlot7",
+        "key": "ctrl+alt+shift+7",
+        "mac": "cmd+alt+shift+7"
+      },
+      {
+        "command": "tabStack.quickSlot8",
+        "key": "ctrl+alt+shift+8",
+        "mac": "cmd+alt+shift+8"
+      },
+      {
+        "command": "tabStack.quickSlot9",
+        "key": "ctrl+alt+shift+9",
+        "mac": "cmd+alt+shift+9"
+      },
+      {
+        "command": "tabStack.quickSwitch",
+        "key": "ctrl+alt+shift+0",
+        "mac": "cmd+alt+shift+0"
+      }
+    ],
+    "configuration": []
   },
   "dependencies": {
     "@vscode/debugadapter": "^1.68.0",
-    "@vscode/debugprotocol": "^1.68.0"
+    "@vscode/debugprotocol": "^1.68.0",
+    "debounce": "^2.2.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "browserslist": "> 0.25%, not dead"
 }

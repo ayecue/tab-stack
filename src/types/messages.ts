@@ -1,0 +1,115 @@
+import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
+import { TabState } from './tabs';
+
+export enum ExtensionMessageType {
+  Sync = 'sync',
+  Notification = 'notification'
+}
+
+export enum ExtensionNotificationKind {
+  Error = 'error',
+  Info = 'info',
+  Warning = 'warning'
+}
+
+export interface BaseExtensionMessage {
+  type: ExtensionMessageType;
+}
+
+export interface ExtensionNotificationMessage extends BaseExtensionMessage {
+  type: ExtensionMessageType.Notification;
+  kind: ExtensionNotificationKind;
+  message: string;
+}
+
+export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
+  type: ExtensionMessageType.Sync;
+  tabState: TabState;
+  history: string[];
+  groups: string[];
+  selectedGroup: string | null;
+  quickSlots: QuickSlotAssignments;
+}
+
+export enum WebviewMessageType {
+  TabOpen = 'tab-open',
+  TabClose = 'tab-close',
+  TabTogglePin = 'tab-toggle-pin',
+  SwitchGroup = 'switch-group',
+  NewGroup = 'new-group',
+  RenameGroup = 'rename-group',
+  DeleteGroup = 'delete-group',
+  AddToHistory = 'add-to-history',
+  DeleteHistory = 'delete-history',
+  RecoverState = 'recover-state',
+  AssignQuickSlot = 'assign-quick-slot',
+  Sync = 'sync'
+}
+
+export interface BaseWebviewMessage {
+  type: WebviewMessageType;
+}
+
+export interface WebviewTabOpenMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.TabOpen;
+  uri: string;
+  columnView: number;
+}
+
+export interface WebviewTabCloseMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.TabClose;
+  uri: string;
+  columnView: number;
+}
+
+export interface WebviewTabTogglePinMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.TabTogglePin;
+  uri: string;
+  columnView: number;
+}
+
+export interface WebviewSwitchGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.SwitchGroup;
+  groupId: string | null;
+}
+
+export interface WebviewNewGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.NewGroup;
+  groupId: string;
+}
+
+export interface WebviewRenameGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.RenameGroup;
+  groupId: string;
+  nextGroupId: string;
+}
+
+export interface WebviewDeleteGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.DeleteGroup;
+  groupId: string;
+}
+
+export interface WebviewAddToHistoryMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.AddToHistory;
+  label?: string;
+}
+
+export interface WebviewDeleteHistoryMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.DeleteHistory;
+  historyId: string;
+}
+
+export interface WebviewRecoverStateMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.RecoverState;
+  historyId: string;
+}
+
+export interface WebviewAssignQuickSlotMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.AssignQuickSlot;
+  slot: QuickSlotIndex;
+  groupId: string | null;
+}
+
+export interface WebviewSyncMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.Sync;
+}

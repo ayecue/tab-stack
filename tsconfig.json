@@ -11,7 +11,10 @@
     "rootDir": "src",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src/**/*"

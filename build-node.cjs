@@ -1,6 +1,4 @@
 const esbuild = require('esbuild');
-const dotenv = require('dotenv');
-const envObj = dotenv.config().parsed;
 
 const build = async () => {
   try {
@@ -21,11 +19,7 @@ const build = async () => {
         treeShaking: true,
         external: ['vscode'],
         define: {
-          'process.env.NODE_ENV': '"production"',
-          ...Object.entries(envObj).reduce((result, [key, value]) => {
-            result[`process.env.${key}`] = `"${value}"`;
-            return result;
-          }, {})
+          'process.env.NODE_ENV': '"production"'
         }
       });
   } catch (err) {
