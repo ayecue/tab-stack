@@ -55,7 +55,7 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 
 ## Contributing & feedback
 
-Bug reports and feature suggestions are welcome! Open an issue on [GitHub](https://github.com/ayecue/tab-manager-vs/issues). If you are contributing code, run `npm run compile` before submitting a pull request so the bundled assets stay up to date.
+Bug reports and feature suggestions are welcome! Open an issue on [GitHub](https://github.com/ayecue/tab-stack/issues). If you are contributing code, run `npm run compile` before submitting a pull request so the bundled assets stay up to date.
 
 ---
 

@@ -11,7 +11,7 @@
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ayecue/tab-manager-vs.git"
+    "url": "git@github.com:ayecue/tab-stack.git"
   },
   "devDependencies": {
     "@types/color-convert": "^2.0.0",
@@ -53,7 +53,7 @@
     "pretest": "npm run compile",
     "test:browser": "npm run compile:ts && npm run compile:browser && vscode-test-web --extensionDevelopmentPath=. ."
   },
-  "homepage": "https://github.com/ayecue/tab-manager-vs",
+  "homepage": "https://github.com/ayecue/tab-stack",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -65,7 +65,7 @@
   "browser": "extension.js",
   "qna": "false",
   "bugs": {
-    "url": "https://github.com/ayecue/tab-manager-vs/issues"
+    "url": "https://github.com/ayecue/tab-stack/issues"
   },
   "contributes": {
     "viewsContainers": {
