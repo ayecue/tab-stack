@@ -20,36 +20,50 @@ export async function setEditorLayout(layout: Layout): Promise<void> {
   await commands.executeCommand('vscode.setEditorLayout', layout);
 }
 
+export async function pinCurrentEditor(): Promise<void> {
+  await commands.executeCommand('workbench.action.pinEditor');
+}
+
+export async function unpinCurrentEditor(): Promise<void> {
+  await commands.executeCommand('workbench.action.unpinEditor');
+}
+
 export async function pinEditor(
   viewColumn: number,
-  index: number
+  index: number,
+  returnToPreviousEditor: boolean = true
 ): Promise<void> {
   const currentViewColumn = window.activeTextEditor?.viewColumn;
   const currentIndex = window.tabGroups.activeTabGroup.tabs.findIndex(
     (tab) => tab.isActive
   );
 
-  await focusGroup(viewColumn);
-  await focusTab(index);
-  await commands.executeCommand('workbench.action.pinEditor');
-  await focusGroup(currentViewColumn);
-  await focusTab(currentIndex);
+  await focusTabInGroup(viewColumn, index);
+  await pinCurrentEditor();
+  if (returnToPreviousEditor) await focusTabInGroup(currentViewColumn, currentIndex);
 }
 
 export async function unpinEditor(
   viewColumn: number,
-  index: number
+  index: number,
+  returnToPreviousEditor: boolean = true
 ): Promise<void> {
   const currentViewColumn = window.activeTextEditor?.viewColumn;
   const currentIndex = window.tabGroups.activeTabGroup.tabs.findIndex(
     (tab) => tab.isActive
   );
 
+  await focusTabInGroup(viewColumn, index);
+  await unpinCurrentEditor();
+  if (returnToPreviousEditor) await focusTabInGroup(currentViewColumn, currentIndex);
+}
+
+export async function focusTabInGroup(
+  viewColumn: number,
+  index: number
+): Promise<void> {
   await focusGroup(viewColumn);
   await focusTab(index);
-  await commands.executeCommand('workbench.action.unpinEditor');
-  await focusGroup(currentViewColumn);
-  await focusTab(currentIndex);
 }
 
 const FOCUS_GROUP_COMMANDS_BY_INDEX: Record<number, string> = {

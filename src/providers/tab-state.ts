@@ -193,14 +193,14 @@ export class TabStateProvider implements Disposable {
     return false;
   }
 
-  async createGroup(name: string, state?: TabManagerState): Promise<boolean> {
+  async createGroup(name: string): Promise<boolean> {
     const groups = await this.getGroups();
 
     if (groups[name]) {
       return false;
     }
 
-    const snapshot = state ?? (await this.refreshState());
+    const snapshot = await this.refreshState();
 
     groups[name] = snapshot;
     await this.setSelectedGroup(name);

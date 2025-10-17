@@ -23,6 +23,7 @@ import { TabInfo } from '../types/tabs';
 import {
   focusGroup,
   focusTab,
+  focusTabInGroup,
   getEditorLayout,
   openTab,
   pinEditor,
@@ -49,6 +50,7 @@ export class TabManagerProvider implements ITabManagerProvider {
   private _onDidChangeTabsListener?: Disposable;
   private _onDidChangeTabGroupsListener?: Disposable;
   private _onDidChangeActiveEditorListener?: Disposable;
+  private _onDidChangeTextEditorOptionsListener?: Disposable;
   private _onDidChangeEditorLayoutListener?: Disposable;
 
   constructor(context: ExtensionContext) {
@@ -98,6 +100,9 @@ export class TabManagerProvider implements ITabManagerProvider {
       () => void this.refresh()
     );
     this._onDidChangeActiveEditorListener = window.onDidChangeActiveTextEditor(
+      () => void this.refresh()
+    );
+    this._onDidChangeTextEditorOptionsListener = window.onDidChangeTextEditorOptions(
       () => void this.refresh()
     );
     this._onDidChangeEditorLayoutListener =
@@ -187,6 +192,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     await setEditorLayout(currentState.layout);
 
     const tabGroupItems = Object.values(currentState.tabState.tabGroups);
+    const pinnedTabs: { tab: TabInfo; index: number }[] = [];
     const activeTabs: { tab: TabInfo; index: number }[] = [];
     const focusedViewColumn =
       currentState.tabState.tabGroups[currentState.tabState.activeGroup]
@@ -197,12 +203,18 @@ export class TabManagerProvider implements ITabManagerProvider {
 
     await Promise.all(
       tabGroupItems.map(async (group) => {
-        return group.tabs.flatMap(async (tab, index) => {
+        return await Promise.all(group.tabs.map(async (tab, index) => {
           if (tab.isActive) activeTabs.push({ tab, index });
           await openTab(tab);
-        });
+          if (tab.isPinned) pinnedTabs.push({ tab, index });
+        }));
       })
     );
+
+    for (let i = 0; i < pinnedTabs.length; i++) {
+      const { tab, index } = pinnedTabs[i];
+      await pinEditor(tab.viewColumn, index, false);
+    }
 
     await Promise.all(
       activeTabs.map(async ({ tab, index }) => {
@@ -248,8 +260,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     }
 
     try {
-      await focusGroup(viewColumn);
-      await focusTab(index);
+      await focusTabInGroup(viewColumn, index);
     } catch (error) {
       this.notify(ExtensionNotificationKind.Error, 'Failed to open tab');
     }
@@ -476,6 +487,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     this._onDidChangeTabsListener?.dispose();
     this._onDidChangeTabGroupsListener?.dispose();
     this._onDidChangeActiveEditorListener?.dispose();
+    this._onDidChangeTextEditorOptionsListener?.dispose();
     this._onDidChangeEditorLayoutListener?.dispose();
     this._view?.dispose();
     this._state?.dispose();
