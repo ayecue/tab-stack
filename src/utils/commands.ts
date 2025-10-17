@@ -40,7 +40,8 @@ export async function pinEditor(
 
   await focusTabInGroup(viewColumn, index);
   await pinCurrentEditor();
-  if (returnToPreviousEditor) await focusTabInGroup(currentViewColumn, currentIndex);
+  if (returnToPreviousEditor)
+    await focusTabInGroup(currentViewColumn, currentIndex);
 }
 
 export async function unpinEditor(
@@ -55,7 +56,8 @@ export async function unpinEditor(
 
   await focusTabInGroup(viewColumn, index);
   await unpinCurrentEditor();
-  if (returnToPreviousEditor) await focusTabInGroup(currentViewColumn, currentIndex);
+  if (returnToPreviousEditor)
+    await focusTabInGroup(currentViewColumn, currentIndex);
 }
 
 export async function focusTabInGroup(

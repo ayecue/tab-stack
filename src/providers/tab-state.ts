@@ -209,12 +209,9 @@ export class TabStateProvider implements Disposable {
     return true;
   }
 
-  async renameGroup(
-    currentId: string,
-    nextId: string
-  ): Promise<boolean> {
+  async renameGroup(currentId: string, nextId: string): Promise<boolean> {
     const groups = await this.getGroups();
-    
+
     if (currentId === nextId) {
       return true;
     }

@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 - support recovery of pinned tabs
 - improve render state
 - add renaming of groups
+- add coloring depending on tab kind
+- add indicator in case tab is not recoverable
 
 ## [1.0.1] - 17-10-2025
 

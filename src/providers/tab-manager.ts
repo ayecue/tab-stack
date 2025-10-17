@@ -102,9 +102,8 @@ export class TabManagerProvider implements ITabManagerProvider {
     this._onDidChangeActiveEditorListener = window.onDidChangeActiveTextEditor(
       () => void this.refresh()
     );
-    this._onDidChangeTextEditorOptionsListener = window.onDidChangeTextEditorOptions(
-      () => void this.refresh()
-    );
+    this._onDidChangeTextEditorOptionsListener =
+      window.onDidChangeTextEditorOptions(() => void this.refresh());
     this._onDidChangeEditorLayoutListener =
       this._layoutProvider.onDidChangeLayout(() => void this.refresh());
   }
@@ -203,11 +202,13 @@ export class TabManagerProvider implements ITabManagerProvider {
 
     await Promise.all(
       tabGroupItems.map(async (group) => {
-        return await Promise.all(group.tabs.map(async (tab, index) => {
-          if (tab.isActive) activeTabs.push({ tab, index });
-          await openTab(tab);
-          if (tab.isPinned) pinnedTabs.push({ tab, index });
-        }));
+        return await Promise.all(
+          group.tabs.map(async (tab, index) => {
+            if (tab.isActive) activeTabs.push({ tab, index });
+            await openTab(tab);
+            if (tab.isPinned) pinnedTabs.push({ tab, index });
+          })
+        );
       })
     );
 

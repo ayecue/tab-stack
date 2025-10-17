@@ -141,10 +141,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       return;
     }
 
-    if (
-      state.groupIds.includes(normalized) &&
-      normalized !== editingGroupId
-    ) {
+    if (state.groupIds.includes(normalized) && normalized !== editingGroupId) {
       setRenameError('A group with this name already exists');
       renameInputRef.current?.focus();
       renameInputRef.current?.select();
@@ -410,7 +407,10 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                             disabled={isRenaming}
                             aria-label="Save group name"
                           >
-                            <i className="codicon codicon-check" aria-hidden="true" />
+                            <i
+                              className="codicon codicon-check"
+                              aria-hidden="true"
+                            />
                           </button>
                           <button
                             type="button"
@@ -422,7 +422,10 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                             disabled={isRenaming}
                             aria-label="Cancel rename"
                           >
-                            <i className="codicon codicon-close" aria-hidden="true" />
+                            <i
+                              className="codicon codicon-close"
+                              aria-hidden="true"
+                            />
                           </button>
                         </div>
                       </>
@@ -474,7 +477,10 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                         disabled={isDeleting}
                         title="Rename group"
                       >
-                        <i className="codicon codicon-edit" aria-hidden="true" />
+                        <i
+                          className="codicon codicon-edit"
+                          aria-hidden="true"
+                        />
                       </button>
                     )}
                     <button
