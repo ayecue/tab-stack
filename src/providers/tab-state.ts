@@ -227,15 +227,13 @@ export class TabStateProvider implements Disposable {
     }
 
     const quickSlots = await this.getQuickSlots();
+    const currentQuickSlotIndex = Object.keys(quickSlots).find(
+      (index) => quickSlots[index] === currentId
+    );
 
-    Object.entries(quickSlots).forEach(([slot, groupId]) => {
-      if (groupId !== currentId) {
-        return;
-      }
-
-      const slotIndex = Number(slot);
-      quickSlots[slotIndex as QuickSlotIndex] = nextId;
-    });
+    if (currentQuickSlotIndex != null) {
+      quickSlots[currentQuickSlotIndex] = nextId;
+    }
 
     this._groups[nextId] = snapshot;
     delete this._groups[currentId];
@@ -418,17 +416,20 @@ export class TabStateProvider implements Disposable {
       this.getGroups()
     ]);
 
-    if (groupId) {
-      if (!groups[groupId]) {
-        return;
-      }
-
-      quickSlots[slot] = groupId;
-    } else {
-      delete quickSlots[slot];
+    if (!groups[groupId]) {
+      return;
     }
 
-    this._quickSlots = quickSlots;
+    const existingSlot = Object.keys(quickSlots).find(
+      (index) => quickSlots[index] === groupId
+    );
+
+    quickSlots[slot] = groupId;
+
+    if (existingSlot != null) {
+      quickSlots[existingSlot] = null;
+    }
+
     await this.save();
   }
 

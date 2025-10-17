@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fix
 
 - fix flaky active tab recovery in all non active tab groups
+- fix quick slot reassignment
 
 ## [1.0.2] - 17-10-2025
 
