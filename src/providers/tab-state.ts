@@ -209,6 +209,50 @@ export class TabStateProvider implements Disposable {
     return true;
   }
 
+  async renameGroup(
+    currentId: string,
+    nextId: string
+  ): Promise<boolean> {
+    const groups = await this.getGroups();
+    
+    if (currentId === nextId) {
+      return true;
+    }
+
+    if (groups[currentId] == null || groups[nextId] != null) {
+      return false;
+    }
+
+    const snapshot = groups[currentId];
+
+    if (this._selectedGroup === currentId) {
+      this._selectedGroup = nextId;
+    }
+
+    if (this._previousSelectedGroup === currentId) {
+      this._previousSelectedGroup = nextId;
+    }
+
+    const quickSlots = await this.getQuickSlots();
+
+    Object.entries(quickSlots).forEach(([slot, groupId]) => {
+      if (groupId !== currentId) {
+        return;
+      }
+
+      const slotIndex = Number(slot);
+      quickSlots[slotIndex as QuickSlotIndex] = nextId;
+    });
+
+    this._groups[nextId] = snapshot;
+    delete this._groups[currentId];
+    this._quickSlots = quickSlots;
+
+    await this.save();
+
+    return true;
+  }
+
   async addCurrentStateToHistory(): Promise<string> {
     const snapshot = await this.refreshState();
     const id = await this.addToHistory(snapshot);

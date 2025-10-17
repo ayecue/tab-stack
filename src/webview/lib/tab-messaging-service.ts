@@ -5,6 +5,7 @@ import {
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
+  WebviewRenameGroupMessage,
   WebviewRecoverStateMessage,
   WebviewSwitchGroupMessage,
   WebviewSyncMessage,
@@ -68,6 +69,15 @@ export class TabMessagingService {
     const message: WebviewNewGroupMessage = {
       type: WebviewMessageType.NewGroup,
       groupId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async renameGroup(groupId: string, nextGroupId: string): Promise<void> {
+    const message: WebviewRenameGroupMessage = {
+      type: WebviewMessageType.RenameGroup,
+      groupId,
+      nextGroupId
     };
     this.messenger.sendMessage(message);
   }

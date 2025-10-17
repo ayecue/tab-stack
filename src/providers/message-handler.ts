@@ -5,6 +5,7 @@ import {
   WebviewAssignQuickSlotMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
+  WebviewRenameGroupMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
@@ -51,9 +52,11 @@ export class MessageHandlerProvider implements Disposable {
         await tabManager.createGroup(groupId);
         break;
       }
-      case WebviewMessageType.RenameGroup:
-        // await this.handleRenameGroup(data as WebviewRenameGroupMessage);
+      case WebviewMessageType.RenameGroup: {
+        const { groupId, nextGroupId } = data as WebviewRenameGroupMessage;
+        await tabManager.renameGroup(groupId, nextGroupId);
         break;
+      }
       case WebviewMessageType.DeleteGroup: {
         const { groupId } = data as WebviewDeleteGroupMessage;
         await tabManager.deleteGroup(groupId);

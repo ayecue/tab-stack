@@ -25,6 +25,11 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const renameInputRef = useRef<HTMLInputElement | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
   const quickSlotOptions = useMemo<QuickSlotIndex[]>(
     () =>
       Array.from({ length: 9 }, (_, index) => (index + 1) as QuickSlotIndex),
@@ -50,11 +55,26 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     }
   }, [isCreating]);
 
+  useEffect(() => {
+    if (editingGroupId && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [editingGroupId]);
+
+  const cancelRename = useCallback(() => {
+    setEditingGroupId(null);
+    setRenameValue('');
+    setRenameError(null);
+    setIsRenaming(false);
+  }, []);
+
   const startCreate = useCallback(() => {
+    cancelRename();
     setIsCreating(true);
     setNewGroupName('');
     setLocalError(null);
-  }, []);
+  }, [cancelRename]);
 
   const cancelCreate = useCallback(() => {
     setIsCreating(false);
@@ -62,6 +82,27 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     setLocalError(null);
     setIsSaving(false);
   }, []);
+
+  const startRename = useCallback(
+    (groupId: string) => {
+      cancelCreate();
+      setEditingGroupId(groupId);
+      setRenameValue(groupId);
+      setRenameError(null);
+      setIsRenaming(false);
+    },
+    [cancelCreate]
+  );
+
+  useEffect(() => {
+    if (!editingGroupId) {
+      return;
+    }
+
+    if (!state.groupIds.includes(editingGroupId)) {
+      cancelRename();
+    }
+  }, [editingGroupId, state.groupIds, cancelRename]);
 
   const submitCreate = useCallback(async () => {
     const normalized = newGroupName.trim();
@@ -82,6 +123,46 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     }
   }, [actions, newGroupName, cancelCreate]);
 
+  const submitRename = useCallback(async () => {
+    if (!editingGroupId) {
+      return;
+    }
+
+    const normalized = renameValue.trim();
+
+    if (!normalized) {
+      setRenameError('Group name is required');
+      renameInputRef.current?.focus();
+      return;
+    }
+
+    if (normalized === editingGroupId) {
+      cancelRename();
+      return;
+    }
+
+    if (
+      state.groupIds.includes(normalized) &&
+      normalized !== editingGroupId
+    ) {
+      setRenameError('A group with this name already exists');
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+      return;
+    }
+
+    try {
+      setIsRenaming(true);
+      await actions.renameGroup(editingGroupId, normalized);
+      cancelRename();
+    } catch (error) {
+      console.error('Failed to rename group', error);
+      setRenameError('Unable to rename group');
+      setIsRenaming(false);
+      renameInputRef.current?.focus();
+    }
+  }, [actions, editingGroupId, renameValue, cancelRename, state.groupIds]);
+
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
@@ -94,6 +175,22 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       }
     },
     [submitCreate, cancelCreate]
+  );
+
+  const handleRenameKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        void submitRename();
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        cancelRename();
+      }
+    },
+    [submitRename, cancelRename]
   );
 
   const filteredGroupIds = useMemo(() => {
@@ -244,14 +341,18 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
             const slotControlId = `slot-${index}`;
             const isSelected = state.selectedGroup === groupId;
             const isDeleting = deletingKeys.has(`group:${groupId}`);
+            const isEditing = editingGroupId === groupId;
 
             return (
               <li
                 key={groupId}
-                className={`section-item${isSelected ? ' active' : ''}`}
+                className={`section-item${isSelected ? ' active' : ''}${isEditing ? ' editing' : ''}`}
                 tabIndex={0}
                 onClick={() => {
                   if (isDeleting) {
+                    return;
+                  }
+                  if (isEditing) {
                     return;
                   }
                   const nextId = isSelected ? null : groupId;
@@ -281,8 +382,59 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
               >
                 <div className="item-row">
                   <div className="item-primary">
-                    <span className="item-name">{groupId}</span>
+                    {isEditing ? (
+                      <>
+                        <input
+                          ref={renameInputRef}
+                          type="text"
+                          value={renameValue}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            setRenameValue(event.target.value);
+                            if (renameError) {
+                              setRenameError(null);
+                            }
+                          }}
+                          onKeyDown={handleRenameKeyDown}
+                          aria-label="Rename group"
+                          disabled={isRenaming}
+                        />
+                        <div className="inline-form-actions">
+                          <button
+                            type="button"
+                            className="action-save"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void submitRename();
+                            }}
+                            disabled={isRenaming}
+                            aria-label="Save group name"
+                          >
+                            <i className="codicon codicon-check" aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            className="action-cancel"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              cancelRename();
+                            }}
+                            disabled={isRenaming}
+                            aria-label="Cancel rename"
+                          >
+                            <i className="codicon codicon-close" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <span className="item-name">{groupId}</span>
+                    )}
                   </div>
+                  {isEditing && renameError && (
+                    <span className="form-error" role="alert">
+                      {renameError}
+                    </span>
+                  )}
 
                   <div
                     className="item-actions"
@@ -301,6 +453,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                           event.stopPropagation();
                           handleSlotChange(groupId, event.target.value);
                         }}
+                        disabled={isEditing}
                       >
                         <option value="">No slot</option>
                         {quickSlotOptions.map((slot) => (
@@ -310,6 +463,20 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                         ))}
                       </select>
                     </div>
+                    {!isEditing && (
+                      <button
+                        type="button"
+                        className="neutral"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          startRename(groupId);
+                        }}
+                        disabled={isDeleting}
+                        title="Rename group"
+                      >
+                        <i className="codicon codicon-edit" aria-hidden="true" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="danger"
@@ -317,7 +484,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                         event.stopPropagation();
                         void onDelete(groupId);
                       }}
-                      disabled={isDeleting}
+                      disabled={isDeleting || isEditing}
                       title="Delete group"
                     >
                       <i className="codicon codicon-trash" aria-hidden="true" />

@@ -45,6 +45,7 @@ export interface ITabManagerProvider extends WebviewViewProvider {
   syncWebview(): Promise<void>;
   createGroup(groupId: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;
+  renameGroup(groupId: string, nextGroupId: string): Promise<void>;
   switchToGroup(groupId: string | null): Promise<void>;
   takeSnapshot(): Promise<void>;
   recoverSnapshot(historyId: string): Promise<void>;

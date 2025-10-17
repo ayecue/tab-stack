@@ -43,6 +43,7 @@ interface TabContextValue {
     closeTab: (index: number, tab: TabInfo) => Promise<void>;
     togglePin: (index: number, tab: TabInfo) => Promise<void>;
     saveGroup: (groupId: string) => Promise<void>;
+    renameGroup: (groupId: string, nextGroupId: string) => Promise<void>;
     switchGroup: (groupId: string | null) => Promise<void>;
     clearSelection: () => Promise<void>;
     captureHistory: () => Promise<void>;
@@ -206,6 +207,18 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           messagingService.createGroup(groupId);
         } catch (error) {
           handleError(error, 'create group');
+          throw error;
+        }
+      },
+      [messagingService, handleError]
+    ),
+
+    renameGroup: useCallback(
+      async (groupId: string, nextGroupId: string): Promise<void> => {
+        try {
+          messagingService.renameGroup(groupId, nextGroupId);
+        } catch (error) {
+          handleError(error, 'rename group');
           throw error;
         }
       },

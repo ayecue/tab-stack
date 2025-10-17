@@ -343,6 +343,28 @@ export class TabManagerProvider implements ITabManagerProvider {
     await this.syncWebview();
   }
 
+  async renameGroup(groupId: string, nextGroupId: string) {
+    if (!this._state) {
+      return;
+    }
+
+    const normalizedNextGroupId = nextGroupId.trim();
+    const result = await this._state.renameGroup(
+      groupId,
+      normalizedNextGroupId
+    );
+
+    if (!result) {
+      this.notify(
+        ExtensionNotificationKind.Error,
+        `Renaming "${groupId}" failed`
+      );
+      return;
+    }
+
+    await this.syncWebview();
+  }
+
   async takeSnapshot() {
     if (!this._state) {
       return;

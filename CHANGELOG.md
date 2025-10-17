@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.2] - 17-10-2025
 
+### Fix
+
+- fix tabs as group button in navbar
+
 ### Added
 
 - support tabs which are not text documents
 - support recovery of pinned tabs
 - improve render state
+- add renaming of groups
 
 ## [1.0.1] - 17-10-2025
 
