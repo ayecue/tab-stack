@@ -1,6 +1,7 @@
 import debounce from 'debounce';
 import { Disposable, Uri, window, workspace } from 'vscode';
 
+import { transformTabToTabInfo } from '../transformer';
 import { StorageFile } from '../types/storage';
 import {
   createDefaultTabStateFileContent,
@@ -11,12 +12,7 @@ import {
   TabManagerState,
   TabStateFileContent
 } from '../types/tab-manager';
-import {
-  TabGroupInfo,
-  TabInfo,
-  TabState,
-  transformTabToTabInfo
-} from '../types/tabs';
+import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
