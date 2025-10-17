@@ -27,18 +27,18 @@ export class MessageHandlerProvider implements Disposable {
 
     switch (data.type) {
       case WebviewMessageType.TabOpen: {
-        const { columnView, uri } = data as WebviewTabOpenMessage;
-        await tabManager.openTab(columnView, uri);
+        const { columnView, index } = data as WebviewTabOpenMessage;
+        await tabManager.openTab(columnView, index);
         break;
       }
       case WebviewMessageType.TabClose: {
-        const { columnView, uri } = data as WebviewTabCloseMessage;
-        await tabManager.closeTab(columnView, uri);
+        const { columnView, index } = data as WebviewTabCloseMessage;
+        await tabManager.closeTab(columnView, index);
         break;
       }
       case WebviewMessageType.TabTogglePin: {
-        const { columnView, uri } = data as WebviewTabTogglePinMessage;
-        await tabManager.toggleTabPin(columnView, uri);
+        const { columnView, index } = data as WebviewTabTogglePinMessage;
+        await tabManager.toggleTabPin(columnView, index);
         break;
       }
       case WebviewMessageType.SwitchGroup: {

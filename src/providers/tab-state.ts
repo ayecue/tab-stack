@@ -1,13 +1,7 @@
 import debounce from 'debounce';
-import {
-  Disposable,
-  TabInputNotebook,
-  TabInputText,
-  Uri,
-  window,
-  workspace
-} from 'vscode';
+import { Disposable, Uri, window, workspace } from 'vscode';
 
+import { StorageFile } from '../types/storage';
 import {
   createDefaultTabStateFileContent,
   EMPTY_GROUP_SELECTION,
@@ -17,12 +11,16 @@ import {
   TabManagerState,
   TabStateFileContent
 } from '../types/tab-manager';
-import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
+import {
+  TabGroupInfo,
+  TabInfo,
+  TabState,
+  transformTabToTabInfo
+} from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
-import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
-import { StorageFile } from '../types/storage';
+import { PersistentJsonFile } from '../utils/persistent-json-file';
 
 export class TabStateProvider implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
@@ -144,24 +142,13 @@ export class TabStateProvider implements Disposable {
       };
 
       group.tabs.forEach((tab) => {
-        if (
-          tab.input instanceof TabInputText ||
-          tab.input instanceof TabInputNotebook
-        ) {
-          const tabInfo: TabInfo = {
-            label: tab.label,
-            uri: tab.input.uri.toString(),
-            isActive: tab.isActive,
-            isPinned: tab.isPinned,
-            viewColumn: group.viewColumn
-          };
+        const tabInfo: TabInfo = transformTabToTabInfo(tab, group.viewColumn);
 
-          if (tab.isActive) {
-            tabGroupInfo.activeTab = tabInfo;
-          }
-
-          tabGroupInfo.tabs.push(tabInfo);
+        if (tab.isActive) {
+          tabGroupInfo.activeTab = tabInfo;
         }
+
+        tabGroupInfo.tabs.push(tabInfo);
       });
 
       tabState.tabGroups[viewColumn] = tabGroupInfo;
@@ -291,9 +278,7 @@ export class TabStateProvider implements Disposable {
     return this._pendingFile;
   }
 
-  private async fetchStateFile(): Promise<
-    StorageFile<TabStateFileContent>
-  > {
+  private async fetchStateFile(): Promise<StorageFile<TabStateFileContent>> {
     const workspaceUri: Uri | null = await getWorkspaceFolder();
 
     if (!workspaceUri) {

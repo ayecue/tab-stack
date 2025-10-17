@@ -1,4 +1,4 @@
-import { StorageFile } from "../types/storage";
+import { StorageFile } from '../types/storage';
 
 export class InMemoryJsonFile<T> implements StorageFile<T> {
   private _data: T | null;

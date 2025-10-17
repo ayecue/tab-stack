@@ -35,13 +35,13 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
 
 export interface ITabManagerProvider extends WebviewViewProvider {
   findTabGroupByViewColumn(viewColumn: number): TabGroup | null;
-  findTabByViewColumnAndUri(viewColumn: number, uri: string): Tab | null;
+  findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null;
 
   refresh: () => Promise<void>;
   applyState(): Promise<void>;
-  toggleTabPin(viewColumn: number, uri: string): Promise<void>;
-  openTab(viewColumn: number, uri: string): Promise<void>;
-  closeTab(viewColumn: number, uri: string): Promise<void>;
+  toggleTabPin(viewColumn: number, index: number): Promise<void>;
+  openTab(viewColumn: number, index: number): Promise<void>;
+  closeTab(viewColumn: number, index: number): Promise<void>;
   syncWebview(): Promise<void>;
   createGroup(groupId: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;

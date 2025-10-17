@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 17-10-2025
+
+### Added
+
+- support tabs which are not text documents
+
 ## [1.0.1] - 17-10-2025
 
 ### Fix

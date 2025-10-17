@@ -39,9 +39,9 @@ interface TabContextValue {
   state: TabState;
   actions: {
     requestRefresh: () => Promise<void>;
-    openTab: (tab: TabInfo) => Promise<void>;
-    closeTab: (tab: TabInfo) => Promise<void>;
-    togglePin: (tab: TabInfo) => Promise<void>;
+    openTab: (index: number, tab: TabInfo) => Promise<void>;
+    closeTab: (index: number, tab: TabInfo) => Promise<void>;
+    togglePin: (index: number, tab: TabInfo) => Promise<void>;
     saveGroup: (groupId: string) => Promise<void>;
     switchGroup: (groupId: string | null) => Promise<void>;
     clearSelection: () => Promise<void>;
@@ -165,9 +165,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     }, [messagingService, handleError]),
 
     openTab: useCallback(
-      async (tab: TabInfo): Promise<void> => {
+      async (index: number, tab: TabInfo): Promise<void> => {
         try {
-          messagingService.openTab(tab.uri, tab.viewColumn);
+          messagingService.openTab(index, tab.viewColumn);
         } catch (error) {
           handleError(error, 'open tab');
           throw error;
@@ -177,9 +177,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     ),
 
     closeTab: useCallback(
-      async (tab: TabInfo): Promise<void> => {
+      async (index: number, tab: TabInfo): Promise<void> => {
         try {
-          messagingService.closeTab(tab.uri, tab.viewColumn);
+          messagingService.closeTab(index, tab.viewColumn);
         } catch (error) {
           handleError(error, 'close tab');
           throw error;
@@ -189,9 +189,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     ),
 
     togglePin: useCallback(
-      async (tab: TabInfo): Promise<void> => {
+      async (index: number, tab: TabInfo): Promise<void> => {
         try {
-          messagingService.toggleTabPin(tab.uri, tab.viewColumn);
+          messagingService.toggleTabPin(index, tab.viewColumn);
         } catch (error) {
           handleError(error, 'toggle pin');
           throw error;

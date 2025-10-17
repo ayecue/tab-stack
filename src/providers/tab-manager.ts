@@ -4,14 +4,9 @@ import {
   ExtensionContext,
   Tab,
   TabGroup,
-  TabInputNotebook,
-  TabInputText,
-  TextDocument,
-  Uri,
   WebviewView,
   WebviewViewResolveContext,
-  window,
-  workspace
+  window
 } from 'vscode';
 
 import {
@@ -24,7 +19,15 @@ import {
   QuickSlotIndex
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
-import { getEditorLayout, pinEditor, setEditorLayout, unpinEditor } from '../utils/commands';
+import {
+  focusGroup,
+  focusTab,
+  getEditorLayout,
+  openTab,
+  pinEditor,
+  setEditorLayout,
+  unpinEditor
+} from '../utils/commands';
 import { EditorLayoutProvider } from './editor-layout';
 import { MessageHandlerProvider } from './message-handler';
 import { TabStateProvider } from './tab-state';
@@ -94,9 +97,8 @@ export class TabManagerProvider implements ITabManagerProvider {
     this._onDidChangeActiveEditorListener = window.onDidChangeActiveTextEditor(
       () => void this.refresh()
     );
-    this._onDidChangeEditorLayoutListener = this._layoutProvider.onDidChangeLayout(
-      () => void this.refresh()
-    );
+    this._onDidChangeEditorLayoutListener =
+      this._layoutProvider.onDidChangeLayout(() => void this.refresh());
   }
 
   async initializeState() {
@@ -118,7 +120,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     return targetGroup || null;
   }
 
-  findTabByViewColumnAndUri(viewColumn: number, uri: string): Tab | null {
+  findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null {
     if (!this._state) {
       return null;
     }
@@ -129,17 +131,7 @@ export class TabManagerProvider implements ITabManagerProvider {
       return null;
     }
 
-    const targetTab = targetGroup.tabs.find((tab) => {
-      if (
-        tab.input instanceof TabInputText ||
-        tab.input instanceof TabInputNotebook
-      ) {
-        return tab.input.uri.toString() === uri;
-      }
-      return false;
-    });
-
-    return targetTab || null;
+    return targetGroup.tabs[index] || null;
   }
 
   async refresh() {
@@ -170,65 +162,34 @@ export class TabManagerProvider implements ITabManagerProvider {
 
       await setEditorLayout(currentState.layout);
 
-      const tabGroupEntries = Object.entries(currentState.tabState.tabGroups);
-      const documentUris = Array.from(
-        new Set<string>(
-          tabGroupEntries.flatMap(([_, group]) =>
-            group.tabs.map((tab) => tab.uri)
-          )
-        )
-      );
-      const documentsByUri: Record<string, TextDocument> = {};
-      const activeTabs: TabInfo[] = [];
-      const focusedTab =
+      const tabGroupItems = Object.values(currentState.tabState.tabGroups);
+      const activeTabs: { tab: TabInfo; index: number }[] = [];
+      const focusedViewColumn =
         currentState.tabState.tabGroups[currentState.tabState.activeGroup]
-          ?.activeTab;
+          .viewColumn;
+      const focusedIndex = currentState.tabState.tabGroups[
+        currentState.tabState.activeGroup
+      ].tabs.findIndex((tab) => tab.isActive);
 
       await Promise.all(
-        documentUris.map(async (uri) => {
-          const textDocument = await workspace.openTextDocument(Uri.parse(uri));
-          documentsByUri[uri] = textDocument;
-        })
-      );
-
-      await Promise.all(
-        tabGroupEntries.map(async ([key, group]) => {
-          const viewColumn = Number(key);
-
-          return group.tabs.flatMap(async (tab) => {
-            if (tab.isActive) activeTabs.push(tab);
-            await window.showTextDocument(documentsByUri[tab.uri], {
-              viewColumn,
-              preview: false,
-              preserveFocus: true
-            });
+        tabGroupItems.map(async (group) => {
+          return group.tabs.flatMap(async (tab, index) => {
+            if (tab.isActive) activeTabs.push({ tab, index });
+            await openTab(tab);
           });
         })
       );
 
-      // For unknown reasons showTextDocument(document, viewColumn, preserveFocus) acts differently than
-      // showTextDocument(document, { viewColumn, preserveFocus, preview }). While using an options object
-      // with preview it seems to enable creating multiple tabs in the same viewColumn. If only using the
-      // two-argument overload, it seems to always reuse the existing tab in that viewColumn.
-      // To work around this, we first open all tabs and then we refocus the actual active tab at the end.
       await Promise.all(
-        activeTabs.map(async (tab) => {
-          if (tab === focusedTab) return;
-          await window.showTextDocument(
-            documentsByUri[tab.uri],
-            tab.viewColumn,
-            false
-          );
+        activeTabs.map(async ({ tab, index }) => {
+          if (tab.viewColumn == focusedViewColumn) return;
+          await focusGroup(tab.viewColumn);
+          await focusTab(index);
         })
       );
 
-      if (!focusedTab) return;
-
-      await window.showTextDocument(
-        documentsByUri[focusedTab.uri],
-        focusedTab.viewColumn,
-        false
-      );
+      await focusGroup(focusedViewColumn);
+      await focusTab(focusedIndex);
     } catch (error) {
       this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
     } finally {
@@ -237,8 +198,8 @@ export class TabManagerProvider implements ITabManagerProvider {
     }
   }
 
-  async toggleTabPin(viewColumn: number, uri: string): Promise<void> {
-    const targetTab = this.findTabByViewColumnAndUri(viewColumn, uri);
+  async toggleTabPin(viewColumn: number, index: number): Promise<void> {
+    const targetTab = this.findTabByViewColumnAndIndex(viewColumn, index);
 
     if (!targetTab) {
       this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
@@ -248,16 +209,16 @@ export class TabManagerProvider implements ITabManagerProvider {
     try {
       // Toggle pin state using VS Code command
       if (targetTab.isPinned) {
-        await unpinEditor(uri);
+        await unpinEditor(viewColumn, index);
       } else {
-        await pinEditor(uri);
+        await pinEditor(viewColumn, index);
       }
     } catch (error) {
       this.notify(ExtensionNotificationKind.Error, 'Failed to toggle tab pin');
     }
   }
 
-  async openTab(viewColumn: number, uri: string): Promise<void> {
+  async openTab(viewColumn: number, index: number): Promise<void> {
     const targetGroup = this.findTabGroupByViewColumn(viewColumn);
 
     if (!targetGroup) {
@@ -269,18 +230,15 @@ export class TabManagerProvider implements ITabManagerProvider {
     }
 
     try {
-      const documentUri = Uri.parse(uri);
-      await window.showTextDocument(documentUri, {
-        viewColumn: targetGroup.viewColumn,
-        preview: false
-      });
+      await focusGroup(viewColumn);
+      await focusTab(index);
     } catch (error) {
       this.notify(ExtensionNotificationKind.Error, 'Failed to open tab');
     }
   }
 
-  async closeTab(viewColumn: number, uri: string): Promise<void> {
-    const targetTab = this.findTabByViewColumnAndUri(viewColumn, uri);
+  async closeTab(viewColumn: number, index: number): Promise<void> {
+    const targetTab = this.findTabByViewColumnAndIndex(viewColumn, index);
 
     if (!targetTab) {
       this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
@@ -373,10 +331,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     const loaded = await this._state.loadHistoryState(historyId);
 
     if (!loaded) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        'History entry not found'
-      );
+      this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
       return;
     }
 
@@ -409,10 +364,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     const deleted = await this._state.deleteHistoryEntry(historyId);
 
     if (!deleted) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        'History entry not found'
-      );
+      this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
       return;
     }
 

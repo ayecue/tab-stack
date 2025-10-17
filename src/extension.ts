@@ -3,6 +3,7 @@ import { commands, ExtensionContext, window } from 'vscode';
 import { TabManagerProvider } from './providers/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
 import { EMPTY_GROUP_SELECTION } from './types/tab-manager';
+import { focusTab } from './utils/commands';
 
 export async function activate(context: ExtensionContext) {
   const provider = new TabManagerProvider(context);
@@ -167,7 +168,21 @@ export async function activate(context: ExtensionContext) {
     quickSlotCommands.push(quickSlotCommand);
   }
 
+  const debugCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.debug`,
+    async () => {
+      const input = await window.showInputBox({
+        prompt: 'Number of the debug tab group',
+        placeHolder: 'e.g. Sprint Planning'
+      });
+      const index = Number(input?.trim());
+
+      await focusTab(index).catch(console.error);
+    }
+  );
+
   context.subscriptions.push(
+    debugCommand,
     provider,
     refreshCommand,
     quickSwitchCommand,

@@ -17,7 +17,6 @@ export const TabItem: React.FC<TabItemProps> = ({
   onOpen,
   onClose,
   onTogglePin,
-  viewColumnLabel,
   isColumnActive
 }) => {
   const handleClose = (event: React.MouseEvent) => {
@@ -30,46 +29,14 @@ export const TabItem: React.FC<TabItemProps> = ({
     onTogglePin();
   };
 
-  // Extract filename from URI
-  const getFileNameFromUri = (uri: string): string => {
-    try {
-      const url = new URL(uri);
-      const pathParts = url.pathname.split('/');
-      return pathParts[pathParts.length - 1] || 'Untitled';
-    } catch {
-      // Fallback for invalid URIs
-      const pathParts = uri.split('/');
-      return pathParts[pathParts.length - 1] || 'Untitled';
-    }
-  };
-
   // Extract file extension
   const getFileExtension = (filename: string): string => {
     const parts = filename.split('.');
     return parts.length > 1 ? parts[parts.length - 1] : '';
   };
 
-  // Extract workspace folder or path info
-  const getWorkspacePath = (uri: string): string => {
-    try {
-      const url = new URL(uri);
-      const pathParts = url.pathname.split('/');
-      if (pathParts.length > 1) {
-        return pathParts.slice(0, -1).join('/');
-      }
-      return '';
-    } catch {
-      const pathParts = uri.split('/');
-      if (pathParts.length > 1) {
-        return pathParts.slice(0, -1).join('/');
-      }
-      return '';
-    }
-  };
-
-  const fileName = tab.label || getFileNameFromUri(tab.uri);
+  const fileName = tab.label;
   const extension = getFileExtension(fileName);
-  const workspacePath = getWorkspacePath(tab.uri);
   const activeClass = [
     tab.isActive ? 'active' : '',
     tab.isPinned ? 'pinned' : '',
@@ -94,11 +61,6 @@ export const TabItem: React.FC<TabItemProps> = ({
               {fileName}
             </span>
           </div>
-          {workspacePath && (
-            <span className="tab-path" title={workspacePath}>
-              {workspacePath}
-            </span>
-          )}
         </div>
       </div>
       <div className="tab-item-actions">

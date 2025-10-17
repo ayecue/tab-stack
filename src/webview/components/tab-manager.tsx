@@ -43,9 +43,9 @@ const TabManagerContent: React.FC = () => {
       return;
     }
     Object.values(tabGroups).forEach((group) => {
-      group.tabs.forEach((tab) => {
+      group.tabs.forEach((tab, index) => {
         void actions
-          .closeTab(tab)
+          .closeTab(index, tab)
           .catch((error) => console.error('Failed to close tab', error));
       });
     });

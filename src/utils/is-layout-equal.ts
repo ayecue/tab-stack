@@ -1,6 +1,9 @@
-import { Layout, LayoutGroup } from "../types/commands";
+import { Layout, LayoutGroup } from '../types/commands';
 
-function areLayoutGroupsEqual(left?: LayoutGroup[], right?: LayoutGroup[]): boolean {
+function areLayoutGroupsEqual(
+  left?: LayoutGroup[],
+  right?: LayoutGroup[]
+): boolean {
   const queue: [[LayoutGroup[], LayoutGroup[]]] = [[left, right]];
 
   while (queue.length > 0) {
@@ -36,5 +39,8 @@ export function isLayoutEqual(left?: Layout, right?: Layout): boolean {
     return left === right;
   }
 
-  return left.orientation === right.orientation && areLayoutGroupsEqual(left.groups, right.groups);
+  return (
+    left.orientation === right.orientation &&
+    areLayoutGroupsEqual(left.groups, right.groups)
+  );
 }

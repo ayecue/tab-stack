@@ -28,10 +28,10 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ totals }) => {
     if (!state.payload?.tabGroups) {
       return;
     }
-    Object.values(state.payload.tabGroups).forEach((group) => {
+    Object.values(state.payload.tabGroups).forEach((group, index) => {
       group.tabs.forEach((tab) => {
         actions
-          .closeTab(tab)
+          .closeTab(index, tab)
           .catch((error) => console.error('Failed to close tab', error));
       });
     });
