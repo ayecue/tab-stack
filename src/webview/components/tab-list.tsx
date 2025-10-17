@@ -18,31 +18,7 @@ interface ColumnInfo {
 
 export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
   const { state, actions } = useTabContext();
-
   const tabGroups = state.payload?.tabGroups ?? {};
-
-  const getFileNameFromUri = (uri: string): string => {
-    try {
-      const url = new URL(uri);
-      const pathParts = url.pathname.split('/');
-      return pathParts[pathParts.length - 1] || uri;
-    } catch {
-      const pathParts = uri.split('/');
-      return pathParts[pathParts.length - 1] || uri;
-    }
-  };
-
-  const getWorkspacePath = (uri: string): string => {
-    try {
-      const url = new URL(uri);
-      const pathParts = url.pathname.split('/');
-      return pathParts.slice(0, -1).join('/');
-    } catch {
-      const pathParts = uri.split('/');
-      return pathParts.slice(0, -1).join('/');
-    }
-  };
-
   const getColumnLabel = (viewColumn: number | undefined) => {
     if (typeof viewColumn === 'number' && !Number.isNaN(viewColumn)) {
       return `Column ${viewColumn}`;
@@ -55,19 +31,12 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
       .map(([key, group]) => {
         const sortValue = group.viewColumn ?? Number.MAX_SAFE_INTEGER;
         const numericKey = Number(key);
-        const displayName = group.activeTab
-          ? group.activeTab.label || getFileNameFromUri(group.activeTab.uri)
-          : null;
-        const workspacePath = group.activeTab
-          ? getWorkspacePath(group.activeTab.uri)
-          : '';
+        const displayName = group.activeTab ? group.activeTab.label : null;
 
         return {
           key,
           viewColumn: group.viewColumn,
-          activeLabel: displayName
-            ? `${displayName}${workspacePath ? ` — ${workspacePath}` : ''}`
-            : null,
+          activeLabel: displayName,
           tabs: group.tabs,
           isActive: state.payload?.activeGroup === group.viewColumn,
           sortValue,
@@ -98,8 +67,8 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
         if (a.tab.isPinned !== b.tab.isPinned) {
           return a.tab.isPinned ? -1 : 1;
         }
-        const nameA = a.tab.label || getFileNameFromUri(a.tab.uri);
-        const nameB = b.tab.label || getFileNameFromUri(b.tab.uri);
+        const nameA = a.tab.label;
+        const nameB = b.tab.label;
         return nameA.localeCompare(nameB);
       });
   }, [columns]);
@@ -129,13 +98,13 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
   if (viewMode === 'flat') {
     return (
       <ul className="tab-list-flat" role="list">
-        {flatList.map(({ tab, columnLabel, isActiveColumn }) => (
+        {flatList.map(({ tab, columnLabel, isActiveColumn }, index) => (
           <TabItem
-            key={`${tab.viewColumn}:${tab.uri}`}
+            key={`${tab.viewColumn}:${tab.label}`}
             tab={tab}
-            onOpen={() => void actions.openTab(tab)}
-            onClose={() => void actions.closeTab(tab)}
-            onTogglePin={() => void actions.togglePin(tab)}
+            onOpen={() => void actions.openTab(index, tab)}
+            onClose={() => void actions.closeTab(index, tab)}
+            onTogglePin={() => void actions.togglePin(index, tab)}
             viewColumnLabel={columnLabel}
             isColumnActive={isActiveColumn}
           />
@@ -146,7 +115,7 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
 
   return (
     <div className="tab-columns" role="list">
-      {columns.map(({ key, viewColumn, activeLabel, tabs, isActive }) => (
+      {columns.map(({ key, viewColumn, tabs, isActive }) => (
         <div
           key={key}
           className={`tab-column${isActive ? ' active' : ''}`}
@@ -158,13 +127,13 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
             </span>
           </div>
           <ul className="tab-list" role="list">
-            {tabs.map((tab) => (
+            {tabs.map((tab, index) => (
               <TabItem
-                key={`${tab.viewColumn}:${tab.uri}`}
+                key={`${tab.viewColumn}:${tab.label}`}
                 tab={tab}
-                onOpen={() => void actions.openTab(tab)}
-                onClose={() => void actions.closeTab(tab)}
-                onTogglePin={() => void actions.togglePin(tab)}
+                onOpen={() => void actions.openTab(index, tab)}
+                onClose={() => void actions.closeTab(index, tab)}
+                onTogglePin={() => void actions.togglePin(index, tab)}
                 viewColumnLabel={getColumnLabel(viewColumn)}
                 isColumnActive={isActive}
               />

@@ -52,19 +52,19 @@ export interface BaseWebviewMessage {
 
 export interface WebviewTabOpenMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabOpen;
-  uri: string;
+  index: number;
   columnView: number;
 }
 
 export interface WebviewTabCloseMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabClose;
-  uri: string;
+  index: number;
   columnView: number;
 }
 
 export interface WebviewTabTogglePinMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabTogglePin;
-  uri: string;
+  index: number;
   columnView: number;
 }
 

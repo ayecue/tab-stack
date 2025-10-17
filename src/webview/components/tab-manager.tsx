@@ -43,17 +43,16 @@ const TabManagerContent: React.FC = () => {
       return;
     }
     Object.values(tabGroups).forEach((group) => {
-      group.tabs.forEach((tab) => {
+      group.tabs.forEach((tab, index) => {
         void actions
-          .closeTab(tab)
+          .closeTab(index, tab)
           .catch((error) => console.error('Failed to close tab', error));
       });
     });
   }, [actions, state.payload?.tabGroups]);
 
   const handleSaveGroup = useCallback(() => {
-    const defaultName = `Group ${new Date().toLocaleTimeString()}`;
-    const name = window.prompt('Save current tabs as group', defaultName);
+    const name = `Group ${new Date().toLocaleTimeString()}`;
     if (name) {
       void actions
         .saveGroup(name.trim())

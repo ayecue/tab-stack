@@ -158,32 +158,24 @@ body {
   gap: 10px;
   align-items: stretch;
 }
-
-.tab-manager-sidebar,
-.tab-manager-main {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.tab-kind-indicator {
+  display: inline-flex;
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 71, 71, 0.7);
+  background: var(--vscode-terminal-ansiRed, #f44747);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
-.tab-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  border: 1px solid var(--vscode-panel-border);
-  border-radius: 4px;
-  background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.04));
-}
-
-.tab-toolbar-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  width: 100%;
+.tab-kind-indicator::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin: auto;
 }
 
 .action-group {
@@ -321,6 +313,16 @@ body {
 .tab-column.active {
   border-color: var(--vscode-focusBorder);
 }
+.tab-item.unknown-kind:not(.active) {
+  border-color: rgba(255, 204, 0, 0.55);
+  background: rgba(255, 204, 0, 0.12);
+}
+
+.tab-item.unknown-kind:not(.active):hover {
+  border-color: rgba(255, 204, 0, 0.7);
+  background: rgba(255, 204, 0, 0.18);
+}
+
 
 .tab-column-header {
   display: flex;
@@ -376,6 +378,21 @@ body {
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid transparent;
   cursor: pointer;
+}
+
+.tab-item.unknown-kind:not(.active) {
+  border-color: rgba(255, 204, 0, 0.5);
+  background: rgba(255, 204, 0, 0.12);
+  border-style: dashed;
+}
+
+.tab-item.unknown-kind:not(.active):hover {
+  border-color: rgba(255, 204, 0, 0.65);
+  background: rgba(255, 204, 0, 0.18);
+}
+
+.tab-item.unknown-kind:not(.active) .tab-icon {
+  background: rgba(255, 204, 0, 0.2);
 }
 
 .tab-item.pinned {
@@ -434,12 +451,73 @@ body {
   min-width: 0;
 }
 
+.tab-kind-indicator {
+  display: inline-flex;
+  width: 10px;
+  height: 10px;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 71, 71, 0.75);
+  color: var(--vscode-terminal-ansiBrightRed, #ff6161);
+  background: var(--vscode-terminal-ansiRed, #f44747);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.tab-kind-indicator::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  margin: auto;
+}
+
 .tab-name {
   font-size: 13px;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tab-name[class*='tab-kind-'] {
+  transition: color 120ms ease;
+}
+
+.tab-name.tab-kind-unknown {
+  color: var(--vscode-terminal-ansiBrightRed, #ff6161);
+}
+
+.tab-name.tab-kind-tabinputtext {
+  color: var(--vscode-terminal-ansiBlue, #2472c8);
+}
+
+.tab-name.tab-kind-tabinputtextdiff {
+  color: var(--vscode-terminal-ansiRed, #f44747);
+}
+
+.tab-name.tab-kind-tabinputcustom {
+  color: var(--vscode-terminal-ansiMagenta, #c586c0);
+}
+
+.tab-name.tab-kind-tabinputwebview {
+  color: var(--vscode-terminal-ansiCyan, #2aa198);
+}
+
+.tab-name.tab-kind-tabinputnotebook {
+  color: var(--vscode-terminal-ansiGreen, #16825d);
+}
+
+.tab-name.tab-kind-tabinputnotebookdiff {
+  color: var(--vscode-terminal-ansiYellow, #c19c00);
+}
+
+.tab-name.tab-kind-tabinputterminal {
+  color: var(--vscode-terminal-ansiBrightBlue, #3b8eea);
+}
+
+.tab-item.active .tab-name {
+  color: inherit !important;
 }
 
 .tab-path {
@@ -482,6 +560,19 @@ body {
   border-color: var(--vscode-focusBorder);
   color: var(--vscode-foreground);
   background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-item-actions .pin-btn.active,
+.tab-item-actions .pin-btn[aria-pressed='true'] {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.15);
+  color: var(--vscode-foreground);
+}
+
+.tab-item-actions .pin-btn.active:hover,
+.tab-item-actions .pin-btn[aria-pressed='true']:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.75);
 }
 
 .collections-panel {
@@ -633,6 +724,7 @@ body {
 
 .inline-form-actions {
   display: inline-flex;
+  align-items: center;
   gap: 4px;
 }
 
@@ -689,6 +781,10 @@ body {
   transition: border-color 120ms ease;
 }
 
+.section-item.editing {
+  cursor: default;
+}
+
 .section-item.active {
   border-color: var(--vscode-focusBorder);
   background: rgba(102, 170, 255, 0.14);
@@ -726,6 +822,42 @@ body {
   flex: 1 1 auto;
   min-width: 0;
   border-radius: 4px;
+}
+
+.section-item.editing .item-primary {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  cursor: default;
+}
+
+.item-primary input[type='text'] {
+  width: 100%;
+  border-radius: 3px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.item-primary input[type='text']:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 0;
+}
+
+.section-item .inline-form-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.section-item .inline-form-actions button {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .item-primary .item-name {

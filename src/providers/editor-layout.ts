@@ -14,7 +14,9 @@ export class EditorLayoutProvider implements Disposable {
   private _timer: NodeJS.Timeout | null;
   private _active: boolean;
 
-  constructor(pollInterval: number = EditorLayoutProvider.DEFAULT_POLL_INTERVAL) {
+  constructor(
+    pollInterval: number = EditorLayoutProvider.DEFAULT_POLL_INTERVAL
+  ) {
     this._pollInterval = pollInterval;
     this._emitter = new EventEmitter<Layout>();
     this._lastLayout = null;

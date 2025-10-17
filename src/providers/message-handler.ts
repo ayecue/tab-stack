@@ -8,6 +8,7 @@ import {
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
+  WebviewRenameGroupMessage,
   WebviewSwitchGroupMessage,
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
@@ -27,18 +28,18 @@ export class MessageHandlerProvider implements Disposable {
 
     switch (data.type) {
       case WebviewMessageType.TabOpen: {
-        const { columnView, uri } = data as WebviewTabOpenMessage;
-        await tabManager.openTab(columnView, uri);
+        const { columnView, index } = data as WebviewTabOpenMessage;
+        await tabManager.openTab(columnView, index);
         break;
       }
       case WebviewMessageType.TabClose: {
-        const { columnView, uri } = data as WebviewTabCloseMessage;
-        await tabManager.closeTab(columnView, uri);
+        const { columnView, index } = data as WebviewTabCloseMessage;
+        await tabManager.closeTab(columnView, index);
         break;
       }
       case WebviewMessageType.TabTogglePin: {
-        const { columnView, uri } = data as WebviewTabTogglePinMessage;
-        await tabManager.toggleTabPin(columnView, uri);
+        const { columnView, index } = data as WebviewTabTogglePinMessage;
+        await tabManager.toggleTabPin(columnView, index);
         break;
       }
       case WebviewMessageType.SwitchGroup: {
@@ -51,9 +52,11 @@ export class MessageHandlerProvider implements Disposable {
         await tabManager.createGroup(groupId);
         break;
       }
-      case WebviewMessageType.RenameGroup:
-        // await this.handleRenameGroup(data as WebviewRenameGroupMessage);
+      case WebviewMessageType.RenameGroup: {
+        const { groupId, nextGroupId } = data as WebviewRenameGroupMessage;
+        await tabManager.renameGroup(groupId, nextGroupId);
         break;
+      }
       case WebviewMessageType.DeleteGroup: {
         const { groupId } = data as WebviewDeleteGroupMessage;
         await tabManager.deleteGroup(groupId);

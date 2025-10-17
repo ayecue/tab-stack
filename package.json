@@ -8,7 +8,7 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
@@ -185,11 +185,6 @@
       {
         "command": "tabStack.quickSlot9",
         "title": "Apply Quick Slot 9",
-        "category": "Tab Stack"
-      },
-      {
-        "command": "tabStack.debug",
-        "title": "Debug: Log Tab Groups to Console",
         "category": "Tab Stack"
       }
     ],

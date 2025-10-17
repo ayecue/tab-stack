@@ -1,13 +1,8 @@
 import debounce from 'debounce';
-import {
-  Disposable,
-  TabInputNotebook,
-  TabInputText,
-  Uri,
-  window,
-  workspace
-} from 'vscode';
+import { Disposable, Uri, window, workspace } from 'vscode';
 
+import { transformTabToTabInfo } from '../transformer';
+import { StorageFile } from '../types/storage';
 import {
   createDefaultTabStateFileContent,
   EMPTY_GROUP_SELECTION,
@@ -20,9 +15,8 @@ import {
 import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
-import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
-import { StorageFile } from '../types/storage';
+import { PersistentJsonFile } from '../utils/persistent-json-file';
 
 export class TabStateProvider implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
@@ -144,24 +138,13 @@ export class TabStateProvider implements Disposable {
       };
 
       group.tabs.forEach((tab) => {
-        if (
-          tab.input instanceof TabInputText ||
-          tab.input instanceof TabInputNotebook
-        ) {
-          const tabInfo: TabInfo = {
-            label: tab.label,
-            uri: tab.input.uri.toString(),
-            isActive: tab.isActive,
-            isPinned: tab.isPinned,
-            viewColumn: group.viewColumn
-          };
+        const tabInfo: TabInfo = transformTabToTabInfo(tab, group.viewColumn);
 
-          if (tab.isActive) {
-            tabGroupInfo.activeTab = tabInfo;
-          }
-
-          tabGroupInfo.tabs.push(tabInfo);
+        if (tab.isActive) {
+          tabGroupInfo.activeTab = tabInfo;
         }
+
+        tabGroupInfo.tabs.push(tabInfo);
       });
 
       tabState.tabGroups[viewColumn] = tabGroupInfo;
@@ -206,18 +189,59 @@ export class TabStateProvider implements Disposable {
     return false;
   }
 
-  async createGroup(name: string, state?: TabManagerState): Promise<boolean> {
+  async createGroup(name: string): Promise<boolean> {
     const groups = await this.getGroups();
 
     if (groups[name]) {
       return false;
     }
 
-    const snapshot = state ?? (await this.refreshState());
+    const snapshot = await this.refreshState();
 
     groups[name] = snapshot;
     await this.setSelectedGroup(name);
     this._state = snapshot;
+
+    return true;
+  }
+
+  async renameGroup(currentId: string, nextId: string): Promise<boolean> {
+    const groups = await this.getGroups();
+
+    if (currentId === nextId) {
+      return true;
+    }
+
+    if (groups[currentId] == null || groups[nextId] != null) {
+      return false;
+    }
+
+    const snapshot = groups[currentId];
+
+    if (this._selectedGroup === currentId) {
+      this._selectedGroup = nextId;
+    }
+
+    if (this._previousSelectedGroup === currentId) {
+      this._previousSelectedGroup = nextId;
+    }
+
+    const quickSlots = await this.getQuickSlots();
+
+    Object.entries(quickSlots).forEach(([slot, groupId]) => {
+      if (groupId !== currentId) {
+        return;
+      }
+
+      const slotIndex = Number(slot);
+      quickSlots[slotIndex as QuickSlotIndex] = nextId;
+    });
+
+    this._groups[nextId] = snapshot;
+    delete this._groups[currentId];
+    this._quickSlots = quickSlots;
+
+    await this.save();
 
     return true;
   }
@@ -291,9 +315,7 @@ export class TabStateProvider implements Disposable {
     return this._pendingFile;
   }
 
-  private async fetchStateFile(): Promise<
-    StorageFile<TabStateFileContent>
-  > {
+  private async fetchStateFile(): Promise<StorageFile<TabStateFileContent>> {
     const workspaceUri: Uri | null = await getWorkspaceFolder();
 
     if (!workspaceUri) {

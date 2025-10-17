@@ -1,4 +1,5 @@
 import { Uri, workspace } from 'vscode';
+
 import { StorageFile } from '../types/storage';
 
 export class PersistentJsonFile<T> implements StorageFile<T> {

@@ -3,6 +3,7 @@ import { commands, ExtensionContext, window } from 'vscode';
 import { TabManagerProvider } from './providers/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
 import { EMPTY_GROUP_SELECTION } from './types/tab-manager';
+import { focusTab } from './utils/commands';
 
 export async function activate(context: ExtensionContext) {
   const provider = new TabManagerProvider(context);

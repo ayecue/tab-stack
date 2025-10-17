@@ -6,6 +6,7 @@ import {
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
+  WebviewRenameGroupMessage,
   WebviewSwitchGroupMessage,
   WebviewSyncMessage,
   WebviewTabCloseMessage,
@@ -29,28 +30,28 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async openTab(uri: string, columnView: number): Promise<void> {
+  async openTab(index: number, columnView: number): Promise<void> {
     const message: WebviewTabOpenMessage = {
       type: WebviewMessageType.TabOpen,
-      uri,
+      index,
       columnView
     };
     this.messenger.sendMessage(message);
   }
 
-  async closeTab(uri: string, columnView: number): Promise<void> {
+  async closeTab(index: number, columnView: number): Promise<void> {
     const message: WebviewTabCloseMessage = {
       type: WebviewMessageType.TabClose,
-      uri,
+      index,
       columnView
     };
     this.messenger.sendMessage(message);
   }
 
-  async toggleTabPin(uri: string, columnView: number): Promise<void> {
+  async toggleTabPin(index: number, columnView: number): Promise<void> {
     const message: WebviewTabTogglePinMessage = {
       type: WebviewMessageType.TabTogglePin,
-      uri,
+      index,
       columnView
     };
     this.messenger.sendMessage(message);
@@ -68,6 +69,15 @@ export class TabMessagingService {
     const message: WebviewNewGroupMessage = {
       type: WebviewMessageType.NewGroup,
       groupId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async renameGroup(groupId: string, nextGroupId: string): Promise<void> {
+    const message: WebviewRenameGroupMessage = {
+      type: WebviewMessageType.RenameGroup,
+      groupId,
+      nextGroupId
     };
     this.messenger.sendMessage(message);
   }
