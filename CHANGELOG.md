@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - support tabs which are not text documents
+- improve render state
 
 ## [1.0.1] - 17-10-2025
 

@@ -16,7 +16,8 @@ import {
 import {
   EMPTY_GROUP_SELECTION,
   ITabManagerProvider,
-  QuickSlotIndex
+  QuickSlotIndex,
+  TabManagerState
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
 import {
@@ -36,7 +37,8 @@ import { WebviewProvider } from './webview';
 export class TabManagerProvider implements ITabManagerProvider {
   static readonly VIEW_TYPE = 'tabStackView' as const;
 
-  private _isRendering: boolean;
+  private _rendering: boolean;
+  private _nextRenderingItem: TabManagerState;
 
   private _context: ExtensionContext;
   private _view: WebviewProvider;
@@ -50,10 +52,11 @@ export class TabManagerProvider implements ITabManagerProvider {
   private _onDidChangeEditorLayoutListener?: Disposable;
 
   constructor(context: ExtensionContext) {
+    this._nextRenderingItem = null;
     this._context = context;
     this._view = null;
     this._state = null;
-    this._isRendering = false;
+    this._rendering = false;
     this._layoutProvider = new EditorLayoutProvider();
 
     this.initializeEvents();
@@ -144,58 +147,73 @@ export class TabManagerProvider implements ITabManagerProvider {
   }
 
   async applyState() {
-    if (this._isRendering) return;
     if (!this._state) return;
 
-    this._isRendering = true;
+    this._nextRenderingItem = await this._state.getState();
 
-    try {
-      const currentState = await this._state.getState();
+    if (this._rendering) return;
 
-      this._layoutProvider.setLayout(currentState.layout);
+    this.next().catch(console.error);
+  }
 
-      if (window.tabGroups.all.length > 0) {
-        await Promise.all(
-          window.tabGroups.all.map((tab) => window.tabGroups.close(tab, true))
-        );
+  private async next() {
+    this._rendering = true;
+
+    while (this._nextRenderingItem !== null) {
+      try {
+        await this.render();
+      } catch (error) {
+        this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
+      } finally {
+        this.refresh().catch(console.error);
       }
-
-      await setEditorLayout(currentState.layout);
-
-      const tabGroupItems = Object.values(currentState.tabState.tabGroups);
-      const activeTabs: { tab: TabInfo; index: number }[] = [];
-      const focusedViewColumn =
-        currentState.tabState.tabGroups[currentState.tabState.activeGroup]
-          .viewColumn;
-      const focusedIndex = currentState.tabState.tabGroups[
-        currentState.tabState.activeGroup
-      ].tabs.findIndex((tab) => tab.isActive);
-
-      await Promise.all(
-        tabGroupItems.map(async (group) => {
-          return group.tabs.flatMap(async (tab, index) => {
-            if (tab.isActive) activeTabs.push({ tab, index });
-            await openTab(tab);
-          });
-        })
-      );
-
-      await Promise.all(
-        activeTabs.map(async ({ tab, index }) => {
-          if (tab.viewColumn == focusedViewColumn) return;
-          await focusGroup(tab.viewColumn);
-          await focusTab(index);
-        })
-      );
-
-      await focusGroup(focusedViewColumn);
-      await focusTab(focusedIndex);
-    } catch (error) {
-      this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
-    } finally {
-      this._isRendering = false;
-      this.refresh().catch(console.error);
     }
+
+    this._rendering = false;
+  }
+
+  private async render() {
+    const currentState = this._nextRenderingItem;
+
+    this._nextRenderingItem = null;
+    this._layoutProvider.setLayout(currentState.layout);
+
+    if (window.tabGroups.all.length > 0) {
+      await Promise.all(
+        window.tabGroups.all.map((tab) => window.tabGroups.close(tab, true))
+      );
+    }
+
+    await setEditorLayout(currentState.layout);
+
+    const tabGroupItems = Object.values(currentState.tabState.tabGroups);
+    const activeTabs: { tab: TabInfo; index: number }[] = [];
+    const focusedViewColumn =
+      currentState.tabState.tabGroups[currentState.tabState.activeGroup]
+        .viewColumn;
+    const focusedIndex = currentState.tabState.tabGroups[
+      currentState.tabState.activeGroup
+    ].tabs.findIndex((tab) => tab.isActive);
+
+    await Promise.all(
+      tabGroupItems.map(async (group) => {
+        return group.tabs.flatMap(async (tab, index) => {
+          if (tab.isActive) activeTabs.push({ tab, index });
+          await openTab(tab);
+        });
+      })
+    );
+
+    await Promise.all(
+      activeTabs.map(async ({ tab, index }) => {
+        if (tab.viewColumn == focusedViewColumn) return;
+        await focusGroup(tab.viewColumn);
+        await focusTab(index);
+      })
+    );
+
+    await focusGroup(focusedViewColumn);
+    await focusTab(focusedIndex);
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
