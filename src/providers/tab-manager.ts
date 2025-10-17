@@ -21,8 +21,6 @@ import {
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
 import {
-  focusGroup,
-  focusTab,
   focusTabInGroup,
   getEditorLayout,
   openTab,
@@ -217,16 +215,15 @@ export class TabManagerProvider implements ITabManagerProvider {
       await pinEditor(tab.viewColumn, index, false);
     }
 
-    await Promise.all(
-      activeTabs.map(async ({ tab, index }) => {
-        if (tab.viewColumn == focusedViewColumn) return;
-        await focusGroup(tab.viewColumn);
-        await focusTab(index);
-      })
-    );
+    for (let i = 0; i < activeTabs.length; i++) {
+      const { tab, index } = activeTabs[i];
+      if (tab.viewColumn === focusedViewColumn && index === focusedIndex) {
+        continue;
+      }
+      await focusTabInGroup(tab.viewColumn, index);
+    }
 
-    await focusGroup(focusedViewColumn);
-    await focusTab(focusedIndex);
+    await focusTabInGroup(focusedViewColumn, focusedIndex);
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
