@@ -168,21 +168,7 @@ export async function activate(context: ExtensionContext) {
     quickSlotCommands.push(quickSlotCommand);
   }
 
-  const debugCommand = commands.registerCommand(
-    `${EXTENSION_NAME}.debug`,
-    async () => {
-      const input = await window.showInputBox({
-        prompt: 'Number of the debug tab group',
-        placeHolder: 'e.g. Sprint Planning'
-      });
-      const index = Number(input?.trim());
-
-      await focusTab(index).catch(console.error);
-    }
-  );
-
   context.subscriptions.push(
-    debugCommand,
     provider,
     refreshCommand,
     quickSwitchCommand,

@@ -186,11 +186,6 @@
         "command": "tabStack.quickSlot9",
         "title": "Apply Quick Slot 9",
         "category": "Tab Stack"
-      },
-      {
-        "command": "tabStack.debug",
-        "title": "Debug: Log Tab Groups to Console",
-        "category": "Tab Stack"
       }
     ],
     "keybindings": [
