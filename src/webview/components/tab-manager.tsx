@@ -52,8 +52,7 @@ const TabManagerContent: React.FC = () => {
   }, [actions, state.payload?.tabGroups]);
 
   const handleSaveGroup = useCallback(() => {
-    const defaultName = `Group ${new Date().toLocaleTimeString()}`;
-    const name = window.prompt('Save current tabs as group', defaultName);
+    const name = `Group ${new Date().toLocaleTimeString()}`;
     if (name) {
       void actions
         .saveGroup(name.trim())
