@@ -8,7 +8,7 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
@@ -42,10 +42,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run compile:ts && npm run compile:node && npm run compile:webview",
+    "compile": "npm run compile:ts && npm run compile:node && npm run compile:browser && npm run compile:webview",
     "compile:ts": "tsc -p ./",
     "compile:node": "node build-node.cjs",
     "compile:webview": "node build-webview.cjs",
+    "compile:browser": "node build-browser.cjs",
     "compile:extension": "vsce package --out extension.vsix",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
@@ -62,7 +63,7 @@
     "Other"
   ],
   "main": "extension.js",
-  "browser": "extension.js",
+  "browser": "extension.browser.js",
   "qna": "false",
   "bugs": {
     "url": "https://github.com/ayecue/tab-stack/issues"
@@ -184,6 +185,11 @@
       {
         "command": "tabStack.quickSlot9",
         "title": "Apply Quick Slot 9",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.debug",
+        "title": "Debug: Log Tab Groups to Console",
         "category": "Tab Stack"
       }
     ],

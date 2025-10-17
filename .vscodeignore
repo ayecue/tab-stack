@@ -21,3 +21,4 @@ build-webview.cjs
 !webview.html
 !webview.css
 !extension.js
+!extension.browser.js

@@ -1,6 +1,7 @@
 import { Uri, workspace } from 'vscode';
+import { StorageFile } from '../types/storage';
 
-export class PersistentJsonFile<T> {
+export class PersistentJsonFile<T> implements StorageFile<T> {
   private _data: T | null;
   private _filePath: Uri;
   private _defaultDataProvider: () => T;

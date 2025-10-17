@@ -8,6 +8,8 @@ node_modules
 /webview.html
 /extension.js
 /extension.cjs
+/extension.browser.js
+/extension.browser.cjs
 *.vsix
 .vscode-test-web
 system.pem

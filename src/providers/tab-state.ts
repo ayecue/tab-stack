@@ -21,6 +21,8 @@ import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
+import { InMemoryJsonFile } from '../utils/in-memory-json-file';
+import { StorageFile } from '../types/storage';
 
 export class TabStateProvider implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
@@ -28,8 +30,8 @@ export class TabStateProvider implements Disposable {
 
   save: () => Promise<void>;
 
-  private _pendingFile: Promise<PersistentJsonFile<TabStateFileContent>> | null;
-  private _file: PersistentJsonFile<TabStateFileContent> | null;
+  private _pendingFile: Promise<StorageFile<TabStateFileContent>> | null;
+  private _file: StorageFile<TabStateFileContent> | null;
 
   private _history: Record<string, TabManagerState> | null;
   private _groups: Record<string, TabManagerState> | null;
@@ -280,7 +282,7 @@ export class TabStateProvider implements Disposable {
     return true;
   }
 
-  private async getStateFile(): Promise<PersistentJsonFile<TabStateFileContent> | null> {
+  private async getStateFile(): Promise<StorageFile<TabStateFileContent> | null> {
     if (this._file) {
       return this._file;
     }
@@ -290,13 +292,17 @@ export class TabStateProvider implements Disposable {
   }
 
   private async fetchStateFile(): Promise<
-    PersistentJsonFile<TabStateFileContent>
+    StorageFile<TabStateFileContent>
   > {
     const workspaceUri: Uri | null = await getWorkspaceFolder();
 
     if (!workspaceUri) {
+      this._file = new InMemoryJsonFile<TabStateFileContent>(
+        createDefaultTabStateFileContent
+      );
+      await this._file.load();
       console.warn('No workspace folder found, cannot load or save state.');
-      return null;
+      return this._file;
     }
 
     const vscodeDir = Uri.joinPath(workspaceUri, '.vscode');
