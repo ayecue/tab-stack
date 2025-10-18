@@ -7,8 +7,8 @@ import { isLayoutEqual } from '../utils/is-layout-equal';
 export class EditorLayoutService implements Disposable {
   static readonly DEFAULT_POLL_INTERVAL = 1000;
 
-  private readonly _pollInterval: number;
-  private readonly _emitter: EventEmitter<Layout>;
+  private _pollInterval: number;
+  private _emitter: EventEmitter<Layout>;
 
   private _lastLayout: Layout | null;
   private _timer: NodeJS.Timeout | null;
@@ -77,6 +77,8 @@ export class EditorLayoutService implements Disposable {
     }
 
     this._emitter.dispose();
+
+    this._emitter = null;
     this._lastLayout = null;
   }
 }

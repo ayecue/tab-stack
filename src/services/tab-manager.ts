@@ -496,8 +496,8 @@ export class TabManagerService implements ITabManagerService {
     this._onDidChangeActiveEditorListener?.dispose();
     this._onDidChangeTextEditorOptionsListener?.dispose();
     this._onDidChangeEditorLayoutListener?.dispose();
-    this._stateService?.dispose();
-    this._layoutService?.dispose();
+    this._syncViewEmitter.dispose();
+    this._notifyViewEmitter.dispose();
 
     this._stateService = null;
     this._layoutService = null;

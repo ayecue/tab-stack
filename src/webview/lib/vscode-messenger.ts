@@ -1,9 +1,10 @@
+import EventEmitter from 'events';
+
 import {
   BaseExtensionMessage,
   BaseWebviewMessage,
   ExtensionMessageType
 } from '../../types/messages';
-import { EventEmitter } from './event-emitter';
 
 declare global {
   interface Window {
