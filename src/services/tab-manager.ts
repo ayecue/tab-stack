@@ -1,51 +1,44 @@
-import {
-  CancellationToken,
-  Disposable,
-  ExtensionContext,
-  Tab,
-  TabGroup,
-  WebviewView,
-  WebviewViewResolveContext,
-  window
-} from 'vscode';
+import { Disposable, EventEmitter, Tab, TabGroup, window } from 'vscode';
 
 import {
-  BaseWebviewMessage,
-  ExtensionNotificationKind
+  ExtensionNotificationKind,
+  ExtensionNotificationMessage,
+  ExtensionTabsSyncMessage
 } from '../types/messages';
 import {
   EMPTY_GROUP_SELECTION,
-  ITabManagerProvider,
+  ITabManagerService,
   QuickSlotIndex,
   TabManagerState
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
 import {
   focusTabInGroup,
-  getEditorLayout,
   openTab,
   pinEditor,
   setEditorLayout,
   unpinEditor
 } from '../utils/commands';
 import { delay } from '../utils/delay';
-import { EditorLayoutProvider } from './editor-layout';
-import { MessageHandlerProvider } from './message-handler';
-import { TabStateProvider } from './tab-state';
-import { WebviewProvider } from './webview';
+import { EditorLayoutService } from './editor-layout';
+import { TabStateService } from './tab-state';
 
-export class TabManagerProvider implements ITabManagerProvider {
-  static readonly VIEW_TYPE = 'tabStackView' as const;
+export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100;
 
   private _rendering: boolean;
   private _nextRenderingItem: TabManagerState;
 
-  private _context: ExtensionContext;
-  private _view: WebviewProvider;
-  private _state: TabStateProvider;
-  private _messageHandler: MessageHandlerProvider;
-  private _layoutProvider: EditorLayoutProvider;
+  private _stateService: TabStateService;
+  private _layoutService: EditorLayoutService;
+
+  private _syncViewEmitter: EventEmitter<
+    Omit<ExtensionTabsSyncMessage, 'type'>
+  >;
+
+  private _notifyViewEmitter: EventEmitter<
+    Omit<ExtensionNotificationMessage, 'type'>
+  >;
 
   private _onDidChangeTabsListener?: Disposable;
   private _onDidChangeTabGroupsListener?: Disposable;
@@ -53,43 +46,34 @@ export class TabManagerProvider implements ITabManagerProvider {
   private _onDidChangeTextEditorOptionsListener?: Disposable;
   private _onDidChangeEditorLayoutListener?: Disposable;
 
-  constructor(context: ExtensionContext) {
+  constructor(
+    stateService: TabStateService,
+    layoutService: EditorLayoutService
+  ) {
     this._nextRenderingItem = null;
-    this._context = context;
-    this._view = null;
-    this._state = null;
+    this._stateService = stateService;
     this._rendering = false;
-    this._layoutProvider = new EditorLayoutProvider();
+    this._layoutService = layoutService;
+    this._syncViewEmitter = new EventEmitter<
+      Omit<ExtensionTabsSyncMessage, 'type'>
+    >();
+    this._notifyViewEmitter = new EventEmitter<
+      Omit<ExtensionNotificationMessage, 'type'>
+    >();
 
     this.initializeEvents();
   }
 
   get state() {
-    return this._state;
+    return this._stateService;
   }
 
-  get view() {
-    return this._view;
+  get onDidSyncTabs() {
+    return this._syncViewEmitter.event;
   }
 
-  private notify(kind: ExtensionNotificationKind, message: string) {
-    if (this._view) {
-      this._view.sendNotification(kind, message);
-      return;
-    }
-
-    switch (kind) {
-      case ExtensionNotificationKind.Error:
-        void window.showErrorMessage(message);
-        break;
-      case ExtensionNotificationKind.Warning:
-        void window.showWarningMessage(message);
-        break;
-      case ExtensionNotificationKind.Info:
-      default:
-        void window.showInformationMessage(message);
-        break;
-    }
+  get onDidNotify() {
+    return this._notifyViewEmitter.event;
   }
 
   private initializeEvents() {
@@ -105,18 +89,28 @@ export class TabManagerProvider implements ITabManagerProvider {
     this._onDidChangeTextEditorOptionsListener =
       window.onDidChangeTextEditorOptions(() => void this.refresh());
     this._onDidChangeEditorLayoutListener =
-      this._layoutProvider.onDidChangeLayout(() => void this.refresh());
+      this._layoutService.onDidChangeLayout(() => void this.refresh());
   }
 
-  async initializeState() {
-    this._state = new TabStateProvider();
-    await this._state.initialize();
-    this._layoutProvider.setLayout(await getEditorLayout());
-    this._layoutProvider.start();
+  private notify(kind: ExtensionNotificationKind, message: string) {
+    this._notifyViewEmitter.fire({ kind, message });
+
+    switch (kind) {
+      case ExtensionNotificationKind.Error:
+        void window.showErrorMessage(message);
+        break;
+      case ExtensionNotificationKind.Warning:
+        void window.showWarningMessage(message);
+        break;
+      case ExtensionNotificationKind.Info:
+      default:
+        void window.showInformationMessage(message);
+        break;
+    }
   }
 
   findTabGroupByViewColumn(viewColumn: number): TabGroup | null {
-    if (!this._state) {
+    if (!this._stateService) {
       return null;
     }
 
@@ -128,7 +122,7 @@ export class TabManagerProvider implements ITabManagerProvider {
   }
 
   findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null {
-    if (!this._state) {
+    if (!this._stateService) {
       return null;
     }
 
@@ -142,21 +136,21 @@ export class TabManagerProvider implements ITabManagerProvider {
   }
 
   async refresh() {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
     if (this._rendering) {
       return;
     }
 
-    await this._state.refreshState();
-    await this.syncWebview();
+    await this._stateService.refreshState();
+    await this.triggerSync();
   }
 
   async applyState() {
-    if (!this._state) return;
+    if (!this._stateService) return;
 
-    this._nextRenderingItem = await this._state.getState();
+    this._nextRenderingItem = await this._stateService.getState();
 
     if (this._rendering) return;
 
@@ -170,13 +164,13 @@ export class TabManagerProvider implements ITabManagerProvider {
       try {
         await this.render();
         // Introduce a small delay to allow VS Code to process UI updates
-        await delay(TabManagerProvider.RENDER_COOLDOWN_MS);
+        await delay(TabManagerService.RENDER_COOLDOWN_MS);
       } catch (error) {
         this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
       }
     }
 
-    await this.syncWebview().catch(console.error);
+    await this.triggerSync().catch(console.error);
     this._rendering = false;
   }
 
@@ -184,7 +178,7 @@ export class TabManagerProvider implements ITabManagerProvider {
     const currentState = this._nextRenderingItem;
 
     this._nextRenderingItem = null;
-    this._layoutProvider.setLayout(currentState.layout);
+    this._layoutService.setLayout(currentState.layout);
 
     if (window.tabGroups.all.length > 0) {
       await Promise.all(
@@ -281,42 +275,42 @@ export class TabManagerProvider implements ITabManagerProvider {
     await window.tabGroups.close(targetTab);
   }
 
-  async syncWebview() {
-    if (!this._view || !this._state) {
+  async triggerSync() {
+    if (!this._stateService) {
       return;
     }
 
     const [state, groups, history, quickSlots] = await Promise.all([
-      this._state.getState(),
-      this._state.getGroups(),
-      this._state.getHistory(),
-      this._state.getQuickSlots()
+      this._stateService.getState(),
+      this._stateService.getGroups(),
+      this._stateService.getHistory(),
+      this._stateService.getQuickSlots()
     ]);
 
     const groupNames = Object.keys(groups);
     const historyKeys = Object.keys(history);
 
-    this._view.sendSync({
+    this._syncViewEmitter.fire({
       tabState: state.tabState,
       history: historyKeys,
       groups: groupNames,
-      selectedGroup: this._state.selectedGroup ?? null,
+      selectedGroup: this._stateService.selectedGroup ?? null,
       quickSlots
     });
   }
 
   async switchToGroup(groupId: string | null) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    if (!groupId || this._state.selectedGroup === groupId) {
-      await this._state.setSelectedGroup(EMPTY_GROUP_SELECTION);
-      await this.syncWebview();
+    if (!groupId || this._stateService.selectedGroup === groupId) {
+      await this._stateService.setSelectedGroup(EMPTY_GROUP_SELECTION);
+      await this.triggerSync();
       return;
     }
 
-    const loaded = await this._state.loadState(groupId);
+    const loaded = await this._stateService.loadState(groupId);
 
     if (!loaded) {
       this.notify(
@@ -330,11 +324,11 @@ export class TabManagerProvider implements ITabManagerProvider {
   }
 
   async createGroup(groupId: string) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    const createdGroup = await this._state.createGroup(groupId);
+    const createdGroup = await this._stateService.createGroup(groupId);
 
     if (!createdGroup) {
       this.notify(
@@ -344,16 +338,16 @@ export class TabManagerProvider implements ITabManagerProvider {
       return;
     }
 
-    await this.syncWebview();
+    await this.triggerSync();
   }
 
   async renameGroup(groupId: string, nextGroupId: string) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
     const normalizedNextGroupId = nextGroupId.trim();
-    const result = await this._state.renameGroup(
+    const result = await this._stateService.renameGroup(
       groupId,
       normalizedNextGroupId
     );
@@ -366,24 +360,24 @@ export class TabManagerProvider implements ITabManagerProvider {
       return;
     }
 
-    await this.syncWebview();
+    await this.triggerSync();
   }
 
   async takeSnapshot() {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    await this._state.addCurrentStateToHistory();
-    await this.syncWebview();
+    await this._stateService.addCurrentStateToHistory();
+    await this.triggerSync();
   }
 
   async recoverSnapshot(historyId: string) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    const loaded = await this._state.loadHistoryState(historyId);
+    const loaded = await this._stateService.loadHistoryState(historyId);
 
     if (!loaded) {
       this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
@@ -394,11 +388,11 @@ export class TabManagerProvider implements ITabManagerProvider {
   }
 
   async deleteGroup(groupId: string) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    const deleted = await this._state.deleteGroup(groupId);
+    const deleted = await this._stateService.deleteGroup(groupId);
 
     if (!deleted) {
       this.notify(
@@ -408,39 +402,39 @@ export class TabManagerProvider implements ITabManagerProvider {
       return;
     }
 
-    await this.syncWebview();
+    await this.triggerSync();
   }
 
   async deleteSnapshot(historyId: string) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    const deleted = await this._state.deleteHistoryEntry(historyId);
+    const deleted = await this._stateService.deleteHistoryEntry(historyId);
 
     if (!deleted) {
       this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
       return;
     }
 
-    await this.syncWebview();
+    await this.triggerSync();
   }
 
   async assignQuickSlot(slot: QuickSlotIndex, groupId: string | null) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    await this._state.setQuickSlot(slot, groupId);
-    await this.syncWebview();
+    await this._stateService.setQuickSlot(slot, groupId);
+    await this.triggerSync();
   }
 
   async applyQuickSlot(slot: QuickSlotIndex) {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    const groupId = await this._state.getQuickSlotAssignment(slot);
+    const groupId = await this._stateService.getQuickSlotAssignment(slot);
 
     if (!groupId) {
       this.notify(
@@ -450,28 +444,28 @@ export class TabManagerProvider implements ITabManagerProvider {
       return;
     }
 
-    const loaded = await this._state.loadState(groupId);
+    const loaded = await this._stateService.loadState(groupId);
 
     if (!loaded) {
-      await this._state.setQuickSlot(slot, null);
+      await this._stateService.setQuickSlot(slot, null);
       this.notify(
         ExtensionNotificationKind.Warning,
         `Saved group "${groupId}" was not found. Quick slot ${slot} was cleared.`
       );
-      await this.syncWebview();
+      await this.triggerSync();
       return;
     }
 
     await this.applyState();
-    await this.syncWebview();
+    await this.triggerSync();
   }
 
   async quickSwitch(): Promise<void> {
-    if (!this._state) {
+    if (!this._stateService) {
       return;
     }
 
-    const previousGroup = await this._state.getPreviousSelectedGroup();
+    const previousGroup = await this._stateService.getPreviousSelectedGroup();
 
     if (!previousGroup) {
       this.notify(
@@ -481,32 +475,19 @@ export class TabManagerProvider implements ITabManagerProvider {
       return;
     }
 
-    const didSwitch = await this._state.loadState(previousGroup);
+    const didSwitch = await this._stateService.loadState(previousGroup);
 
     if (!didSwitch) {
       this.notify(
         ExtensionNotificationKind.Warning,
         `Previous group "${previousGroup}" no longer exists`
       );
-      await this.syncWebview();
+      await this.triggerSync();
       return;
     }
 
     await this.applyState();
-    await this.syncWebview();
-  }
-
-  async resolveWebviewView(
-    webviewView: WebviewView,
-    _context: WebviewViewResolveContext,
-    _token: CancellationToken
-  ) {
-    this._view = new WebviewProvider(webviewView, this._context);
-    this._messageHandler = new MessageHandlerProvider(this);
-    await this._view.initialize();
-    this._view.on('message', async (data: BaseWebviewMessage) => {
-      await this._messageHandler.handle(data);
-    });
+    await this.triggerSync();
   }
 
   dispose() {
@@ -515,14 +496,10 @@ export class TabManagerProvider implements ITabManagerProvider {
     this._onDidChangeActiveEditorListener?.dispose();
     this._onDidChangeTextEditorOptionsListener?.dispose();
     this._onDidChangeEditorLayoutListener?.dispose();
-    this._view?.dispose();
-    this._state?.dispose();
-    this._messageHandler?.dispose();
-    this._layoutProvider?.dispose();
+    this._stateService?.dispose();
+    this._layoutService?.dispose();
 
-    this._view = null;
-    this._state = null;
-    this._messageHandler = null;
-    this._layoutProvider = null;
+    this._stateService = null;
+    this._layoutService = null;
   }
 }

@@ -207,7 +207,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
 
       if (!value) {
         if (currentSlot) {
-          void actions.clearQuickSlot(currentSlot).catch((error) => {
+          void actions.clearQuickSlot(groupId).catch((error) => {
             console.error('Failed to clear quick slot', error);
           });
         }

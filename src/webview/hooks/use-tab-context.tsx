@@ -51,7 +51,7 @@ interface TabContextValue {
     deleteGroup: (groupId: string) => Promise<void>;
     deleteHistory: (historyId: string) => Promise<void>;
     assignQuickSlot: (slot: QuickSlotIndex, groupId: string) => Promise<void>;
-    clearQuickSlot: (slot: QuickSlotIndex) => Promise<void>;
+    clearQuickSlot: (groupId: string) => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -304,9 +304,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     ),
 
     clearQuickSlot: useCallback(
-      async (slot: QuickSlotIndex): Promise<void> => {
+      async (groupId: string): Promise<void> => {
         try {
-          messagingService.assignQuickSlot(slot, null);
+          messagingService.assignQuickSlot(null, groupId);
         } catch (error) {
           handleError(error, 'clear quick slot');
           throw error;

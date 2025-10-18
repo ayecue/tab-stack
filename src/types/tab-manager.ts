@@ -1,6 +1,10 @@
-import { Tab, TabGroup, WebviewViewProvider } from 'vscode';
+import { Disposable, Event, Tab, TabGroup, WebviewView } from 'vscode';
 
 import { Layout } from './commands';
+import {
+  ExtensionNotificationMessage,
+  ExtensionTabsSyncMessage
+} from './messages';
 import { TabState } from './tabs';
 
 export type QuickSlotIndex = number;
@@ -33,7 +37,7 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
   };
 }
 
-export interface ITabManagerProvider extends WebviewViewProvider {
+export interface ITabManagerService extends Disposable {
   findTabGroupByViewColumn(viewColumn: number): TabGroup | null;
   findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null;
 
@@ -42,7 +46,6 @@ export interface ITabManagerProvider extends WebviewViewProvider {
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
   openTab(viewColumn: number, index: number): Promise<void>;
   closeTab(viewColumn: number, index: number): Promise<void>;
-  syncWebview(): Promise<void>;
   createGroup(groupId: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;
   renameGroup(groupId: string, nextGroupId: string): Promise<void>;
@@ -53,4 +56,9 @@ export interface ITabManagerProvider extends WebviewViewProvider {
   assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): Promise<void>;
   applyQuickSlot(slot: QuickSlotIndex): Promise<void>;
   quickSwitch(): Promise<void>;
+
+  triggerSync(): Promise<void>;
+
+  onDidSyncTabs: Event<Omit<ExtensionTabsSyncMessage, 'type'>>;
+  onDidNotify: Event<Omit<ExtensionNotificationMessage, 'type'>>;
 }

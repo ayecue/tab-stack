@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 18-10-2025
+
+### Fix
+
+- fix clearing of quick slots
+
+### Added
+
+- clean up structure to support multiple parallel webviews
+
 ## [1.0.4] - 18-10-2025
 
 ### Fix
 
-- fix tab states getting overriding by too fast switching
+- fix tab states getting overridden by too fast switching
 
 ## [1.0.3] - 18-10-2025
 
