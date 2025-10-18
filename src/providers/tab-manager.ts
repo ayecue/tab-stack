@@ -28,6 +28,7 @@ import {
   setEditorLayout,
   unpinEditor
 } from '../utils/commands';
+import { delay } from '../utils/delay';
 import { EditorLayoutProvider } from './editor-layout';
 import { MessageHandlerProvider } from './message-handler';
 import { TabStateProvider } from './tab-state';
@@ -35,6 +36,7 @@ import { WebviewProvider } from './webview';
 
 export class TabManagerProvider implements ITabManagerProvider {
   static readonly VIEW_TYPE = 'tabStackView' as const;
+  static readonly RENDER_COOLDOWN_MS = 100;
 
   private _rendering: boolean;
   private _nextRenderingItem: TabManagerState;
@@ -143,6 +145,9 @@ export class TabManagerProvider implements ITabManagerProvider {
     if (!this._state) {
       return;
     }
+    if (this._rendering) {
+      return;
+    }
 
     await this._state.refreshState();
     await this.syncWebview();
@@ -164,13 +169,14 @@ export class TabManagerProvider implements ITabManagerProvider {
     while (this._nextRenderingItem !== null) {
       try {
         await this.render();
+        // Introduce a small delay to allow VS Code to process UI updates
+        await delay(TabManagerProvider.RENDER_COOLDOWN_MS);
       } catch (error) {
         this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
-      } finally {
-        this.refresh().catch(console.error);
       }
     }
 
+    await this.syncWebview().catch(console.error);
     this._rendering = false;
   }
 
