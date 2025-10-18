@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 18-10-2025
+
+### Fix
+
+- fix tab states getting overriding by too fast switching
+
 ## [1.0.3] - 18-10-2025
 
 ### Fix
