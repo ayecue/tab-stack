@@ -10,12 +10,11 @@ import {
 
 import {
   ExtensionMessageType,
-  ExtensionNotificationKind,
   ExtensionNotificationMessage,
   ExtensionTabsSyncMessage
 } from '../types/messages';
 
-export class WebviewProvider extends EventEmitter implements Disposable {
+export class WebviewHandler extends EventEmitter implements Disposable {
   static readonly DEBOUNCE_DELAY = 100 as const;
 
   sendSync: (payload: Omit<ExtensionTabsSyncMessage, 'type'>) => Promise<void>;
@@ -30,7 +29,7 @@ export class WebviewProvider extends EventEmitter implements Disposable {
     this._context = context;
     this.sendSync = debounce(
       this._sendSync.bind(this),
-      WebviewProvider.DEBOUNCE_DELAY
+      WebviewHandler.DEBOUNCE_DELAY
     );
   }
 
@@ -71,15 +70,14 @@ export class WebviewProvider extends EventEmitter implements Disposable {
     return html;
   }
 
-  sendNotification(kind: ExtensionNotificationKind, message: string) {
+  sendNotification(payload: Omit<ExtensionNotificationMessage, 'type'>) {
     if (!this._view) {
       return;
     }
 
     this._view.webview.postMessage({
       type: ExtensionMessageType.Notification,
-      kind,
-      message
+      ...payload
     } satisfies ExtensionNotificationMessage);
   }
 

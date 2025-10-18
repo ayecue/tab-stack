@@ -1,44 +1,59 @@
 import { commands, ExtensionContext, window } from 'vscode';
 
-import { TabManagerProvider } from './providers/tab-manager';
+import { ViewManagerProvider } from './providers/view-manager';
+import { EditorLayoutService } from './services/editor-layout';
+import { TabManagerService } from './services/tab-manager';
+import { TabStateService } from './services/tab-state';
 import { EXTENSION_NAME } from './types/extension';
 import { EMPTY_GROUP_SELECTION } from './types/tab-manager';
-import { focusTab } from './utils/commands';
+import { getEditorLayout } from './utils/commands';
 
 export async function activate(context: ExtensionContext) {
-  const provider = new TabManagerProvider(context);
+  const layoutService = new EditorLayoutService();
+  const stateService = new TabStateService();
 
-  await provider.initializeState();
+  await stateService.initialize();
+  layoutService.setLayout(await getEditorLayout());
+  layoutService.start();
+
+  const tabManagerService = new TabManagerService(stateService, layoutService);
+  const viewManagerProvider = new ViewManagerProvider(
+    context,
+    tabManagerService
+  );
 
   context.subscriptions.push(
-    window.registerWebviewViewProvider(TabManagerProvider.VIEW_TYPE, provider)
+    window.registerWebviewViewProvider(
+      ViewManagerProvider.VIEW_TYPE,
+      viewManagerProvider
+    )
   );
 
   const refreshCommand = commands.registerCommand(
     `${EXTENSION_NAME}.refresh`,
     async () => {
-      await provider.refresh();
+      await tabManagerService.refresh();
     }
   );
 
   const quickSwitchCommand = commands.registerCommand(
     `${EXTENSION_NAME}.quickSwitch`,
     async () => {
-      await provider.quickSwitch();
+      await tabManagerService.quickSwitch();
     }
   );
 
   const clearSelectionCommand = commands.registerCommand(
     `${EXTENSION_NAME}.clearSelection`,
     async () => {
-      await provider.switchToGroup(EMPTY_GROUP_SELECTION);
+      await tabManagerService.switchToGroup(EMPTY_GROUP_SELECTION);
     }
   );
 
   const switchGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.switchGroup`,
     async () => {
-      const groups = await provider.state.getGroups();
+      const groups = await tabManagerService.state.getGroups();
       const groupKeys = Object.keys(groups);
 
       if (groupKeys.length === 0) {
@@ -55,7 +70,7 @@ export async function activate(context: ExtensionContext) {
         return;
       }
 
-      await provider.switchToGroup(groupId);
+      await tabManagerService.switchToGroup(groupId);
     }
   );
 
@@ -72,14 +87,14 @@ export async function activate(context: ExtensionContext) {
         return;
       }
 
-      await provider.createGroup(groupId);
+      await tabManagerService.createGroup(groupId);
     }
   );
 
   const deleteGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteGroup`,
     async () => {
-      const groups = await provider.state.getGroups();
+      const groups = await tabManagerService.state.getGroups();
       const groupKeys = Object.keys(groups);
 
       if (groupKeys.length === 0) {
@@ -96,21 +111,21 @@ export async function activate(context: ExtensionContext) {
         return;
       }
 
-      await provider.deleteGroup(groupId);
+      await tabManagerService.deleteGroup(groupId);
     }
   );
 
   const snapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.snapshot`,
     async () => {
-      await provider.takeSnapshot();
+      await tabManagerService.takeSnapshot();
     }
   );
 
   const restoreSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.restoreSnapshot`,
     async () => {
-      const snapshots = await provider.state.getHistory();
+      const snapshots = await tabManagerService.state.getHistory();
       const snapshotKeys = Object.keys(snapshots);
 
       if (snapshotKeys.length === 0) {
@@ -127,14 +142,14 @@ export async function activate(context: ExtensionContext) {
         return;
       }
 
-      await provider.recoverSnapshot(historyId);
+      await tabManagerService.recoverSnapshot(historyId);
     }
   );
 
   const deleteSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteSnapshot`,
     async () => {
-      const snapshots = await provider.state.getHistory();
+      const snapshots = await tabManagerService.state.getHistory();
       const snapshotKeys = Object.keys(snapshots);
 
       if (snapshotKeys.length === 0) {
@@ -151,7 +166,7 @@ export async function activate(context: ExtensionContext) {
         return;
       }
 
-      await provider.deleteSnapshot(historyId);
+      await tabManagerService.deleteSnapshot(historyId);
     }
   );
 
@@ -161,7 +176,7 @@ export async function activate(context: ExtensionContext) {
     const quickSlotCommand = commands.registerCommand(
       `${EXTENSION_NAME}.quickSlot${slot}`,
       async () => {
-        await provider.applyQuickSlot(slot);
+        await tabManagerService.applyQuickSlot(slot);
       }
     );
 
@@ -169,7 +184,10 @@ export async function activate(context: ExtensionContext) {
   }
 
   context.subscriptions.push(
-    provider,
+    stateService,
+    layoutService,
+    tabManagerService,
+    viewManagerProvider,
     refreshCommand,
     quickSwitchCommand,
     clearSelectionCommand,

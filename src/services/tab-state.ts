@@ -18,7 +18,7 @@ import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
 
-export class TabStateProvider implements Disposable {
+export class TabStateService implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
   static readonly DEBOUNCE_DELAY = 200 as const;
 
@@ -44,10 +44,7 @@ export class TabStateProvider implements Disposable {
     this._state = null;
     this._pendingFile = null;
     this._file = null;
-    this.save = debounce(
-      this._save.bind(this),
-      TabStateProvider.DEBOUNCE_DELAY
-    );
+    this.save = debounce(this._save.bind(this), TabStateService.DEBOUNCE_DELAY);
   }
 
   async initialize() {
@@ -91,10 +88,10 @@ export class TabStateProvider implements Disposable {
 
     const keys = Object.keys(history);
 
-    if (keys.length > TabStateProvider.MAX_HISTORY) {
+    if (keys.length > TabStateService.MAX_HISTORY) {
       const keysToRemove = keys.slice(
         0,
-        keys.length - TabStateProvider.MAX_HISTORY
+        keys.length - TabStateService.MAX_HISTORY
       );
       keysToRemove.forEach((key) => delete history[key]);
     }

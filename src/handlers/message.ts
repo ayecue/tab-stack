@@ -14,12 +14,12 @@ import {
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage
 } from '../types/messages';
-import { ITabManagerProvider } from '../types/tab-manager';
+import { ITabManagerService } from '../types/tab-manager';
 
-export class MessageHandlerProvider implements Disposable {
-  private _tabManager: ITabManagerProvider;
+export class MessageHandler implements Disposable {
+  private _tabManager: ITabManagerService;
 
-  constructor(tabManager: ITabManagerProvider) {
+  constructor(tabManager: ITabManagerService) {
     this._tabManager = tabManager;
   }
 
@@ -82,7 +82,7 @@ export class MessageHandlerProvider implements Disposable {
         break;
       }
       case WebviewMessageType.Sync: {
-        await tabManager.syncWebview();
+        await tabManager.triggerSync();
         break;
       }
       default:

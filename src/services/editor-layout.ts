@@ -4,7 +4,7 @@ import { Layout } from '../types/commands';
 import { getEditorLayout } from '../utils/commands';
 import { isLayoutEqual } from '../utils/is-layout-equal';
 
-export class EditorLayoutProvider implements Disposable {
+export class EditorLayoutService implements Disposable {
   static readonly DEFAULT_POLL_INTERVAL = 1000;
 
   private readonly _pollInterval: number;
@@ -15,7 +15,7 @@ export class EditorLayoutProvider implements Disposable {
   private _active: boolean;
 
   constructor(
-    pollInterval: number = EditorLayoutProvider.DEFAULT_POLL_INTERVAL
+    pollInterval: number = EditorLayoutService.DEFAULT_POLL_INTERVAL
   ) {
     this._pollInterval = pollInterval;
     this._emitter = new EventEmitter<Layout>();
