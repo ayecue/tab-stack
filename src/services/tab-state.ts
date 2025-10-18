@@ -421,7 +421,9 @@ export class TabStateService implements Disposable {
       (index) => quickSlots[index] === groupId
     );
 
-    quickSlots[slot] = groupId;
+    if (slot != null) {
+      quickSlots[slot] = groupId;
+    }
 
     if (existingSlot != null) {
       quickSlots[existingSlot] = null;

@@ -1,10 +1,4 @@
-import {
-  Disposable,
-  EventEmitter,
-  Tab,
-  TabGroup,
-  window
-} from 'vscode';
+import { Disposable, EventEmitter, Tab, TabGroup, window } from 'vscode';
 
 import {
   ExtensionNotificationKind,
