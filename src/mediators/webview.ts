@@ -9,6 +9,10 @@ export class WebviewMediator implements Disposable {
   private _messageHandler: MessageHandler;
   private _webview: WebviewHandler;
 
+  private _onMessageListener?: Disposable;
+  private _onDidSyncTabsListener?: Disposable;
+  private _onDidNotifyListener?: Disposable;
+
   constructor(
     tabManager: ITabManagerService,
     messageHandler: MessageHandler,
@@ -21,22 +25,33 @@ export class WebviewMediator implements Disposable {
 
   async initialize() {
     await this._webview.initialize();
-    this._webview.on('message', async (data) => {
+
+    this._onMessageListener = this._webview.onMessage(async (data) => {
       await this._messageHandler.handle(data);
     });
 
-    this._tabManager.onDidSyncTabs(async (payload) => {
-      await this._webview.sendSync(payload);
-    });
+    this._onDidSyncTabsListener = this._tabManager.onDidSyncTabs(
+      async (payload) => {
+        await this._webview.sendSync(payload);
+      }
+    );
 
-    this._tabManager.onDidNotify(async (payload) => {
-      await this._webview.sendNotification(payload);
-    });
+    this._onDidNotifyListener = this._tabManager.onDidNotify(
+      async (payload) => {
+        await this._webview.sendNotification(payload);
+      }
+    );
   }
 
   dispose() {
+    this._onMessageListener?.dispose();
+    this._onDidSyncTabsListener?.dispose();
+    this._onDidNotifyListener?.dispose();
     this._webview.dispose();
     this._messageHandler.dispose();
+
+    this._webview = null;
+    this._messageHandler = null;
     this._tabManager = null;
   }
 }

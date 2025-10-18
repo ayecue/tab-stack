@@ -1,4 +1,4 @@
-import { Disposable, Event, Tab, TabGroup, WebviewView } from 'vscode';
+import { Disposable, Event, Tab, TabGroup } from 'vscode';
 
 import { Layout } from './commands';
 import {

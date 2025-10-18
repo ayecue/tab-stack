@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 const { copyWebviewAssets } = require('./copy-assets.cjs');
 
 const buildWebview = async () => {
@@ -24,6 +25,11 @@ const buildWebview = async () => {
       loader: {
         '.css': 'empty'  // Ignore CSS imports since we load CSS separately
       },
+      plugins: [
+        polyfillNode({
+          globals: false
+        })
+      ],
       external: [],
       logLevel: 'info'
     });

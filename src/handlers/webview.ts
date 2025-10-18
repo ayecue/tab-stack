@@ -1,7 +1,7 @@
 import debounce from 'debounce';
-import EventEmitter from 'events';
 import {
   Disposable,
+  EventEmitter,
   ExtensionContext,
   Uri,
   WebviewView,
@@ -14,19 +14,19 @@ import {
   ExtensionTabsSyncMessage
 } from '../types/messages';
 
-export class WebviewHandler extends EventEmitter implements Disposable {
+export class WebviewHandler implements Disposable {
   static readonly DEBOUNCE_DELAY = 100 as const;
 
   sendSync: (payload: Omit<ExtensionTabsSyncMessage, 'type'>) => Promise<void>;
 
   private _view: WebviewView;
   private _context: ExtensionContext;
+  private _messageEmitter: EventEmitter<any>;
 
   constructor(view: WebviewView, context: ExtensionContext) {
-    super();
-
     this._view = view;
     this._context = context;
+    this._messageEmitter = new EventEmitter<any>();
     this.sendSync = debounce(
       this._sendSync.bind(this),
       WebviewHandler.DEBOUNCE_DELAY
@@ -35,6 +35,10 @@ export class WebviewHandler extends EventEmitter implements Disposable {
 
   get view() {
     return this._view;
+  }
+
+  get onMessage() {
+    return this._messageEmitter.event;
   }
 
   async initialize() {
@@ -49,7 +53,7 @@ export class WebviewHandler extends EventEmitter implements Disposable {
 
     this._view.webview.html = await this._getHtmlForWebview();
     this._view.webview.onDidReceiveMessage((data) =>
-      this.emit('message', data)
+      this._messageEmitter.fire(data)
     );
   }
 
@@ -93,7 +97,10 @@ export class WebviewHandler extends EventEmitter implements Disposable {
   }
 
   dispose() {
-    this.removeAllListeners();
+    this._messageEmitter.dispose();
+
+    this._messageEmitter = null;
+    this._context = null;
     this._view = null;
   }
 }
