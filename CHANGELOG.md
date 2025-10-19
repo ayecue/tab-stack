@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.7] - 19-10-2025
+
+### Fix
+
+- fix caching issue in group items component of webview
+- fix tab list view interactions
+
 ## [1.0.6] - 18-10-2025
 
 ### Added
