@@ -19,63 +19,34 @@ interface ColumnInfo {
 export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
   const { state, actions } = useTabContext();
   const tabGroups = state.payload?.tabGroups ?? {};
-  const getColumnLabel = (viewColumn: number | undefined) => {
-    if (typeof viewColumn === 'number' && !Number.isNaN(viewColumn)) {
-      return `Column ${viewColumn}`;
-    }
-    return 'Column •';
+  const getColumnLabel = (viewColumn: number) => {
+    return `Column ${viewColumn}`;
   };
 
-  const columns = useMemo<ColumnInfo[]>(() => {
-    return Object.entries(tabGroups)
-      .map(([key, group]) => {
-        const sortValue = group.viewColumn ?? Number.MAX_SAFE_INTEGER;
-        const numericKey = Number(key);
-        const displayName = group.activeTab ? group.activeTab.label : null;
+  const columns = Object.values(tabGroups)
+    .map((group) => {
+      const displayName = group.activeTab ? group.activeTab.label : null;
 
-        return {
-          key,
-          viewColumn: group.viewColumn,
-          activeLabel: displayName,
-          tabs: group.tabs,
-          isActive: state.payload?.activeGroup === group.viewColumn,
-          sortValue,
-          numericKey: Number.isNaN(numericKey)
-            ? Number.MAX_SAFE_INTEGER
-            : numericKey
-        };
-      })
-      .sort((a, b) => {
-        if (a.sortValue !== b.sortValue) {
-          return a.sortValue - b.sortValue;
-        }
-        return a.numericKey - b.numericKey;
-      });
-  }, [tabGroups, state.payload?.activeGroup]);
+      return {
+        viewColumn: group.viewColumn,
+        label: displayName,
+        tabs: group.tabs,
+        isActive: state.payload?.activeGroup === group.viewColumn
+      };
+    });
 
-  const flatList = useMemo(() => {
-    return columns
-      .flatMap((column) =>
-        column.tabs.map((tab) => ({
-          columnKey: column.key,
-          columnLabel: getColumnLabel(column.viewColumn),
-          isActiveColumn: column.isActive,
-          tab
-        }))
-      )
-      .sort((a, b) => {
-        if (a.tab.isPinned !== b.tab.isPinned) {
-          return a.tab.isPinned ? -1 : 1;
-        }
-        const nameA = a.tab.label;
-        const nameB = b.tab.label;
-        return nameA.localeCompare(nameB);
-      });
-  }, [columns]);
+  const flatList = columns
+    .flatMap((group) =>
+      group.tabs.map((tab, index) => ({
+        label: getColumnLabel(group.viewColumn),
+        isActive: group.isActive,
+        tabGroupIndex: index,
+        viewColumn: group.viewColumn,
+        tab
+      }))
+    );
 
-  const totalVisibleTabs = useMemo(() => {
-    return columns.reduce((count, column) => count + column.tabs.length, 0);
-  }, [columns]);
+  const totalVisibleTabs = flatList.length;
 
   if (state.loading) {
     return (
@@ -98,15 +69,15 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
   if (viewMode === 'flat') {
     return (
       <ul className="tab-list-flat" role="list">
-        {flatList.map(({ tab, columnLabel, isActiveColumn }, index) => (
+        {flatList.map(({ tab, label, isActive, tabGroupIndex }) => (
           <TabItem
             key={`${tab.viewColumn}:${tab.label}`}
             tab={tab}
-            onOpen={() => void actions.openTab(index, tab)}
-            onClose={() => void actions.closeTab(index, tab)}
-            onTogglePin={() => void actions.togglePin(index, tab)}
-            viewColumnLabel={columnLabel}
-            isColumnActive={isActiveColumn}
+            onOpen={() => void actions.openTab(tabGroupIndex, tab)}
+            onClose={() => void actions.closeTab(tabGroupIndex, tab)}
+            onTogglePin={() => void actions.togglePin(tabGroupIndex, tab)}
+            viewColumnLabel={label}
+            isColumnActive={isActive}
           />
         ))}
       </ul>
@@ -115,35 +86,40 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
 
   return (
     <div className="tab-columns" role="list">
-      {columns.map(({ key, viewColumn, tabs, isActive }) => (
-        <div
-          key={key}
-          className={`tab-column${isActive ? ' active' : ''}`}
-          role="listitem"
-        >
-          <div className="tab-column-header">
-            <span className="tab-column-title">
-              {getColumnLabel(viewColumn)}
-            </span>
+      {columns.map(({ viewColumn, tabs, isActive }) => {
+        const columnLabel = getColumnLabel(viewColumn);
+
+        return (
+          <div
+            key={`${viewColumn}`}
+            className={`tab-column${isActive ? ' active' : ''}`}
+            role="listitem"
+          >
+            <div className="tab-column-header">
+              <span className="tab-column-title">
+                {columnLabel}
+              </span>
+            </div>
+            <ul className="tab-list" role="list">
+              {tabs.map((tab, index) => (
+                <TabItem
+                  key={`${tab.viewColumn}:${index}:${tab.label}`}
+                  tab={tab}
+                  onOpen={() => void actions.openTab(index, tab)}
+                  onClose={() => void actions.closeTab(index, tab)}
+                  onTogglePin={() => void actions.togglePin(index, tab)}
+                  viewColumnLabel={columnLabel}
+                  isColumnActive={isActive}
+                />
+              ))}
+              {tabs.length === 0 && (
+                <li className="no-tabs">No tabs in this column.</li>
+              )}
+            </ul>
           </div>
-          <ul className="tab-list" role="list">
-            {tabs.map((tab, index) => (
-              <TabItem
-                key={`${tab.viewColumn}:${tab.label}`}
-                tab={tab}
-                onOpen={() => void actions.openTab(index, tab)}
-                onClose={() => void actions.closeTab(index, tab)}
-                onTogglePin={() => void actions.togglePin(index, tab)}
-                viewColumnLabel={getColumnLabel(viewColumn)}
-                isColumnActive={isActive}
-              />
-            ))}
-            {tabs.length === 0 && (
-              <li className="no-tabs">No tabs in this column.</li>
-            )}
-          </ul>
-        </div>
-      ))}
+        );
+        }
+      )}
     </div>
   );
 };
