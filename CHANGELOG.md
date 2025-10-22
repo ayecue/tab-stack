@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 23-10-2025
+
+### Added
+
+- Groups are now automatically sorted by most recently selected (most recent first)
+- Git integration with context-sensitive group management
+  - AutoSwitch mode: Automatically switch to a group when switching Git branches (if group exists)
+  - AutoCreate mode: Automatically create a group for new Git branches
+  - FullAuto mode: Combination of AutoSwitch and AutoCreate
+  - Configurable group prefix for Git-based groups
+- Settings panel in webview for managing extension configuration
+- Workspace folder selection from the UI
+- Timestamp tracking on group entities (`lastSelectedAt`)
+
 ## [1.0.7] - 19-10-2025
 
 ### Fix
