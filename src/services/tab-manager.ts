@@ -20,6 +20,12 @@ import {
   unpinEditor
 } from '../utils/commands';
 import { delay } from '../utils/delay';
+import {
+  closeAllTabs,
+  closeTab,
+  findTabByViewColumnAndIndex,
+  findTabGroupByViewColumn
+} from '../utils/tab-utils';
 import { EditorLayoutService } from './editor-layout';
 import { TabStateService } from './tab-state';
 
@@ -107,32 +113,6 @@ export class TabManagerService implements ITabManagerService {
         void window.showInformationMessage(message);
         break;
     }
-  }
-
-  findTabGroupByViewColumn(viewColumn: number): TabGroup | null {
-    if (!this._stateService) {
-      return null;
-    }
-
-    const targetGroup = window.tabGroups.all.find(
-      (group) => group.viewColumn === viewColumn
-    );
-
-    return targetGroup || null;
-  }
-
-  findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null {
-    if (!this._stateService) {
-      return null;
-    }
-
-    const targetGroup = this.findTabGroupByViewColumn(viewColumn);
-
-    if (!targetGroup) {
-      return null;
-    }
-
-    return targetGroup.tabs[index] || null;
   }
 
   async refresh() {
@@ -227,7 +207,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
-    const targetTab = this.findTabByViewColumnAndIndex(viewColumn, index);
+    const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
 
     if (!targetTab) {
       this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
@@ -247,7 +227,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async openTab(viewColumn: number, index: number): Promise<void> {
-    const targetGroup = this.findTabGroupByViewColumn(viewColumn);
+    const targetGroup = findTabGroupByViewColumn(viewColumn);
 
     if (!targetGroup) {
       this.notify(
@@ -265,20 +245,18 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async closeTab(viewColumn: number, index: number): Promise<void> {
-    const targetTab = this.findTabByViewColumnAndIndex(viewColumn, index);
+    const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
 
     if (!targetTab) {
       this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
       return;
     }
 
-    await window.tabGroups.close(targetTab);
+    await closeTab(targetTab);
   }
 
   async clearAllTabs(): Promise<void> {
-    for (const group of window.tabGroups.all) {
-      await window.tabGroups.close(group, true);
-    }
+    await closeAllTabs();
   }
 
   async triggerSync() {

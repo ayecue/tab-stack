@@ -38,9 +38,6 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
 }
 
 export interface ITabManagerService extends Disposable {
-  findTabGroupByViewColumn(viewColumn: number): TabGroup | null;
-  findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null;
-
   refresh: () => Promise<void>;
   applyState(): Promise<void>;
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
