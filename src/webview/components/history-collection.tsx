@@ -61,7 +61,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
           <div className="section-search">
             <i className="codicon codicon-search" aria-hidden="true" />
             <input
-              type="search"
+              type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search snapshots"

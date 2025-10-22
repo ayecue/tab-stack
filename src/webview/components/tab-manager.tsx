@@ -10,6 +10,7 @@ import { TabToolbar } from './tab-toolbar';
 const TabManagerContent: React.FC = () => {
   const { state, actions } = useTabContext();
   const [viewMode, setViewMode] = useState<'columns' | 'flat'>('columns');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const totals = useMemo(() => {
     const tabGroups = state.payload?.tabGroups ?? {};
@@ -100,6 +101,8 @@ const TabManagerContent: React.FC = () => {
             onViewModeChange={setViewMode}
             totals={totals}
             isLoading={state.loading}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
             actions={{
               onRefresh: () =>
                 void actions
@@ -120,7 +123,7 @@ const TabManagerContent: React.FC = () => {
             }}
           />
 
-          <TabList viewMode={viewMode} />
+          <TabList viewMode={viewMode} searchTerm={searchTerm} />
         </section>
       </div>
     </div>

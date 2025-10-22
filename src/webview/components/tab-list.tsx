@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { TabInfo } from '../../types/tabs';
 import { useTabContext } from '../hooks/use-tab-context';
@@ -6,6 +6,7 @@ import { TabItem } from './tab-item';
 
 interface TabListProps {
   viewMode: 'columns' | 'flat';
+  searchTerm: string;
 }
 
 interface ColumnInfo {
@@ -16,33 +17,87 @@ interface ColumnInfo {
   isActive: boolean;
 }
 
-export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
+interface TabWithIndex {
+  tab: TabInfo;
+  originalIndex: number;
+}
+
+export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
   const { state, actions } = useTabContext();
   const tabGroups = state.payload?.tabGroups ?? {};
   const getColumnLabel = (viewColumn: number) => {
     return `Column ${viewColumn}`;
   };
 
-  const columns = Object.values(tabGroups).map((group) => {
-    const displayName = group.activeTab ? group.activeTab.label : null;
+  const matchesSearch = (tab: TabInfo, term: string): boolean => {
+    if (!term.trim()) return true;
+    const lowerTerm = term.toLowerCase();
 
-    return {
-      viewColumn: group.viewColumn,
-      label: displayName,
-      tabs: group.tabs,
-      isActive: state.payload?.activeGroup === group.viewColumn
-    };
-  });
+    // Check label
+    if (tab.label.toLowerCase().includes(lowerTerm)) {
+      return true;
+    }
 
-  const flatList = columns.flatMap((group) =>
-    group.tabs.map((tab, index) => ({
-      label: getColumnLabel(group.viewColumn),
-      isActive: group.isActive,
-      tabGroupIndex: index,
-      viewColumn: group.viewColumn,
-      tab
-    }))
-  );
+    // Check URI for tab types that have it
+    if ('uri' in tab && tab.uri && tab.uri.toLowerCase().includes(lowerTerm)) {
+      return true;
+    }
+
+    // Check URIs for diff types
+    if ('originalUri' in tab) {
+      if (
+        tab.originalUri &&
+        tab.originalUri.toLowerCase().includes(lowerTerm)
+      ) {
+        return true;
+      }
+      if (
+        'modifiedUri' in tab &&
+        tab.modifiedUri &&
+        tab.modifiedUri.toLowerCase().includes(lowerTerm)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const columns = useMemo(() => {
+    return Object.values(tabGroups).map((group) => {
+      const displayName = group.activeTab ? group.activeTab.label : null;
+
+      // Map tabs with their original indices before filtering
+      const tabsWithIndices: TabWithIndex[] = group.tabs.map((tab, index) => ({
+        tab,
+        originalIndex: index
+      }));
+
+      // Filter tabs based on search term while preserving original indices
+      const filteredTabs = searchTerm.trim()
+        ? tabsWithIndices.filter(({ tab }) => matchesSearch(tab, searchTerm))
+        : tabsWithIndices;
+
+      return {
+        viewColumn: group.viewColumn,
+        label: displayName,
+        tabs: filteredTabs,
+        isActive: state.payload?.activeGroup === group.viewColumn
+      };
+    });
+  }, [tabGroups, searchTerm, state.payload?.activeGroup]);
+
+  const flatList = useMemo(() => {
+    return columns.flatMap((group) =>
+      group.tabs.map(({ tab, originalIndex }) => ({
+        label: getColumnLabel(group.viewColumn),
+        isActive: group.isActive,
+        tabGroupIndex: originalIndex,
+        viewColumn: group.viewColumn,
+        tab
+      }))
+    );
+  }, [columns]);
 
   const totalVisibleTabs = flatList.length;
 
@@ -56,6 +111,14 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
   }
 
   if (totalVisibleTabs === 0) {
+    if (searchTerm.trim()) {
+      return (
+        <div className="tab-empty-state">
+          <i className="codicon codicon-search-fuzzy" aria-hidden="true" />
+          <p>No tabs match "{searchTerm}"</p>
+        </div>
+      );
+    }
     return (
       <div className="tab-empty-state">
         <i className="codicon codicon-search-fuzzy" aria-hidden="true" />
@@ -97,19 +160,23 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
               <span className="tab-column-title">{columnLabel}</span>
             </div>
             <ul className="tab-list" role="list">
-              {tabs.map((tab, index) => (
+              {tabs.map(({ tab, originalIndex }) => (
                 <TabItem
-                  key={`${tab.viewColumn}:${index}:${tab.label}`}
+                  key={`${tab.viewColumn}:${originalIndex}:${tab.label}`}
                   tab={tab}
-                  onOpen={() => void actions.openTab(index, tab)}
-                  onClose={() => void actions.closeTab(index, tab)}
-                  onTogglePin={() => void actions.togglePin(index, tab)}
+                  onOpen={() => void actions.openTab(originalIndex, tab)}
+                  onClose={() => void actions.closeTab(originalIndex, tab)}
+                  onTogglePin={() => void actions.togglePin(originalIndex, tab)}
                   viewColumnLabel={columnLabel}
                   isColumnActive={isActive}
                 />
               ))}
               {tabs.length === 0 && (
-                <li className="no-tabs">No tabs in this column.</li>
+                <li className="no-tabs">
+                  {searchTerm.trim()
+                    ? 'No tabs match that search.'
+                    : 'No tabs in this column.'}
+                </li>
               )}
             </ul>
           </div>

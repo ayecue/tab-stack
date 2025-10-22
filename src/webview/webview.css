@@ -243,18 +243,97 @@ body {
   color: var(--vscode-button-foreground);
 }
 
-.tab-toolbar-meta {
+.tab-toolbar-search {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.tab-toolbar-search .search-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  height: 28px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  width: 100%;
+}
+
+.tab-toolbar-search .search-input:focus-within {
+  border-color: var(--vscode-focusBorder);
+}
+
+.tab-toolbar-search .search-input input {
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  font-size: 12px;
+  line-height: 1.2;
+  min-width: 0;
+  outline: none;
+}
+
+.tab-toolbar-search .search-input input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.tab-toolbar-search .clear-search {
+  border: none;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.tab-toolbar-search .clear-search:hover {
+  color: var(--vscode-foreground);
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.tab-toolbar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.tab-toolbar-controls .action-group {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.toolbar-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
   width: 100%;
 }
 
-.toolbar-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.toggle-group {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 1px;
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  width: 100%;
 }
 
 .toolbar-stat {
