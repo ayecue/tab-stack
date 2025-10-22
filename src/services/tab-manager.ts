@@ -275,6 +275,12 @@ export class TabManagerService implements ITabManagerService {
     await window.tabGroups.close(targetTab);
   }
 
+  async clearAllTabs(): Promise<void> {
+    for (const group of window.tabGroups.all) {
+      await window.tabGroups.close(group, true);
+    }
+  }
+
   async triggerSync() {
     if (!this._stateService) {
       return;

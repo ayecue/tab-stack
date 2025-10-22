@@ -23,28 +23,26 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
     return `Column ${viewColumn}`;
   };
 
-  const columns = Object.values(tabGroups)
-    .map((group) => {
-      const displayName = group.activeTab ? group.activeTab.label : null;
+  const columns = Object.values(tabGroups).map((group) => {
+    const displayName = group.activeTab ? group.activeTab.label : null;
 
-      return {
-        viewColumn: group.viewColumn,
-        label: displayName,
-        tabs: group.tabs,
-        isActive: state.payload?.activeGroup === group.viewColumn
-      };
-    });
+    return {
+      viewColumn: group.viewColumn,
+      label: displayName,
+      tabs: group.tabs,
+      isActive: state.payload?.activeGroup === group.viewColumn
+    };
+  });
 
-  const flatList = columns
-    .flatMap((group) =>
-      group.tabs.map((tab, index) => ({
-        label: getColumnLabel(group.viewColumn),
-        isActive: group.isActive,
-        tabGroupIndex: index,
-        viewColumn: group.viewColumn,
-        tab
-      }))
-    );
+  const flatList = columns.flatMap((group) =>
+    group.tabs.map((tab, index) => ({
+      label: getColumnLabel(group.viewColumn),
+      isActive: group.isActive,
+      tabGroupIndex: index,
+      viewColumn: group.viewColumn,
+      tab
+    }))
+  );
 
   const totalVisibleTabs = flatList.length;
 
@@ -96,9 +94,7 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
             role="listitem"
           >
             <div className="tab-column-header">
-              <span className="tab-column-title">
-                {columnLabel}
-              </span>
+              <span className="tab-column-title">{columnLabel}</span>
             </div>
             <ul className="tab-list" role="list">
               {tabs.map((tab, index) => (
@@ -118,8 +114,7 @@ export const TabList: React.FC<TabListProps> = ({ viewMode }) => {
             </ul>
           </div>
         );
-        }
-      )}
+      })}
     </div>
   );
 };

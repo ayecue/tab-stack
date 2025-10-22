@@ -46,6 +46,7 @@ export interface ITabManagerService extends Disposable {
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
   openTab(viewColumn: number, index: number): Promise<void>;
   closeTab(viewColumn: number, index: number): Promise<void>;
+  clearAllTabs(): Promise<void>;
   createGroup(groupId: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;
   renameGroup(groupId: string, nextGroupId: string): Promise<void>;

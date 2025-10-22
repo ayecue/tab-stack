@@ -37,6 +37,10 @@ export class MessageHandler implements Disposable {
         await tabManager.closeTab(columnView, index);
         break;
       }
+      case WebviewMessageType.ClearAllTabs: {
+        await tabManager.clearAllTabs();
+        break;
+      }
       case WebviewMessageType.TabTogglePin: {
         const { columnView, index } = data as WebviewTabTogglePinMessage;
         await tabManager.toggleTabPin(columnView, index);

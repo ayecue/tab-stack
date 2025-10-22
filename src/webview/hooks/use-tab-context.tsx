@@ -41,6 +41,7 @@ interface TabContextValue {
     requestRefresh: () => Promise<void>;
     openTab: (index: number, tab: TabInfo) => Promise<void>;
     closeTab: (index: number, tab: TabInfo) => Promise<void>;
+    clearAllTabs: () => Promise<void>;
     togglePin: (index: number, tab: TabInfo) => Promise<void>;
     saveGroup: (groupId: string) => Promise<void>;
     renameGroup: (groupId: string, nextGroupId: string) => Promise<void>;
@@ -188,6 +189,15 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
       },
       [messagingService, handleError, state.payload]
     ),
+
+    clearAllTabs: useCallback(async (): Promise<void> => {
+      try {
+        messagingService.clearAllTabs();
+      } catch (error) {
+        handleError(error, 'clear all tabs');
+        throw error;
+      }
+    }, [messagingService, handleError]),
 
     togglePin: useCallback(
       async (index: number, tab: TabInfo): Promise<void> => {

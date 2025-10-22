@@ -34,6 +34,7 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
 export enum WebviewMessageType {
   TabOpen = 'tab-open',
   TabClose = 'tab-close',
+  ClearAllTabs = 'clear-all-tabs',
   TabTogglePin = 'tab-toggle-pin',
   SwitchGroup = 'switch-group',
   NewGroup = 'new-group',
@@ -60,6 +61,10 @@ export interface WebviewTabCloseMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabClose;
   index: number;
   columnView: number;
+}
+
+export interface WebviewClearAllTabsMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ClearAllTabs;
 }
 
 export interface WebviewTabTogglePinMessage extends BaseWebviewMessage {

@@ -42,12 +42,8 @@ const TabManagerContent: React.FC = () => {
     if (!tabGroups) {
       return;
     }
-    Object.values(tabGroups).forEach((group) => {
-      group.tabs.forEach((tab, index) => {
-        void actions
-          .closeTab(index, tab)
-          .catch((error) => console.error('Failed to close tab', error));
-      });
+    actions.clearAllTabs().catch((error) => {
+      console.error('Failed to close all tabs', error);
     });
   }, [actions, state.payload?.tabGroups]);
 

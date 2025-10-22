@@ -1,6 +1,7 @@
 import {
   WebviewAddToHistoryMessage,
   WebviewAssignQuickSlotMessage,
+  WebviewClearAllTabsMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
@@ -44,6 +45,13 @@ export class TabMessagingService {
       type: WebviewMessageType.TabClose,
       index,
       columnView
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async clearAllTabs(): Promise<void> {
+    const message: WebviewClearAllTabsMessage = {
+      type: WebviewMessageType.ClearAllTabs
     };
     this.messenger.sendMessage(message);
   }
