@@ -9,6 +9,7 @@ import {
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
   WebviewRenameGroupMessage,
+  WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
@@ -83,6 +84,15 @@ export class MessageHandler implements Disposable {
       case WebviewMessageType.AssignQuickSlot: {
         const { slot, groupId } = data as WebviewAssignQuickSlotMessage;
         await tabManager.assignQuickSlot(slot, groupId);
+        break;
+      }
+      case WebviewMessageType.SelectWorkspaceFolder: {
+        const { folderPath } = data as WebviewSelectWorkspaceFolderMessage;
+        await tabManager.selectWorkspaceFolder(folderPath);
+        break;
+      }
+      case WebviewMessageType.ClearWorkspaceFolder: {
+        await tabManager.clearWorkspaceFolder();
         break;
       }
       case WebviewMessageType.Sync: {

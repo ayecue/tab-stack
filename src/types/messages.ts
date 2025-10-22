@@ -29,6 +29,8 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   groups: string[];
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
+  masterWorkspaceFolder: string | null;
+  availableWorkspaceFolders: Array<{ name: string; path: string }>;
 }
 
 export enum WebviewMessageType {
@@ -44,7 +46,9 @@ export enum WebviewMessageType {
   DeleteHistory = 'delete-history',
   RecoverState = 'recover-state',
   AssignQuickSlot = 'assign-quick-slot',
-  Sync = 'sync'
+  Sync = 'sync',
+  SelectWorkspaceFolder = 'select-workspace-folder',
+  ClearWorkspaceFolder = 'clear-workspace-folder'
 }
 
 export interface BaseWebviewMessage {
@@ -117,4 +121,14 @@ export interface WebviewAssignQuickSlotMessage extends BaseWebviewMessage {
 
 export interface WebviewSyncMessage extends BaseWebviewMessage {
   type: WebviewMessageType.Sync;
+}
+
+export interface WebviewSelectWorkspaceFolderMessage
+  extends BaseWebviewMessage {
+  type: WebviewMessageType.SelectWorkspaceFolder;
+  folderPath: string | null;
+}
+
+export interface WebviewClearWorkspaceFolderMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ClearWorkspaceFolder;
 }

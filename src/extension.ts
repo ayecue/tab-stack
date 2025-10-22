@@ -2,6 +2,7 @@ import { ExtensionContext, window } from 'vscode';
 
 import { createCommands } from './create-commands';
 import { ViewManagerProvider } from './providers/view-manager';
+import { ConfigService } from './services/config';
 import { EditorLayoutService } from './services/editor-layout';
 import { TabManagerService } from './services/tab-manager';
 import { TabStateService } from './services/tab-state';
@@ -9,13 +10,18 @@ import { getEditorLayout } from './utils/commands';
 
 export async function activate(context: ExtensionContext) {
   const layoutService = new EditorLayoutService();
-  const stateService = new TabStateService();
+  const configService = new ConfigService();
+  const stateService = new TabStateService(configService);
 
   await stateService.initialize();
   layoutService.setLayout(await getEditorLayout());
   layoutService.start();
 
-  const tabManagerService = new TabManagerService(stateService, layoutService);
+  const tabManagerService = new TabManagerService(
+    stateService,
+    layoutService,
+    configService
+  );
   const viewManagerProvider = new ViewManagerProvider(
     context,
     tabManagerService
@@ -31,6 +37,7 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(
     stateService,
     layoutService,
+    configService,
     tabManagerService,
     viewManagerProvider,
     ...createCommands(tabManagerService)

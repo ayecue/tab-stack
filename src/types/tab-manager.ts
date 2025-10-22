@@ -54,6 +54,8 @@ export interface ITabManagerService extends Disposable {
   assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): Promise<void>;
   applyQuickSlot(slot: QuickSlotIndex): Promise<void>;
   quickSwitch(): Promise<void>;
+  selectWorkspaceFolder(folderPath: string | null): Promise<void>;
+  clearWorkspaceFolder(): Promise<void>;
 
   triggerSync(): Promise<void>;
 

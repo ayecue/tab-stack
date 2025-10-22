@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { TabProvider, useTabContext } from '../hooks/use-tab-context';
 import { CollectionsPanel } from './collections-panel';
 import { Header } from './header';
+import { SettingsPanel } from './settings-panel';
 import { TabList } from './tab-list';
 import { TabToolbar } from './tab-toolbar';
 
@@ -89,6 +90,7 @@ const TabManagerContent: React.FC = () => {
 
       <div className="tab-manager-shell">
         <aside className="tab-manager-sidebar">
+          <SettingsPanel />
           <CollectionsPanel />
         </aside>
 

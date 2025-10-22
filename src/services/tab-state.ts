@@ -17,6 +17,7 @@ import { getEditorLayout } from '../utils/commands';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
+import { ConfigService } from './config';
 
 export class TabStateService implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
@@ -34,8 +35,10 @@ export class TabStateService implements Disposable {
   private _previousSelectedGroup: GroupSelectionValue | null;
   private _quickSlots: QuickSlotAssignments | null;
   private _state: TabManagerState | null;
+  private _configService: ConfigService;
 
-  constructor() {
+  constructor(configService: ConfigService) {
+    this._configService = configService;
     this._history = null;
     this._groups = null;
     this._selectedGroup = null;
@@ -311,7 +314,8 @@ export class TabStateService implements Disposable {
   }
 
   private async fetchStateFile(): Promise<StorageFile<TabStateFileContent>> {
-    const workspaceUri: Uri | null = await getWorkspaceFolder();
+    const masterFolderPath = this._configService.getMasterWorkspaceFolder();
+    const workspaceUri = Uri.parse(masterFolderPath);
 
     if (!workspaceUri) {
       this._file = new InMemoryJsonFile<TabStateFileContent>(
@@ -323,6 +327,7 @@ export class TabStateService implements Disposable {
     }
 
     const vscodeDir = Uri.joinPath(workspaceUri, '.vscode');
+    console.log('Loading state file from workspace:', vscodeDir?.fsPath);
     await workspace.fs.createDirectory(vscodeDir);
 
     const filePath = Uri.joinPath(vscodeDir, 'tmstate.json');
@@ -435,6 +440,12 @@ export class TabStateService implements Disposable {
   async getQuickSlotAssignment(slot: QuickSlotIndex): Promise<string | null> {
     const quickSlots = await this.getQuickSlots();
     return quickSlots[slot] ?? null;
+  }
+
+  async reloadStateFile(): Promise<void> {
+    this._file = null;
+    this._pendingFile = null;
+    await this.initialize();
   }
 
   private async _save() {

@@ -255,7 +255,17 @@
         "mac": "cmd+alt+shift+0"
       }
     ],
-    "configuration": []
+    "configuration": {
+      "type": "object",
+      "title": "Tab Stack",
+      "properties": {
+        "tabStack.masterWorkspaceFolder": {
+          "type": "string",
+          "default": null,
+          "description": "Path to the workspace folder to use for storing tab state and tracking git branches. If not set, the first workspace folder will be used."
+        }
+      }
+    }
   },
   "dependencies": {
     "@vscode/debugadapter": "^1.68.0",

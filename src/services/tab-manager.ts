@@ -26,6 +26,7 @@ import {
   findTabByViewColumnAndIndex,
   findTabGroupByViewColumn
 } from '../utils/tab-utils';
+import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
 import { TabStateService } from './tab-state';
 
@@ -37,6 +38,7 @@ export class TabManagerService implements ITabManagerService {
 
   private _stateService: TabStateService;
   private _layoutService: EditorLayoutService;
+  private _configService: ConfigService;
 
   private _syncViewEmitter: EventEmitter<
     Omit<ExtensionTabsSyncMessage, 'type'>
@@ -51,15 +53,18 @@ export class TabManagerService implements ITabManagerService {
   private _onDidChangeActiveEditorListener?: Disposable;
   private _onDidChangeTextEditorOptionsListener?: Disposable;
   private _onDidChangeEditorLayoutListener?: Disposable;
+  private _onDidChangeConfigListener?: Disposable;
 
   constructor(
     stateService: TabStateService,
-    layoutService: EditorLayoutService
+    layoutService: EditorLayoutService,
+    configService: ConfigService
   ) {
     this._nextRenderingItem = null;
     this._stateService = stateService;
     this._rendering = false;
     this._layoutService = layoutService;
+    this._configService = configService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
     >();
@@ -96,6 +101,13 @@ export class TabManagerService implements ITabManagerService {
       window.onDidChangeTextEditorOptions(() => void this.refresh());
     this._onDidChangeEditorLayoutListener =
       this._layoutService.onDidChangeLayout(() => void this.refresh());
+    this._onDidChangeConfigListener = this._configService.onDidChangeConfig(
+      async () => {
+        await this._stateService.reloadStateFile();
+        await this.applyState();
+        await this.triggerSync();
+      }
+    );
   }
 
   private notify(kind: ExtensionNotificationKind, message: string) {
@@ -274,12 +286,23 @@ export class TabManagerService implements ITabManagerService {
     const groupNames = Object.keys(groups);
     const historyKeys = Object.keys(history);
 
+    const masterWorkspaceFolder =
+      this._configService.getMasterWorkspaceFolder();
+    const availableWorkspaceFolders = this._configService
+      .getAvailableWorkspaceFolders()
+      .map((folder) => ({
+        name: folder.name,
+        path: folder.uri.toString()
+      }));
+
     this._syncViewEmitter.fire({
       tabState: state.tabState,
       history: historyKeys,
       groups: groupNames,
       selectedGroup: this._stateService.selectedGroup ?? null,
-      quickSlots
+      quickSlots,
+      masterWorkspaceFolder,
+      availableWorkspaceFolders
     });
   }
 
@@ -474,16 +497,26 @@ export class TabManagerService implements ITabManagerService {
     await this.triggerSync();
   }
 
+  async selectWorkspaceFolder(folderPath: string | null): Promise<void> {
+    await this._configService.setMasterWorkspaceFolder(folderPath);
+  }
+
+  async clearWorkspaceFolder(): Promise<void> {
+    await this._configService.setMasterWorkspaceFolder(null);
+  }
+
   dispose() {
     this._onDidChangeTabsListener?.dispose();
     this._onDidChangeTabGroupsListener?.dispose();
     this._onDidChangeActiveEditorListener?.dispose();
     this._onDidChangeTextEditorOptionsListener?.dispose();
     this._onDidChangeEditorLayoutListener?.dispose();
+    this._onDidChangeConfigListener?.dispose();
     this._syncViewEmitter.dispose();
     this._notifyViewEmitter.dispose();
 
     this._stateService = null;
     this._layoutService = null;
+    this._configService = null;
   }
 }

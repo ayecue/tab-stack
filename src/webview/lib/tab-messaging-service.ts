@@ -2,12 +2,14 @@ import {
   WebviewAddToHistoryMessage,
   WebviewAssignQuickSlotMessage,
   WebviewClearAllTabsMessage,
+  WebviewClearWorkspaceFolderMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
   WebviewRenameGroupMessage,
+  WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
   WebviewSyncMessage,
   WebviewTabCloseMessage,
@@ -130,6 +132,21 @@ export class TabMessagingService {
       type: WebviewMessageType.AssignQuickSlot,
       slot,
       groupId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async selectWorkspaceFolder(folderPath: string | null): Promise<void> {
+    const message: WebviewSelectWorkspaceFolderMessage = {
+      type: WebviewMessageType.SelectWorkspaceFolder,
+      folderPath
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async clearWorkspaceFolder(): Promise<void> {
+    const message: WebviewClearWorkspaceFolderMessage = {
+      type: WebviewMessageType.ClearWorkspaceFolder
     };
     this.messenger.sendMessage(message);
   }

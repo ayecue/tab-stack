@@ -33,6 +33,8 @@ interface TabState {
   historyIds: string[];
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
+  masterWorkspaceFolder: string | null;
+  availableWorkspaceFolders: Array<{ name: string; path: string }>;
 }
 
 interface TabContextValue {
@@ -53,6 +55,8 @@ interface TabContextValue {
     deleteHistory: (historyId: string) => Promise<void>;
     assignQuickSlot: (slot: QuickSlotIndex, groupId: string) => Promise<void>;
     clearQuickSlot: (groupId: string) => Promise<void>;
+    selectWorkspaceFolder: (folderPath: string | null) => Promise<void>;
+    clearWorkspaceFolder: () => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -72,7 +76,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     groupIds: [],
     historyIds: [],
     selectedGroup: null,
-    quickSlots: {}
+    quickSlots: {},
+    masterWorkspaceFolder: null,
+    availableWorkspaceFolders: []
   });
 
   const [messenger] = useState(() =>
@@ -95,7 +101,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           groupIds: event.groups,
           historyIds: event.history,
           selectedGroup: event.selectedGroup,
-          quickSlots: event.quickSlots
+          quickSlots: event.quickSlots,
+          masterWorkspaceFolder: event.masterWorkspaceFolder,
+          availableWorkspaceFolders: event.availableWorkspaceFolders
         }));
       }
     );
@@ -323,7 +331,28 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
         }
       },
       [messagingService, handleError]
-    )
+    ),
+
+    selectWorkspaceFolder: useCallback(
+      async (folderPath: string | null): Promise<void> => {
+        try {
+          messagingService.selectWorkspaceFolder(folderPath);
+        } catch (error) {
+          handleError(error, 'select workspace folder');
+          throw error;
+        }
+      },
+      [messagingService, handleError]
+    ),
+
+    clearWorkspaceFolder: useCallback(async (): Promise<void> => {
+      try {
+        messagingService.clearWorkspaceFolder();
+      } catch (error) {
+        handleError(error, 'clear workspace folder');
+        throw error;
+      }
+    }, [messagingService, handleError])
   };
 
   const contextValue: TabContextValue = {
