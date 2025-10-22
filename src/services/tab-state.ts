@@ -14,7 +14,6 @@ import {
 } from '../types/tab-manager';
 import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
-import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { ConfigService } from './config';

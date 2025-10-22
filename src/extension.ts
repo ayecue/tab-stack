@@ -4,6 +4,7 @@ import { createCommands } from './create-commands';
 import { ViewManagerProvider } from './providers/view-manager';
 import { ConfigService } from './services/config';
 import { EditorLayoutService } from './services/editor-layout';
+import { GitService } from './services/git';
 import { TabManagerService } from './services/tab-manager';
 import { TabStateService } from './services/tab-state';
 import { getEditorLayout } from './utils/commands';
@@ -13,6 +14,16 @@ export async function activate(context: ExtensionContext) {
   const configService = new ConfigService();
   const stateService = new TabStateService(configService);
 
+  // Initialize git service with config service
+  const gitService = new GitService(configService);
+  const gitInitialized = await gitService.initialize();
+
+  if (!gitInitialized) {
+    console.warn(
+      'Git service failed to initialize - git integration will be disabled'
+    );
+  }
+
   await stateService.initialize();
   layoutService.setLayout(await getEditorLayout());
   layoutService.start();
@@ -20,7 +31,8 @@ export async function activate(context: ExtensionContext) {
   const tabManagerService = new TabManagerService(
     stateService,
     layoutService,
-    configService
+    configService,
+    gitInitialized ? gitService : null
   );
   const viewManagerProvider = new ViewManagerProvider(
     context,
@@ -42,6 +54,10 @@ export async function activate(context: ExtensionContext) {
     viewManagerProvider,
     ...createCommands(tabManagerService)
   );
+
+  if (gitInitialized) {
+    context.subscriptions.push(gitService);
+  }
 }
 
 export function deactivate() {}

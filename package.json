@@ -263,6 +263,31 @@
           "type": "string",
           "default": null,
           "description": "Path to the workspace folder to use for storing tab state and tracking git branches. If not set, the first workspace folder will be used."
+        },
+        "tabStack.gitIntegration.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic group management based on git branch changes."
+        },
+        "tabStack.gitIntegration.mode": {
+          "type": "string",
+          "enum": [
+            "auto-switch",
+            "auto-create",
+            "full-auto"
+          ],
+          "enumDescriptions": [
+            "Automatically switch to existing groups when branch changes",
+            "Automatically create groups for new branches and switch to them",
+            "Fully automatic: create groups for new branches and auto-switch between them"
+          ],
+          "default": "full-auto",
+          "description": "Git integration mode: how Tab Stack manages groups based on git branches."
+        },
+        "tabStack.gitIntegration.groupPrefix": {
+          "type": "string",
+          "default": "git:",
+          "description": "Prefix for automatically created git-based groups (e.g., 'git:main', 'git:feature/login')."
         }
       }
     }

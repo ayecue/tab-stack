@@ -1,10 +1,11 @@
 import { Disposable, EventEmitter, workspace, WorkspaceFolder } from 'vscode';
 
+import {
+  ConfigChangeEvent,
+  GitIntegrationConfig,
+  GitIntegrationMode
+} from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
-
-export interface ConfigChangeEvent {
-  masterWorkspaceFolder: string | null;
-}
 
 export class ConfigService implements Disposable {
   private _onDidChangeConfig: EventEmitter<ConfigChangeEvent>;
@@ -21,10 +22,18 @@ export class ConfigService implements Disposable {
 
   private initializeListeners() {
     this._configChangeListener = workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration('tabStack.masterWorkspaceFolder')) {
-        this._onDidChangeConfig.fire({
-          masterWorkspaceFolder: this.getMasterWorkspaceFolder()
-        });
+      const changes: ConfigChangeEvent = {
+        masterWorkspaceFolder: this.getMasterWorkspaceFolder()
+      };
+
+      if (
+        e.affectsConfiguration('tabStack.masterWorkspaceFolder') ||
+        e.affectsConfiguration('tabStack.gitIntegration')
+      ) {
+        if (e.affectsConfiguration('tabStack.gitIntegration')) {
+          changes.gitIntegration = this.getGitIntegrationConfig();
+        }
+        this._onDidChangeConfig.fire(changes);
       }
     });
   }
@@ -39,6 +48,26 @@ export class ConfigService implements Disposable {
   async setMasterWorkspaceFolder(folderPath: string | null): Promise<void> {
     const config = workspace.getConfiguration('tabStack');
     await config.update('masterWorkspaceFolder', folderPath, false);
+  }
+
+  getGitIntegrationConfig(): GitIntegrationConfig {
+    const config = workspace.getConfiguration('tabStack.gitIntegration');
+
+    return {
+      enabled: config.get<boolean>('enabled', false),
+      mode: config.get<GitIntegrationMode>('mode', GitIntegrationMode.FullAuto),
+      groupPrefix: config.get<string>('groupPrefix', 'git:')
+    };
+  }
+
+  async setGitIntegrationEnabled(enabled: boolean): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.gitIntegration');
+    await config.update('enabled', enabled, false);
+  }
+
+  async setGitIntegrationMode(mode: GitIntegrationMode): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.gitIntegration');
+    await config.update('mode', mode, false);
   }
 
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {

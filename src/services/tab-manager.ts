@@ -1,5 +1,6 @@
 import { Disposable, EventEmitter, window } from 'vscode';
 
+import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
@@ -28,6 +29,7 @@ import {
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
+import { GitBranchChangeEvent, GitService } from './git';
 import { TabStateService } from './tab-state';
 
 export class TabManagerService implements ITabManagerService {
@@ -39,6 +41,7 @@ export class TabManagerService implements ITabManagerService {
   private _stateService: TabStateService;
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
+  private _gitService: GitService | null;
 
   private _syncViewEmitter: EventEmitter<
     Omit<ExtensionTabsSyncMessage, 'type'>
@@ -48,23 +51,20 @@ export class TabManagerService implements ITabManagerService {
     Omit<ExtensionNotificationMessage, 'type'>
   >;
 
-  private _onDidChangeTabsListener?: Disposable;
-  private _onDidChangeTabGroupsListener?: Disposable;
-  private _onDidChangeActiveEditorListener?: Disposable;
-  private _onDidChangeTextEditorOptionsListener?: Disposable;
-  private _onDidChangeEditorLayoutListener?: Disposable;
-  private _onDidChangeConfigListener?: Disposable;
+  private _disposables: Disposable[] = [];
 
   constructor(
     stateService: TabStateService,
     layoutService: EditorLayoutService,
-    configService: ConfigService
+    configService: ConfigService,
+    gitService: GitService | null = null
   ) {
     this._nextRenderingItem = null;
     this._stateService = stateService;
     this._rendering = false;
     this._layoutService = layoutService;
     this._configService = configService;
+    this._gitService = gitService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
     >();
@@ -88,26 +88,78 @@ export class TabManagerService implements ITabManagerService {
   }
 
   private initializeEvents() {
-    this._onDidChangeTabsListener = window.tabGroups.onDidChangeTabs(
-      () => void this.refresh()
+    this._disposables.push(
+      window.tabGroups.onDidChangeTabs(() => void this.refresh())
     );
-    this._onDidChangeTabGroupsListener = window.tabGroups.onDidChangeTabGroups(
-      () => void this.refresh()
+    this._disposables.push(
+      window.tabGroups.onDidChangeTabGroups(() => void this.refresh())
     );
-    this._onDidChangeActiveEditorListener = window.onDidChangeActiveTextEditor(
-      () => void this.refresh()
+    this._disposables.push(
+      window.onDidChangeActiveTextEditor(() => void this.refresh())
     );
-    this._onDidChangeTextEditorOptionsListener =
-      window.onDidChangeTextEditorOptions(() => void this.refresh());
-    this._onDidChangeEditorLayoutListener =
-      this._layoutService.onDidChangeLayout(() => void this.refresh());
-    this._onDidChangeConfigListener = this._configService.onDidChangeConfig(
-      async () => {
-        await this._stateService.reloadStateFile();
-        await this.applyState();
-        await this.triggerSync();
-      }
+    this._disposables.push(
+      window.onDidChangeTextEditorOptions(() => void this.refresh())
     );
+    this._disposables.push(
+      this._layoutService.onDidChangeLayout(() => void this.refresh())
+    );
+    this._disposables.push(
+      this._configService.onDidChangeConfig(async (changes) => {
+        if (changes.masterWorkspaceFolder !== undefined) {
+          await this._stateService.reloadStateFile();
+          await this.applyState();
+          await this.triggerSync();
+        }
+      })
+    );
+    this._disposables.push(
+      this._gitService.onDidChangeBranch(
+        (event) => void this._handleBranchChange(event)
+      )
+    );
+  }
+
+  private async _handleBranchChange(event: GitBranchChangeEvent) {
+    const gitConfig = this._configService.getGitIntegrationConfig();
+
+    if (!gitConfig.enabled) return;
+
+    if (!event.currentBranch) {
+      this.notify(
+        ExtensionNotificationKind.Warning,
+        'Branch change detected but no current branch'
+      );
+      return;
+    }
+
+    const groupId = `${gitConfig.groupPrefix}${event.currentBranch}`;
+    const groups = await this._stateService.getGroups();
+    const groupExists = !!groups[groupId];
+
+    switch (gitConfig.mode) {
+      case GitIntegrationMode.AutoSwitch:
+        // Only switch if group exists
+        if (groupExists) {
+          await this.switchToGroup(groupId);
+        }
+        break;
+
+      case GitIntegrationMode.AutoCreate:
+        // Create group if it doesn't exist
+        if (!groupExists) {
+          await this.createGroup(groupId);
+        }
+        break;
+
+      case GitIntegrationMode.FullAuto:
+        // Create if doesn't exist, then switch
+        if (!groupExists) {
+          await this.createGroup(groupId);
+        } else {
+          await this.switchToGroup(groupId);
+        }
+        break;
+    }
   }
 
   private notify(kind: ExtensionNotificationKind, message: string) {
@@ -506,17 +558,15 @@ export class TabManagerService implements ITabManagerService {
   }
 
   dispose() {
-    this._onDidChangeTabsListener?.dispose();
-    this._onDidChangeTabGroupsListener?.dispose();
-    this._onDidChangeActiveEditorListener?.dispose();
-    this._onDidChangeTextEditorOptionsListener?.dispose();
-    this._onDidChangeEditorLayoutListener?.dispose();
-    this._onDidChangeConfigListener?.dispose();
+    this._disposables.forEach((d) => d.dispose());
+    this._disposables = [];
     this._syncViewEmitter.dispose();
     this._notifyViewEmitter.dispose();
 
     this._stateService = null;
     this._layoutService = null;
+    this._configService = null;
+    this._gitService = null;
     this._configService = null;
   }
 }
