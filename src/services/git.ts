@@ -95,7 +95,8 @@ export class GitService implements Disposable {
   private _attachToRepository(repository: Repository): void {
     if (
       this._currentRepository &&
-      this._currentRepository.rootUri.toString() === repository.rootUri.toString()
+      this._currentRepository.rootUri.toString() ===
+        repository.rootUri.toString()
     ) {
       return; // Already monitoring this repository
     }

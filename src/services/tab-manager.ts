@@ -334,8 +334,15 @@ export class TabManagerService implements ITabManagerService {
       this._stateService.getHistory(),
       this._stateService.getQuickSlots()
     ]);
-
     const groupNames = Object.keys(groups);
+
+    // Sort groups by most recently selected (descending)
+    groupNames.sort((a, b) => {
+      const timeA = groups[a].lastSelectedAt || 0;
+      const timeB = groups[b].lastSelectedAt || 0;
+      return timeB - timeA; // Most recent first
+    });
+
     const historyKeys = Object.keys(history);
 
     const masterWorkspaceFolder =
@@ -363,7 +370,11 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    if (!groupId || this._stateService.selectedGroup === groupId) {
+    if (this._stateService.selectedGroup === groupId) {
+      return;
+    }
+
+    if (!groupId) {
       await this._stateService.setSelectedGroup(EMPTY_GROUP_SELECTION);
       await this.triggerSync();
       return;

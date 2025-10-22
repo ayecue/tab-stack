@@ -14,9 +14,10 @@ export type QuickSlotAssignments = Partial<Record<QuickSlotIndex, string>>;
 export interface TabManagerState {
   tabState: TabState;
   layout: Layout;
+  lastSelectedAt?: number;
 }
 
-export const EMPTY_GROUP_SELECTION = undefined;
+export const EMPTY_GROUP_SELECTION: undefined = void 0;
 export type GroupSelectionValue = string | typeof EMPTY_GROUP_SELECTION;
 
 export interface TabStateFileContent {

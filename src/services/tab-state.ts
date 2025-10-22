@@ -71,6 +71,15 @@ export class TabStateService implements Disposable {
     this._previousSelectedGroup = this._selectedGroup;
     this._selectedGroup = groupId;
 
+    // Update the last selected timestamp on the group entity
+    if (groupId !== EMPTY_GROUP_SELECTION) {
+      const groups = await this.getGroups();
+      if (groups[groupId]) {
+        groups[groupId].lastSelectedAt = Date.now();
+        this._groups = groups;
+      }
+    }
+
     await this.save();
   }
 
@@ -401,7 +410,7 @@ export class TabStateService implements Disposable {
     }
 
     const stateFile = await this.getStateFile();
-    const storedQuickSlots = stateFile?.data?.quickSlots ?? {};
+    const storedQuickSlots = stateFile?.data?.quickSlots || {};
 
     this._quickSlots = storedQuickSlots;
 
