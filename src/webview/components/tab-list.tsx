@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { TabInfo } from '../../types/tabs';
 import { useTabContext } from '../hooks/use-tab-context';

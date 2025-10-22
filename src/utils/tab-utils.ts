@@ -1,8 +1,4 @@
-import {
-  Tab,
-  TabGroup,
-  window
-} from 'vscode';
+import { Tab, TabGroup, window } from 'vscode';
 
 export function findTabByViewColumnAndIndex(
   viewColumn: number,

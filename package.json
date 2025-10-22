@@ -68,6 +68,16 @@
   "bugs": {
     "url": "https://github.com/ayecue/tab-stack/issues"
   },
+  "keywords": [
+    "tabs",
+    "groups",
+    "snapshots",
+    "tab management",
+    "tab groups",
+    "tab snapshots",
+    "workspace",
+    "productivity"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -140,6 +150,11 @@
       {
         "command": "tabStack.deleteSnapshot",
         "title": "Delete Tabs Snapshot",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.assignQuickSlot",
+        "title": "Assign Current Group to Quick Slot",
         "category": "Tab Stack"
       },
       {
