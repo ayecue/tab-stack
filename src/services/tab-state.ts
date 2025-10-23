@@ -76,7 +76,6 @@ export class TabStateService implements Disposable {
       const groups = await this.getGroups();
       if (groups[groupId]) {
         groups[groupId].lastSelectedAt = Date.now();
-        this._groups = groups;
       }
     }
 

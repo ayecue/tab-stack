@@ -26,7 +26,8 @@ export async function closeTab(tab: Tab): Promise<void> {
 }
 
 export async function closeAllTabs(): Promise<void> {
-  for (const group of window.tabGroups.all) {
+  for (let i = window.tabGroups.all.length - 1; i >= 0; i--) {
+    const group = window.tabGroups.all[i];
     await window.tabGroups.close(group, true);
   }
 }
