@@ -71,14 +71,6 @@ export class TabStateService implements Disposable {
     this._previousSelectedGroup = this._selectedGroup;
     this._selectedGroup = groupId;
 
-    // Update the last selected timestamp on the group entity
-    if (groupId !== EMPTY_GROUP_SELECTION) {
-      const groups = await this.getGroups();
-      if (groups[groupId]) {
-        groups[groupId].lastSelectedAt = Date.now();
-      }
-    }
-
     await this.save();
   }
 
@@ -177,6 +169,7 @@ export class TabStateService implements Disposable {
 
     if (groups && groups[name]) {
       this._state = groups[name];
+      this._state.lastSelectedAt = Date.now();
       await this.setSelectedGroup(name);
       return true;
     }
@@ -189,6 +182,7 @@ export class TabStateService implements Disposable {
 
     if (history && history[historyId]) {
       this._state = history[historyId];
+      this._state.lastSelectedAt = Date.now();
       await this.setSelectedGroup(EMPTY_GROUP_SELECTION);
       return true;
     }
@@ -206,8 +200,9 @@ export class TabStateService implements Disposable {
     const snapshot = await this.refreshState();
 
     groups[name] = snapshot;
-    await this.setSelectedGroup(name);
     this._state = snapshot;
+    this._state.lastSelectedAt = Date.now();
+    await this.setSelectedGroup(name);
 
     return true;
   }
