@@ -239,7 +239,6 @@ export class TabStateService implements Disposable {
 
     this._groups[nextId] = snapshot;
     delete this._groups[currentId];
-    this._quickSlots = quickSlots;
 
     await this.save();
 
