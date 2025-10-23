@@ -451,6 +451,12 @@ export class TabStateService implements Disposable {
   }
 
   async reloadStateFile(): Promise<void> {
+    this._groups = null;
+    this._history = null;
+    this._state = null;
+    this._selectedGroup = null;
+    this._previousSelectedGroup = null;
+    this._quickSlots = null;
     this._file = null;
     this._pendingFile = null;
     await this.initialize();
