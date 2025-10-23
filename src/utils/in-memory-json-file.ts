@@ -17,6 +17,10 @@ export class InMemoryJsonFile<T> implements StorageFile<T> {
     return this._data;
   }
 
+  set data(value: T) {
+    this._data = value;
+  }
+
   async save(data: T) {
     this._data = data;
   }

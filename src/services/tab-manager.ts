@@ -10,7 +10,7 @@ import {
   EMPTY_GROUP_SELECTION,
   ITabManagerService,
   QuickSlotIndex,
-  TabManagerState
+  StateContainer
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
 import {
@@ -36,7 +36,7 @@ export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100;
 
   private _rendering: boolean;
-  private _nextRenderingItem: TabManagerState;
+  private _nextRenderingItem: StateContainer;
 
   private _stateService: TabStateService;
   private _layoutService: EditorLayoutService;
@@ -132,31 +132,33 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const groupId = `${gitConfig.groupPrefix}${event.currentBranch}`;
+    const groupName = `${gitConfig.groupPrefix}${event.currentBranch}`;
     const groups = await this._stateService.getGroups();
-    const groupExists = !!groups[groupId];
+    const correlatingGroupId = Object.values(groups).find(
+      (g) => g.name === groupName
+    )?.id;
 
     switch (gitConfig.mode) {
       case GitIntegrationMode.AutoSwitch:
         // Only switch if group exists
-        if (groupExists) {
-          await this.switchToGroup(groupId);
+        if (correlatingGroupId) {
+          await this.switchToGroup(correlatingGroupId);
         }
         break;
 
       case GitIntegrationMode.AutoCreate:
         // Create group if it doesn't exist
-        if (!groupExists) {
-          await this.createGroup(groupId);
+        if (!correlatingGroupId) {
+          await this.createGroup(groupName);
         }
         break;
 
       case GitIntegrationMode.FullAuto:
         // Create if doesn't exist, then switch
-        if (!groupExists) {
-          await this.createGroup(groupId);
+        if (!correlatingGroupId) {
+          await this.createGroup(groupName);
         } else {
-          await this.switchToGroup(groupId);
+          await this.switchToGroup(correlatingGroupId);
         }
         break;
     }
@@ -222,7 +224,7 @@ export class TabManagerService implements ITabManagerService {
     const currentState = this._nextRenderingItem;
 
     this._nextRenderingItem = null;
-    this._layoutService.setLayout(currentState.layout);
+    this._layoutService.setLayout(currentState.state.layout);
 
     if (window.tabGroups.all.length > 0) {
       await Promise.all(
@@ -230,16 +232,17 @@ export class TabManagerService implements ITabManagerService {
       );
     }
 
-    await setEditorLayout(currentState.layout);
+    await setEditorLayout(currentState.state.layout);
 
-    const tabGroupItems = Object.values(currentState.tabState.tabGroups);
+    const tabGroupItems = Object.values(currentState.state.tabState.tabGroups);
     const pinnedTabs: { tab: TabInfo; index: number }[] = [];
     const activeTabs: { tab: TabInfo; index: number }[] = [];
     const focusedViewColumn =
-      currentState.tabState.tabGroups[currentState.tabState.activeGroup]
-        .viewColumn;
-    const focusedIndex = currentState.tabState.tabGroups[
-      currentState.tabState.activeGroup
+      currentState.state.tabState.tabGroups[
+        currentState.state.tabState.activeGroup
+      ].viewColumn;
+    const focusedIndex = currentState.state.tabState.tabGroups[
+      currentState.state.tabState.activeGroup
     ].tabs.findIndex((tab) => tab.isActive);
 
     await Promise.all(
@@ -334,16 +337,16 @@ export class TabManagerService implements ITabManagerService {
       this._stateService.getHistory(),
       this._stateService.getQuickSlots()
     ]);
-    const groupNames = Object.keys(groups);
+    const groupValues = Object.values(groups);
 
     // Sort groups by most recently selected (descending)
-    groupNames.sort((a, b) => {
-      const timeA = groups[a].lastSelectedAt || 0;
-      const timeB = groups[b].lastSelectedAt || 0;
+    groupValues.sort((a, b) => {
+      const timeA = a.lastSelectedAt || 0;
+      const timeB = b.lastSelectedAt || 0;
       return timeB - timeA; // Most recent first
     });
 
-    const historyKeys = Object.keys(history);
+    const historyValues = Object.values(history);
 
     const masterWorkspaceFolder =
       this._configService.getMasterWorkspaceFolder();
@@ -355,9 +358,15 @@ export class TabManagerService implements ITabManagerService {
       }));
 
     this._syncViewEmitter.fire({
-      tabState: state.tabState,
-      history: historyKeys,
-      groups: groupNames,
+      tabState: state.state.tabState,
+      histories: historyValues.map((entry) => ({
+        historyId: entry.id,
+        name: entry.name
+      })),
+      groups: groupValues.map((group) => ({
+        groupId: group.id,
+        name: group.name
+      })),
       selectedGroup: this._stateService.selectedGroup ?? null,
       quickSlots,
       masterWorkspaceFolder,

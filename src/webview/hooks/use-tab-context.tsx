@@ -29,8 +29,8 @@ interface TabState {
   loading: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groupIds: string[];
-  historyIds: string[];
+  groups: Array<{ groupId: string; name: string }>;
+  histories: Array<{ historyId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
@@ -73,8 +73,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     loading: true,
     error: null,
     connectionStatus: ConnectionStatus.Connecting,
-    groupIds: [],
-    historyIds: [],
+    groups: [],
+    histories: [],
     selectedGroup: null,
     quickSlots: {},
     masterWorkspaceFolder: null,
@@ -98,8 +98,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           loading: false,
           error: null,
           connectionStatus: ConnectionStatus.Connected,
-          groupIds: event.groups,
-          historyIds: event.history,
+          groups: event.groups,
+          histories: event.histories,
           selectedGroup: event.selectedGroup,
           quickSlots: event.quickSlots,
           masterWorkspaceFolder: event.masterWorkspaceFolder,
@@ -232,9 +232,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     ),
 
     renameGroup: useCallback(
-      async (groupId: string, nextGroupId: string): Promise<void> => {
+      async (groupId: string, newName: string): Promise<void> => {
         try {
-          messagingService.renameGroup(groupId, nextGroupId);
+          messagingService.renameGroup(groupId, newName);
         } catch (error) {
           handleError(error, 'rename group');
           throw error;

@@ -83,11 +83,11 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async renameGroup(groupId: string, nextGroupId: string): Promise<void> {
+  async renameGroup(groupId: string, newName: string): Promise<void> {
     const message: WebviewRenameGroupMessage = {
       type: WebviewMessageType.RenameGroup,
       groupId,
-      nextGroupId
+      name: newName
     };
     this.messenger.sendMessage(message);
   }

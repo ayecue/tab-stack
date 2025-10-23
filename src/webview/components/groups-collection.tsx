@@ -84,10 +84,10 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   }, []);
 
   const startRename = useCallback(
-    (groupId: string) => {
+    (groupId: string, currentName: string) => {
       cancelCreate();
       setEditingGroupId(groupId);
-      setRenameValue(groupId);
+      setRenameValue(currentName);
       setRenameError(null);
       setIsRenaming(false);
     },
@@ -99,10 +99,10 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       return;
     }
 
-    if (!state.groupIds.includes(editingGroupId)) {
+    if (!state.groups.some((g) => g.groupId === editingGroupId)) {
       cancelRename();
     }
-  }, [editingGroupId, state.groupIds, cancelRename]);
+  }, [editingGroupId, state.groups, cancelRename]);
 
   const submitCreate = useCallback(async () => {
     const normalized = newGroupName.trim();
@@ -136,12 +136,17 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       return;
     }
 
-    if (normalized === editingGroupId) {
+    const currentGroup = state.groups.find((g) => g.groupId === editingGroupId);
+    if (normalized === currentGroup?.name) {
       cancelRename();
       return;
     }
 
-    if (state.groupIds.includes(normalized) && normalized !== editingGroupId) {
+    if (
+      state.groups.some(
+        (g) => g.name === normalized && g.groupId !== editingGroupId
+      )
+    ) {
       setRenameError('A group with this name already exists');
       renameInputRef.current?.focus();
       renameInputRef.current?.select();
@@ -158,7 +163,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       setIsRenaming(false);
       renameInputRef.current?.focus();
     }
-  }, [actions, editingGroupId, renameValue, cancelRename, state.groupIds]);
+  }, [actions, editingGroupId, renameValue, cancelRename, state.groups]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -190,15 +195,15 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     [submitRename, cancelRename]
   );
 
-  const filteredGroupIds = useMemo(() => {
+  const filteredGroups = useMemo(() => {
     if (!searchTerm.trim()) {
-      return state.groupIds;
+      return state.groups;
     }
     const term = searchTerm.trim().toLowerCase();
-    return state.groupIds.filter((groupId) =>
-      groupId.toLowerCase().includes(term)
+    return state.groups.filter((group) =>
+      group.name.toLowerCase().includes(term)
     );
-  }, [state.groupIds, searchTerm]);
+  }, [state.groups, searchTerm]);
 
   const handleSlotChange = useCallback(
     (groupId: string, rawValue: string) => {
@@ -329,11 +334,12 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
         </div>
       )}
 
-      {state.groupIds.length === 0 && !isCreating ? (
+      {state.groups.length === 0 && !isCreating ? (
         <p className="section-empty">No groups saved yet.</p>
       ) : (
         <ul className="section-list" role="list">
-          {filteredGroupIds.map((groupId, index) => {
+          {filteredGroups.map((group, index) => {
+            const { groupId, name } = group;
             const assignedSlot = slotByGroup[groupId];
             const slotControlId = `slot-${index}`;
             const isSelected = state.selectedGroup === groupId;
@@ -430,7 +436,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                         </div>
                       </>
                     ) : (
-                      <span className="item-name">{groupId}</span>
+                      <span className="item-name">{name}</span>
                     )}
                   </div>
                   {isEditing && renameError && (
@@ -472,7 +478,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                         className="neutral"
                         onClick={(event) => {
                           event.stopPropagation();
-                          startRename(groupId);
+                          startRename(groupId, name);
                         }}
                         disabled={isDeleting}
                         title="Rename group"
@@ -501,8 +507,8 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
             );
           })}
 
-          {filteredGroupIds.length === 0 &&
-            state.groupIds.length > 0 &&
+          {filteredGroups.length === 0 &&
+            state.groups.length > 0 &&
             !isCreating && (
               <li className="section-empty" aria-live="polite">
                 No groups match that search.

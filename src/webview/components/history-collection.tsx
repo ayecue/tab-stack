@@ -22,8 +22,11 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
   const { state, actions } = useTabContext();
 
   const sortedHistory = useMemo(
-    () => [...state.historyIds].sort().reverse(),
-    [state.historyIds]
+    () =>
+      [...state.histories].sort((a, b) =>
+        b.historyId.localeCompare(a.historyId)
+      ),
+    [state.histories]
   );
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -33,9 +36,13 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
     }
 
     const term = searchTerm.trim().toLowerCase();
-    return sortedHistory.filter((historyId) => {
-      const timestamp = formatTimestamp(historyId).toLowerCase();
-      return historyId.toLowerCase().includes(term) || timestamp.includes(term);
+    return sortedHistory.filter((history) => {
+      const timestamp = formatTimestamp(history.historyId).toLowerCase();
+      return (
+        history.name.toLowerCase().includes(term) ||
+        history.historyId.toLowerCase().includes(term) ||
+        timestamp.includes(term)
+      );
     });
   }, [sortedHistory, searchTerm]);
 
@@ -87,7 +94,8 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
         <p className="section-empty">No snapshots match your search.</p>
       ) : (
         <ul className="section-list" role="list">
-          {filteredHistory.map((historyId) => {
+          {filteredHistory.map((history) => {
+            const { historyId, name } = history;
             const isDeleting = deletingKeys.has(`history:${historyId}`);
 
             const handleRestore = () => {
@@ -118,9 +126,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
               >
                 <div className="item-row">
                   <div className="item-primary">
-                    <span className="item-name">
-                      {formatTimestamp(historyId)}
-                    </span>
+                    <span className="item-name">{name}</span>
                   </div>
 
                   <div

@@ -14,15 +14,25 @@ export type QuickSlotAssignments = Partial<Record<QuickSlotIndex, string>>;
 export interface TabManagerState {
   tabState: TabState;
   layout: Layout;
-  lastSelectedAt?: number;
+}
+
+export interface StateContainer {
+  id: string;
+  name: string;
+  state: TabManagerState;
+  createdAt: number;
+  lastSelectedAt: number;
 }
 
 export const EMPTY_GROUP_SELECTION: undefined = void 0;
 export type GroupSelectionValue = string | typeof EMPTY_GROUP_SELECTION;
 
+export const CURRENT_STATE_FILE_VERSION = 1;
+
 export interface TabStateFileContent {
-  groups: Record<string, TabManagerState>;
-  history: Record<string, TabManagerState>;
+  version?: number;
+  groups: Record<string, StateContainer>;
+  history: Record<string, StateContainer>;
   selectedGroup: GroupSelectionValue;
   previousSelectedGroup: GroupSelectionValue;
   quickSlots: QuickSlotAssignments;
@@ -30,6 +40,7 @@ export interface TabStateFileContent {
 
 export function createDefaultTabStateFileContent(): TabStateFileContent {
   return {
+    version: CURRENT_STATE_FILE_VERSION,
     groups: {},
     history: {},
     selectedGroup: EMPTY_GROUP_SELECTION,
@@ -47,7 +58,7 @@ export interface ITabManagerService extends Disposable {
   clearAllTabs(): Promise<void>;
   createGroup(groupId: string): Promise<void>;
   deleteGroup(groupId: string): Promise<void>;
-  renameGroup(groupId: string, nextGroupId: string): Promise<void>;
+  renameGroup(groupId: string, newName: string): Promise<void>;
   switchToGroup(groupId: string | null): Promise<void>;
   takeSnapshot(): Promise<void>;
   recoverSnapshot(historyId: string): Promise<void>;

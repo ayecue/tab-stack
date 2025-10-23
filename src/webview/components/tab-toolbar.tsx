@@ -7,7 +7,7 @@ interface TabToolbarProps {
     openTabs: number;
     pinnedTabs: number;
     groups: number;
-    history: number;
+    histories: number;
   };
   isLoading: boolean;
   searchTerm: string;

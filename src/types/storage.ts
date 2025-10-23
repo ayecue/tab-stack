@@ -1,5 +1,5 @@
 export interface StorageFile<T> {
-  readonly data: T;
+  data: T;
 
   load(): Promise<void>;
   save(data: T): Promise<void>;

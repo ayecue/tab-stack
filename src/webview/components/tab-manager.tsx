@@ -27,17 +27,19 @@ const TabManagerContent: React.FC = () => {
     return {
       openTabs,
       pinnedTabs,
-      groups: state.groupIds.length,
-      history: state.historyIds.length
+      groups: state.groups.length,
+      histories: state.histories.length
     };
   }, [state]);
 
   const lastSnapshotId = useMemo(() => {
-    if (state.historyIds.length === 0) {
+    if (state.histories.length === 0) {
       return null;
     }
-    return [...state.historyIds].sort().reverse()[0];
-  }, [state.historyIds]);
+    return [...state.histories].sort((a, b) =>
+      b.historyId.localeCompare(a.historyId)
+    )[0].historyId;
+  }, [state.histories]);
 
   const handleCloseAllTabs = useCallback(() => {
     const tabGroups = state.payload?.tabGroups;

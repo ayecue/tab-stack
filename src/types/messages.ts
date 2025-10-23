@@ -25,8 +25,8 @@ export interface ExtensionNotificationMessage extends BaseExtensionMessage {
 export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   type: ExtensionMessageType.Sync;
   tabState: TabState;
-  history: string[];
-  groups: string[];
+  histories: Array<{ historyId: string; name: string }>;
+  groups: Array<{ groupId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
@@ -90,7 +90,7 @@ export interface WebviewNewGroupMessage extends BaseWebviewMessage {
 export interface WebviewRenameGroupMessage extends BaseWebviewMessage {
   type: WebviewMessageType.RenameGroup;
   groupId: string;
-  nextGroupId: string;
+  name: string;
 }
 
 export interface WebviewDeleteGroupMessage extends BaseWebviewMessage {

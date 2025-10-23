@@ -58,8 +58,8 @@ export class MessageHandler implements Disposable {
         break;
       }
       case WebviewMessageType.RenameGroup: {
-        const { groupId, nextGroupId } = data as WebviewRenameGroupMessage;
-        await tabManager.renameGroup(groupId, nextGroupId);
+        const { groupId, name } = data as WebviewRenameGroupMessage;
+        await tabManager.renameGroup(groupId, name);
         break;
       }
       case WebviewMessageType.DeleteGroup: {
