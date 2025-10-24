@@ -29,7 +29,11 @@ import {
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
-import { GitBranchChangeEvent, GitService } from './git';
+import {
+  GitBranchChangeEvent,
+  GitRepositoryOpenEvent,
+  GitService
+} from './git';
 import { TabStateService } from './tab-state';
 
 export class TabManagerService implements ITabManagerService {
@@ -54,13 +58,12 @@ export class TabManagerService implements ITabManagerService {
   private _disposables: Disposable[] = [];
 
   constructor(
-    stateService: TabStateService,
     layoutService: EditorLayoutService,
     configService: ConfigService,
     gitService: GitService | null = null
   ) {
     this._nextRenderingItem = null;
-    this._stateService = stateService;
+    this._stateService = null;
     this._rendering = false;
     this._layoutService = layoutService;
     this._configService = configService;
@@ -87,6 +90,16 @@ export class TabManagerService implements ITabManagerService {
     return this._notifyViewEmitter.event;
   }
 
+  async attachStateService() {
+    if (this._stateService != null) this._stateService.dispose();
+    this._stateService = null;
+    const newStateService = new TabStateService(this._configService);
+    await newStateService.initialize();
+    this._stateService = newStateService;
+    await this.applyState();
+    await this.triggerSync();
+  }
+
   private initializeEvents() {
     this._disposables.push(
       window.tabGroups.onDidChangeTabs(() => void this.refresh())
@@ -106,15 +119,7 @@ export class TabManagerService implements ITabManagerService {
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
         if (changes.masterWorkspaceFolder !== undefined) {
-          this._stateService = null;
-
-          const newStateService = new TabStateService(this._configService);
-          await newStateService.initialize();
-          this._stateService = newStateService;
-          console.log(await newStateService.getState());
-          await this.applyState();
-          await this.triggerSync();
-
+          await this.attachStateService();
           this._gitService.updateRepository();
         }
       })
@@ -124,18 +129,21 @@ export class TabManagerService implements ITabManagerService {
         (event) => void this._handleBranchChange(event)
       )
     );
+    this._disposables.push(
+      this._gitService.onDidOpenRepository(
+        (event) => void this._handleBranchChange(event)
+      )
+    );
   }
 
-  private async _handleBranchChange(event: GitBranchChangeEvent) {
+  private async _handleBranchChange(
+    event: GitBranchChangeEvent | GitRepositoryOpenEvent
+  ) {
     const gitConfig = this._configService.getGitIntegrationConfig();
 
     if (!gitConfig.enabled) return;
 
     if (!event.currentBranch) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        'Branch change detected but no current branch'
-      );
       return;
     }
 
@@ -594,6 +602,7 @@ export class TabManagerService implements ITabManagerService {
     this._disposables = [];
     this._syncViewEmitter.dispose();
     this._notifyViewEmitter.dispose();
+    this._stateService?.dispose();
 
     this._stateService = null;
     this._layoutService = null;

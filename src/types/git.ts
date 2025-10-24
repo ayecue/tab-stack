@@ -3,3 +3,8 @@ export interface GitBranchChangeEvent {
   previousBranch: string | null;
   currentBranch: string | null;
 }
+
+export interface GitRepositoryOpenEvent {
+  repository: string;
+  currentBranch: string | null;
+}

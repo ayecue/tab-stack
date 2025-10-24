@@ -1,12 +1,13 @@
 import { Disposable, EventEmitter, extensions } from 'vscode';
 
-import { GitBranchChangeEvent } from '../types/git';
+import { GitBranchChangeEvent, GitRepositoryOpenEvent } from '../types/git';
 import { API, GitExtension, Repository } from '../types/git-extension';
 import { ConfigService } from './config';
-export { GitBranchChangeEvent } from '../types/git';
+export { GitBranchChangeEvent, GitRepositoryOpenEvent } from '../types/git';
 
 export class GitService implements Disposable {
   private _onDidChangeBranch: EventEmitter<GitBranchChangeEvent>;
+  private _onDidOpenRepository: EventEmitter<GitRepositoryOpenEvent>;
   private _gitAPI: API | null = null;
   private _disposables: Disposable[];
   private _currentBranch: string | null = null;
@@ -17,7 +18,8 @@ export class GitService implements Disposable {
   constructor(configService: ConfigService) {
     this._configService = configService;
     this._onDidChangeBranch = new EventEmitter<GitBranchChangeEvent>();
-    this._disposables = [this._onDidChangeBranch];
+    this._onDidOpenRepository = new EventEmitter<GitRepositoryOpenEvent>();
+    this._disposables = [this._onDidChangeBranch, this._onDidOpenRepository];
     this._gitAPI = null;
     this._currentBranch = null;
     this._currentRepository = null;
@@ -26,6 +28,10 @@ export class GitService implements Disposable {
 
   get onDidChangeBranch() {
     return this._onDidChangeBranch.event;
+  }
+
+  get onDidOpenRepository() {
+    return this._onDidOpenRepository.event;
   }
 
   async initialize(): Promise<boolean> {
@@ -107,6 +113,11 @@ export class GitService implements Disposable {
     });
 
     this._disposables.push(this._repositoryListener);
+
+    this._onDidOpenRepository.fire({
+      repository: repository.rootUri.toString(),
+      currentBranch: this._currentBranch
+    });
   }
 
   private _clearCurrentRepository(): void {
