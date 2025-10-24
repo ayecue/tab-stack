@@ -9,10 +9,12 @@ import {
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
   WebviewRenameGroupMessage,
+  WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
-  WebviewTabTogglePinMessage
+  WebviewTabTogglePinMessage,
+  WebviewUpdateGitIntegrationMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
 
@@ -37,6 +39,10 @@ export class MessageHandler implements Disposable {
         await tabManager.closeTab(columnView, index);
         break;
       }
+      case WebviewMessageType.ClearAllTabs: {
+        await tabManager.clearAllTabs();
+        break;
+      }
       case WebviewMessageType.TabTogglePin: {
         const { columnView, index } = data as WebviewTabTogglePinMessage;
         await tabManager.toggleTabPin(columnView, index);
@@ -53,8 +59,8 @@ export class MessageHandler implements Disposable {
         break;
       }
       case WebviewMessageType.RenameGroup: {
-        const { groupId, nextGroupId } = data as WebviewRenameGroupMessage;
-        await tabManager.renameGroup(groupId, nextGroupId);
+        const { groupId, name } = data as WebviewRenameGroupMessage;
+        await tabManager.renameGroup(groupId, name);
         break;
       }
       case WebviewMessageType.DeleteGroup: {
@@ -79,6 +85,26 @@ export class MessageHandler implements Disposable {
       case WebviewMessageType.AssignQuickSlot: {
         const { slot, groupId } = data as WebviewAssignQuickSlotMessage;
         await tabManager.assignQuickSlot(slot, groupId);
+        break;
+      }
+      case WebviewMessageType.SelectWorkspaceFolder: {
+        const { folderPath } = data as WebviewSelectWorkspaceFolderMessage;
+        await tabManager.selectWorkspaceFolder(folderPath);
+        break;
+      }
+      case WebviewMessageType.ClearWorkspaceFolder: {
+        await tabManager.clearWorkspaceFolder();
+        break;
+      }
+      case WebviewMessageType.UpdateGitIntegration: {
+        const { enabled, mode, groupPrefix } =
+          data as WebviewUpdateGitIntegrationMessage;
+        if (enabled != null)
+          await tabManager.config.setGitIntegrationEnabled(enabled);
+        if (mode != null) await tabManager.config.setGitIntegrationMode(mode);
+        if (groupPrefix != null)
+          await tabManager.config.setGitIntegrationGroupPrefix(groupPrefix);
+        await tabManager.triggerSync();
         break;
       }
       case WebviewMessageType.Sync: {

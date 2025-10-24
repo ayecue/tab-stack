@@ -3,12 +3,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { TabProvider, useTabContext } from '../hooks/use-tab-context';
 import { CollectionsPanel } from './collections-panel';
 import { Header } from './header';
+import { SettingsPanel } from './settings-panel';
 import { TabList } from './tab-list';
 import { TabToolbar } from './tab-toolbar';
 
 const TabManagerContent: React.FC = () => {
   const { state, actions } = useTabContext();
   const [viewMode, setViewMode] = useState<'columns' | 'flat'>('columns');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const totals = useMemo(() => {
     const tabGroups = state.payload?.tabGroups ?? {};
@@ -25,29 +27,25 @@ const TabManagerContent: React.FC = () => {
     return {
       openTabs,
       pinnedTabs,
-      groups: state.groupIds.length,
-      history: state.historyIds.length
+      groups: state.groups.length,
+      histories: state.histories.length
     };
   }, [state]);
 
   const lastSnapshotId = useMemo(() => {
-    if (state.historyIds.length === 0) {
+    if (state.histories.length === 0) {
       return null;
     }
-    return [...state.historyIds].sort().reverse()[0];
-  }, [state.historyIds]);
+    return state.histories[0].historyId;
+  }, [state.histories]);
 
   const handleCloseAllTabs = useCallback(() => {
     const tabGroups = state.payload?.tabGroups;
     if (!tabGroups) {
       return;
     }
-    Object.values(tabGroups).forEach((group) => {
-      group.tabs.forEach((tab, index) => {
-        void actions
-          .closeTab(index, tab)
-          .catch((error) => console.error('Failed to close tab', error));
-      });
+    actions.clearAllTabs().catch((error) => {
+      console.error('Failed to close all tabs', error);
     });
   }, [actions, state.payload?.tabGroups]);
 
@@ -93,6 +91,7 @@ const TabManagerContent: React.FC = () => {
 
       <div className="tab-manager-shell">
         <aside className="tab-manager-sidebar">
+          <SettingsPanel />
           <CollectionsPanel />
         </aside>
 
@@ -102,6 +101,8 @@ const TabManagerContent: React.FC = () => {
             onViewModeChange={setViewMode}
             totals={totals}
             isLoading={state.loading}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
             actions={{
               onRefresh: () =>
                 void actions
@@ -122,7 +123,7 @@ const TabManagerContent: React.FC = () => {
             }}
           />
 
-          <TabList viewMode={viewMode} />
+          <TabList viewMode={viewMode} searchTerm={searchTerm} />
         </section>
       </div>
     </div>

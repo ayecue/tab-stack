@@ -8,7 +8,7 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
@@ -68,6 +68,16 @@
   "bugs": {
     "url": "https://github.com/ayecue/tab-stack/issues"
   },
+  "keywords": [
+    "tabs",
+    "groups",
+    "snapshots",
+    "tab management",
+    "tab groups",
+    "tab snapshots",
+    "workspace",
+    "productivity"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -140,6 +150,11 @@
       {
         "command": "tabStack.deleteSnapshot",
         "title": "Delete Tabs Snapshot",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.assignQuickSlot",
+        "title": "Assign Current Group to Quick Slot",
         "category": "Tab Stack"
       },
       {
@@ -240,12 +255,48 @@
         "mac": "cmd+alt+shift+0"
       }
     ],
-    "configuration": []
+    "configuration": {
+      "type": "object",
+      "title": "Tab Stack",
+      "properties": {
+        "tabStack.masterWorkspaceFolder": {
+          "type": "string",
+          "default": null,
+          "description": "Path to the workspace folder to use for storing tab state and tracking git branches. If not set, the first workspace folder will be used."
+        },
+        "tabStack.gitIntegration.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic group management based on git branch changes."
+        },
+        "tabStack.gitIntegration.mode": {
+          "type": "string",
+          "enum": [
+            "auto-switch",
+            "auto-create",
+            "full-auto"
+          ],
+          "enumDescriptions": [
+            "Automatically switch to existing groups when branch changes",
+            "Automatically create groups for new branches and switch to them",
+            "Fully automatic: create groups for new branches and auto-switch between them"
+          ],
+          "default": "full-auto",
+          "description": "Git integration mode: how Tab Stack manages groups based on git branches."
+        },
+        "tabStack.gitIntegration.groupPrefix": {
+          "type": "string",
+          "default": "git:",
+          "description": "Prefix for automatically created git-based groups (e.g., 'git:main', 'git:feature/login')."
+        }
+      }
+    }
   },
   "dependencies": {
     "@vscode/debugadapter": "^1.68.0",
     "@vscode/debugprotocol": "^1.68.0",
     "debounce": "^2.2.0",
+    "nanoid": "^5.1.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

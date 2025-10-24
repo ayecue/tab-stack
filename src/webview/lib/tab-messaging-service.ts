@@ -1,12 +1,15 @@
 import {
   WebviewAddToHistoryMessage,
   WebviewAssignQuickSlotMessage,
+  WebviewClearAllTabsMessage,
+  WebviewClearWorkspaceFolderMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
   WebviewRenameGroupMessage,
+  WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
   WebviewSyncMessage,
   WebviewTabCloseMessage,
@@ -48,6 +51,13 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
+  async clearAllTabs(): Promise<void> {
+    const message: WebviewClearAllTabsMessage = {
+      type: WebviewMessageType.ClearAllTabs
+    };
+    this.messenger.sendMessage(message);
+  }
+
   async toggleTabPin(index: number, columnView: number): Promise<void> {
     const message: WebviewTabTogglePinMessage = {
       type: WebviewMessageType.TabTogglePin,
@@ -73,11 +83,11 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async renameGroup(groupId: string, nextGroupId: string): Promise<void> {
+  async renameGroup(groupId: string, newName: string): Promise<void> {
     const message: WebviewRenameGroupMessage = {
       type: WebviewMessageType.RenameGroup,
       groupId,
-      nextGroupId
+      name: newName
     };
     this.messenger.sendMessage(message);
   }
@@ -124,6 +134,32 @@ export class TabMessagingService {
       groupId
     };
     this.messenger.sendMessage(message);
+  }
+
+  async selectWorkspaceFolder(folderPath: string | null): Promise<void> {
+    const message: WebviewSelectWorkspaceFolderMessage = {
+      type: WebviewMessageType.SelectWorkspaceFolder,
+      folderPath
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async clearWorkspaceFolder(): Promise<void> {
+    const message: WebviewClearWorkspaceFolderMessage = {
+      type: WebviewMessageType.ClearWorkspaceFolder
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async updateGitIntegration(config: {
+    enabled?: boolean;
+    mode?: string;
+    groupPrefix?: string;
+  }): Promise<void> {
+    this.messenger.sendMessage({
+      type: WebviewMessageType.UpdateGitIntegration,
+      ...config
+    });
   }
 
   getMessenger(): VSCodeMessenger {

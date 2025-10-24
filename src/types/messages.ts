@@ -1,3 +1,4 @@
+import { GitIntegrationConfig, GitIntegrationMode } from './config';
 import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
 import { TabState } from './tabs';
 
@@ -25,15 +26,19 @@ export interface ExtensionNotificationMessage extends BaseExtensionMessage {
 export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   type: ExtensionMessageType.Sync;
   tabState: TabState;
-  history: string[];
-  groups: string[];
+  histories: Array<{ historyId: string; name: string }>;
+  groups: Array<{ groupId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
+  masterWorkspaceFolder: string | null;
+  availableWorkspaceFolders: Array<{ name: string; path: string }>;
+  gitIntegration: GitIntegrationConfig;
 }
 
 export enum WebviewMessageType {
   TabOpen = 'tab-open',
   TabClose = 'tab-close',
+  ClearAllTabs = 'clear-all-tabs',
   TabTogglePin = 'tab-toggle-pin',
   SwitchGroup = 'switch-group',
   NewGroup = 'new-group',
@@ -43,7 +48,10 @@ export enum WebviewMessageType {
   DeleteHistory = 'delete-history',
   RecoverState = 'recover-state',
   AssignQuickSlot = 'assign-quick-slot',
-  Sync = 'sync'
+  Sync = 'sync',
+  SelectWorkspaceFolder = 'select-workspace-folder',
+  ClearWorkspaceFolder = 'clear-workspace-folder',
+  UpdateGitIntegration = 'update-git-integration'
 }
 
 export interface BaseWebviewMessage {
@@ -60,6 +68,10 @@ export interface WebviewTabCloseMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabClose;
   index: number;
   columnView: number;
+}
+
+export interface WebviewClearAllTabsMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ClearAllTabs;
 }
 
 export interface WebviewTabTogglePinMessage extends BaseWebviewMessage {
@@ -81,7 +93,7 @@ export interface WebviewNewGroupMessage extends BaseWebviewMessage {
 export interface WebviewRenameGroupMessage extends BaseWebviewMessage {
   type: WebviewMessageType.RenameGroup;
   groupId: string;
-  nextGroupId: string;
+  name: string;
 }
 
 export interface WebviewDeleteGroupMessage extends BaseWebviewMessage {
@@ -112,4 +124,21 @@ export interface WebviewAssignQuickSlotMessage extends BaseWebviewMessage {
 
 export interface WebviewSyncMessage extends BaseWebviewMessage {
   type: WebviewMessageType.Sync;
+}
+
+export interface WebviewSelectWorkspaceFolderMessage
+  extends BaseWebviewMessage {
+  type: WebviewMessageType.SelectWorkspaceFolder;
+  folderPath: string | null;
+}
+
+export interface WebviewClearWorkspaceFolderMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ClearWorkspaceFolder;
+}
+
+export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.UpdateGitIntegration;
+  enabled?: boolean;
+  mode?: GitIntegrationMode;
+  groupPrefix?: string;
 }

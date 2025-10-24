@@ -20,24 +20,23 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
   onDelete
 }) => {
   const { state, actions } = useTabContext();
-
-  const sortedHistory = useMemo(
-    () => [...state.historyIds].sort().reverse(),
-    [state.historyIds]
-  );
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredHistory = useMemo(() => {
     if (!searchTerm.trim()) {
-      return sortedHistory;
+      return state.histories;
     }
 
     const term = searchTerm.trim().toLowerCase();
-    return sortedHistory.filter((historyId) => {
-      const timestamp = formatTimestamp(historyId).toLowerCase();
-      return historyId.toLowerCase().includes(term) || timestamp.includes(term);
+    return state.histories.filter((history) => {
+      const timestamp = formatTimestamp(history.historyId).toLowerCase();
+      return (
+        history.name.toLowerCase().includes(term) ||
+        history.historyId.toLowerCase().includes(term) ||
+        timestamp.includes(term)
+      );
     });
-  }, [sortedHistory, searchTerm]);
+  }, [state.histories, searchTerm]);
 
   return (
     <div className="collections-section history-collection">
@@ -61,7 +60,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
           <div className="section-search">
             <i className="codicon codicon-search" aria-hidden="true" />
             <input
-              type="search"
+              type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search snapshots"
@@ -81,13 +80,14 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
         </div>
       </div>
 
-      {sortedHistory.length === 0 ? (
+      {state.histories.length === 0 ? (
         <p className="section-empty">No snapshots captured yet.</p>
       ) : filteredHistory.length === 0 ? (
         <p className="section-empty">No snapshots match your search.</p>
       ) : (
         <ul className="section-list" role="list">
-          {filteredHistory.map((historyId) => {
+          {filteredHistory.map((history) => {
+            const { historyId, name } = history;
             const isDeleting = deletingKeys.has(`history:${historyId}`);
 
             const handleRestore = () => {
@@ -118,9 +118,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
               >
                 <div className="item-row">
                   <div className="item-primary">
-                    <span className="item-name">
-                      {formatTimestamp(historyId)}
-                    </span>
+                    <span className="item-name">{name}</span>
                   </div>
 
                   <div

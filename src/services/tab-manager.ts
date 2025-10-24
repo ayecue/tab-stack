@@ -1,5 +1,6 @@
-import { Disposable, EventEmitter, Tab, TabGroup, window } from 'vscode';
+import { Disposable, EventEmitter, window } from 'vscode';
 
+import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
@@ -9,7 +10,7 @@ import {
   EMPTY_GROUP_SELECTION,
   ITabManagerService,
   QuickSlotIndex,
-  TabManagerState
+  StateContainer
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
 import {
@@ -20,17 +21,31 @@ import {
   unpinEditor
 } from '../utils/commands';
 import { delay } from '../utils/delay';
+import {
+  closeAllTabs,
+  closeTab,
+  findTabByViewColumnAndIndex,
+  findTabGroupByViewColumn
+} from '../utils/tab-utils';
+import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
+import {
+  GitBranchChangeEvent,
+  GitRepositoryOpenEvent,
+  GitService
+} from './git';
 import { TabStateService } from './tab-state';
 
 export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100;
 
   private _rendering: boolean;
-  private _nextRenderingItem: TabManagerState;
+  private _nextRenderingItem: StateContainer;
 
   private _stateService: TabStateService;
   private _layoutService: EditorLayoutService;
+  private _configService: ConfigService;
+  private _gitService: GitService | null;
 
   private _syncViewEmitter: EventEmitter<
     Omit<ExtensionTabsSyncMessage, 'type'>
@@ -40,20 +55,19 @@ export class TabManagerService implements ITabManagerService {
     Omit<ExtensionNotificationMessage, 'type'>
   >;
 
-  private _onDidChangeTabsListener?: Disposable;
-  private _onDidChangeTabGroupsListener?: Disposable;
-  private _onDidChangeActiveEditorListener?: Disposable;
-  private _onDidChangeTextEditorOptionsListener?: Disposable;
-  private _onDidChangeEditorLayoutListener?: Disposable;
+  private _disposables: Disposable[] = [];
 
   constructor(
-    stateService: TabStateService,
-    layoutService: EditorLayoutService
+    layoutService: EditorLayoutService,
+    configService: ConfigService,
+    gitService: GitService | null = null
   ) {
     this._nextRenderingItem = null;
-    this._stateService = stateService;
+    this._stateService = null;
     this._rendering = false;
     this._layoutService = layoutService;
+    this._configService = configService;
+    this._gitService = gitService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
     >();
@@ -62,6 +76,10 @@ export class TabManagerService implements ITabManagerService {
     >();
 
     this.initializeEvents();
+  }
+
+  get config() {
+    return this._configService;
   }
 
   get state() {
@@ -76,20 +94,93 @@ export class TabManagerService implements ITabManagerService {
     return this._notifyViewEmitter.event;
   }
 
+  async attachStateService() {
+    if (this._stateService != null) this._stateService.dispose();
+    this._stateService = null;
+    const newStateService = new TabStateService(this._configService);
+    await newStateService.initialize();
+    this._stateService = newStateService;
+    await this.applyState();
+    await this.triggerSync();
+  }
+
   private initializeEvents() {
-    this._onDidChangeTabsListener = window.tabGroups.onDidChangeTabs(
-      () => void this.refresh()
+    this._disposables.push(
+      window.tabGroups.onDidChangeTabs(() => void this.refresh())
     );
-    this._onDidChangeTabGroupsListener = window.tabGroups.onDidChangeTabGroups(
-      () => void this.refresh()
+    this._disposables.push(
+      window.tabGroups.onDidChangeTabGroups(() => void this.refresh())
     );
-    this._onDidChangeActiveEditorListener = window.onDidChangeActiveTextEditor(
-      () => void this.refresh()
+    this._disposables.push(
+      window.onDidChangeActiveTextEditor(() => void this.refresh())
     );
-    this._onDidChangeTextEditorOptionsListener =
-      window.onDidChangeTextEditorOptions(() => void this.refresh());
-    this._onDidChangeEditorLayoutListener =
-      this._layoutService.onDidChangeLayout(() => void this.refresh());
+    this._disposables.push(
+      window.onDidChangeTextEditorOptions(() => void this.refresh())
+    );
+    this._disposables.push(
+      this._layoutService.onDidChangeLayout(() => void this.refresh())
+    );
+    this._disposables.push(
+      this._configService.onDidChangeConfig(async (changes) => {
+        if (changes.masterWorkspaceFolder !== undefined) {
+          await this.attachStateService();
+          this._gitService.updateRepository();
+        }
+      })
+    );
+    this._disposables.push(
+      this._gitService.onDidChangeBranch(
+        (event) => void this._handleBranchChange(event)
+      )
+    );
+    this._disposables.push(
+      this._gitService.onDidOpenRepository(
+        (event) => void this._handleBranchChange(event)
+      )
+    );
+  }
+
+  private async _handleBranchChange(
+    event: GitBranchChangeEvent | GitRepositoryOpenEvent
+  ) {
+    const gitConfig = this._configService.getGitIntegrationConfig();
+
+    if (!gitConfig.enabled) return;
+
+    if (!event.currentBranch) {
+      return;
+    }
+
+    const groupName = `${gitConfig.groupPrefix}${event.currentBranch}`;
+    const groups = await this._stateService.getGroups();
+    const correlatingGroupId = Object.values(groups).find(
+      (g) => g.name === groupName
+    )?.id;
+
+    switch (gitConfig.mode) {
+      case GitIntegrationMode.AutoSwitch:
+        // Only switch if group exists
+        if (correlatingGroupId) {
+          await this.switchToGroup(correlatingGroupId);
+        }
+        break;
+
+      case GitIntegrationMode.AutoCreate:
+        // Create group if it doesn't exist
+        if (!correlatingGroupId) {
+          await this.createGroup(groupName);
+        }
+        break;
+
+      case GitIntegrationMode.FullAuto:
+        // Create if doesn't exist, then switch
+        if (!correlatingGroupId) {
+          await this.createGroup(groupName);
+        } else {
+          await this.switchToGroup(correlatingGroupId);
+        }
+        break;
+    }
   }
 
   private notify(kind: ExtensionNotificationKind, message: string) {
@@ -107,32 +198,6 @@ export class TabManagerService implements ITabManagerService {
         void window.showInformationMessage(message);
         break;
     }
-  }
-
-  findTabGroupByViewColumn(viewColumn: number): TabGroup | null {
-    if (!this._stateService) {
-      return null;
-    }
-
-    const targetGroup = window.tabGroups.all.find(
-      (group) => group.viewColumn === viewColumn
-    );
-
-    return targetGroup || null;
-  }
-
-  findTabByViewColumnAndIndex(viewColumn: number, index: number): Tab | null {
-    if (!this._stateService) {
-      return null;
-    }
-
-    const targetGroup = this.findTabGroupByViewColumn(viewColumn);
-
-    if (!targetGroup) {
-      return null;
-    }
-
-    return targetGroup.tabs[index] || null;
   }
 
   async refresh() {
@@ -178,7 +243,7 @@ export class TabManagerService implements ITabManagerService {
     const currentState = this._nextRenderingItem;
 
     this._nextRenderingItem = null;
-    this._layoutService.setLayout(currentState.layout);
+    this._layoutService.setLayout(currentState.state.layout);
 
     if (window.tabGroups.all.length > 0) {
       await Promise.all(
@@ -186,16 +251,17 @@ export class TabManagerService implements ITabManagerService {
       );
     }
 
-    await setEditorLayout(currentState.layout);
+    await setEditorLayout(currentState.state.layout);
 
-    const tabGroupItems = Object.values(currentState.tabState.tabGroups);
+    const tabGroupItems = Object.values(currentState.state.tabState.tabGroups);
     const pinnedTabs: { tab: TabInfo; index: number }[] = [];
     const activeTabs: { tab: TabInfo; index: number }[] = [];
     const focusedViewColumn =
-      currentState.tabState.tabGroups[currentState.tabState.activeGroup]
-        .viewColumn;
-    const focusedIndex = currentState.tabState.tabGroups[
-      currentState.tabState.activeGroup
+      currentState.state.tabState.tabGroups[
+        currentState.state.tabState.activeGroup
+      ].viewColumn;
+    const focusedIndex = currentState.state.tabState.tabGroups[
+      currentState.state.tabState.activeGroup
     ].tabs.findIndex((tab) => tab.isActive);
 
     await Promise.all(
@@ -227,7 +293,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
-    const targetTab = this.findTabByViewColumnAndIndex(viewColumn, index);
+    const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
 
     if (!targetTab) {
       this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
@@ -247,7 +313,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async openTab(viewColumn: number, index: number): Promise<void> {
-    const targetGroup = this.findTabGroupByViewColumn(viewColumn);
+    const targetGroup = findTabGroupByViewColumn(viewColumn);
 
     if (!targetGroup) {
       this.notify(
@@ -265,14 +331,18 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async closeTab(viewColumn: number, index: number): Promise<void> {
-    const targetTab = this.findTabByViewColumnAndIndex(viewColumn, index);
+    const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
 
     if (!targetTab) {
       this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
       return;
     }
 
-    await window.tabGroups.close(targetTab);
+    await closeTab(targetTab);
+  }
+
+  async clearAllTabs(): Promise<void> {
+    await closeAllTabs();
   }
 
   async triggerSync() {
@@ -286,16 +356,47 @@ export class TabManagerService implements ITabManagerService {
       this._stateService.getHistory(),
       this._stateService.getQuickSlots()
     ]);
+    const groupValues = Object.values(groups);
 
-    const groupNames = Object.keys(groups);
-    const historyKeys = Object.keys(history);
+    groupValues.sort((a, b) => {
+      const timeA = a.lastSelectedAt || 0;
+      const timeB = b.lastSelectedAt || 0;
+      return timeB - timeA;
+    });
+
+    const historyValues = Object.values(history);
+
+    historyValues.sort((a, b) => {
+      const timeA = a.createdAt || 0;
+      const timeB = b.createdAt || 0;
+      return timeB - timeA;
+    });
+
+    const masterWorkspaceFolder =
+      this._configService.getMasterWorkspaceFolder();
+    const gitIntegration = this._configService.getGitIntegrationConfig();
+    const availableWorkspaceFolders = this._configService
+      .getAvailableWorkspaceFolders()
+      .map((folder) => ({
+        name: folder.name,
+        path: folder.uri.toString()
+      }));
 
     this._syncViewEmitter.fire({
-      tabState: state.tabState,
-      history: historyKeys,
-      groups: groupNames,
+      tabState: state.state.tabState,
+      histories: historyValues.map((entry) => ({
+        historyId: entry.id,
+        name: entry.name
+      })),
+      groups: groupValues.map((group) => ({
+        groupId: group.id,
+        name: group.name
+      })),
       selectedGroup: this._stateService.selectedGroup ?? null,
-      quickSlots
+      quickSlots,
+      masterWorkspaceFolder,
+      availableWorkspaceFolders,
+      gitIntegration
     });
   }
 
@@ -304,7 +405,11 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    if (!groupId || this._stateService.selectedGroup === groupId) {
+    if (this._stateService.selectedGroup === groupId) {
+      return;
+    }
+
+    if (!groupId) {
       await this._stateService.setSelectedGroup(EMPTY_GROUP_SELECTION);
       await this.triggerSync();
       return;
@@ -490,16 +595,25 @@ export class TabManagerService implements ITabManagerService {
     await this.triggerSync();
   }
 
+  async selectWorkspaceFolder(folderPath: string | null): Promise<void> {
+    await this._configService.setMasterWorkspaceFolder(folderPath);
+  }
+
+  async clearWorkspaceFolder(): Promise<void> {
+    await this._configService.setMasterWorkspaceFolder(null);
+  }
+
   dispose() {
-    this._onDidChangeTabsListener?.dispose();
-    this._onDidChangeTabGroupsListener?.dispose();
-    this._onDidChangeActiveEditorListener?.dispose();
-    this._onDidChangeTextEditorOptionsListener?.dispose();
-    this._onDidChangeEditorLayoutListener?.dispose();
+    this._disposables.forEach((d) => d.dispose());
+    this._disposables = [];
     this._syncViewEmitter.dispose();
     this._notifyViewEmitter.dispose();
+    this._stateService?.dispose();
 
     this._stateService = null;
     this._layoutService = null;
+    this._configService = null;
+    this._gitService = null;
+    this._configService = null;
   }
 }

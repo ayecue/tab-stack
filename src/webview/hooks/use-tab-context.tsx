@@ -7,6 +7,7 @@ import React, {
   useState
 } from 'react';
 
+import { GitIntegrationConfig, GitIntegrationMode } from '../../types/config';
 import {
   ExtensionMessageType,
   ExtensionNotificationKind,
@@ -29,10 +30,13 @@ interface TabState {
   loading: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groupIds: string[];
-  historyIds: string[];
+  groups: Array<{ groupId: string; name: string }>;
+  histories: Array<{ historyId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
+  masterWorkspaceFolder: string | null;
+  availableWorkspaceFolders: Array<{ name: string; path: string }>;
+  gitIntegration?: GitIntegrationConfig;
 }
 
 interface TabContextValue {
@@ -41,6 +45,7 @@ interface TabContextValue {
     requestRefresh: () => Promise<void>;
     openTab: (index: number, tab: TabInfo) => Promise<void>;
     closeTab: (index: number, tab: TabInfo) => Promise<void>;
+    clearAllTabs: () => Promise<void>;
     togglePin: (index: number, tab: TabInfo) => Promise<void>;
     saveGroup: (groupId: string) => Promise<void>;
     renameGroup: (groupId: string, nextGroupId: string) => Promise<void>;
@@ -52,6 +57,13 @@ interface TabContextValue {
     deleteHistory: (historyId: string) => Promise<void>;
     assignQuickSlot: (slot: QuickSlotIndex, groupId: string) => Promise<void>;
     clearQuickSlot: (groupId: string) => Promise<void>;
+    selectWorkspaceFolder: (folderPath: string | null) => Promise<void>;
+    clearWorkspaceFolder: () => Promise<void>;
+    updateGitIntegration: (cfg: {
+      enabled?: boolean;
+      mode?: GitIntegrationMode;
+      groupPrefix?: string;
+    }) => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -68,10 +80,13 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     loading: true,
     error: null,
     connectionStatus: ConnectionStatus.Connecting,
-    groupIds: [],
-    historyIds: [],
+    groups: [],
+    histories: [],
     selectedGroup: null,
-    quickSlots: {}
+    quickSlots: {},
+    masterWorkspaceFolder: null,
+    availableWorkspaceFolders: [],
+    gitIntegration: undefined
   });
 
   const [messenger] = useState(() =>
@@ -91,10 +106,13 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           loading: false,
           error: null,
           connectionStatus: ConnectionStatus.Connected,
-          groupIds: event.groups,
-          historyIds: event.history,
+          groups: event.groups,
+          histories: event.histories,
           selectedGroup: event.selectedGroup,
-          quickSlots: event.quickSlots
+          quickSlots: event.quickSlots,
+          masterWorkspaceFolder: event.masterWorkspaceFolder,
+          availableWorkspaceFolders: event.availableWorkspaceFolders,
+          gitIntegration: event.gitIntegration
         }));
       }
     );
@@ -189,6 +207,15 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
       [messagingService, handleError, state.payload]
     ),
 
+    clearAllTabs: useCallback(async (): Promise<void> => {
+      try {
+        messagingService.clearAllTabs();
+      } catch (error) {
+        handleError(error, 'clear all tabs');
+        throw error;
+      }
+    }, [messagingService, handleError]),
+
     togglePin: useCallback(
       async (index: number, tab: TabInfo): Promise<void> => {
         try {
@@ -214,9 +241,9 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     ),
 
     renameGroup: useCallback(
-      async (groupId: string, nextGroupId: string): Promise<void> => {
+      async (groupId: string, newName: string): Promise<void> => {
         try {
-          messagingService.renameGroup(groupId, nextGroupId);
+          messagingService.renameGroup(groupId, newName);
         } catch (error) {
           handleError(error, 'rename group');
           throw error;
@@ -309,6 +336,43 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           messagingService.assignQuickSlot(null, groupId);
         } catch (error) {
           handleError(error, 'clear quick slot');
+          throw error;
+        }
+      },
+      [messagingService, handleError]
+    ),
+
+    selectWorkspaceFolder: useCallback(
+      async (folderPath: string | null): Promise<void> => {
+        try {
+          messagingService.selectWorkspaceFolder(folderPath);
+        } catch (error) {
+          handleError(error, 'select workspace folder');
+          throw error;
+        }
+      },
+      [messagingService, handleError]
+    ),
+
+    clearWorkspaceFolder: useCallback(async (): Promise<void> => {
+      try {
+        messagingService.clearWorkspaceFolder();
+      } catch (error) {
+        handleError(error, 'clear workspace folder');
+        throw error;
+      }
+    }, [messagingService, handleError]),
+
+    updateGitIntegration: useCallback(
+      async (cfg: {
+        enabled?: boolean;
+        mode?: GitIntegrationMode;
+        groupPrefix?: string;
+      }): Promise<void> => {
+        try {
+          messagingService.updateGitIntegration(cfg);
+        } catch (error) {
+          handleError(error, 'update git settings');
           throw error;
         }
       },

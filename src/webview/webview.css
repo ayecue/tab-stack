@@ -243,18 +243,97 @@ body {
   color: var(--vscode-button-foreground);
 }
 
-.tab-toolbar-meta {
+.tab-toolbar-search {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.tab-toolbar-search .search-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  height: 28px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  width: 100%;
+}
+
+.tab-toolbar-search .search-input:focus-within {
+  border-color: var(--vscode-focusBorder);
+}
+
+.tab-toolbar-search .search-input input {
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  font-size: 12px;
+  line-height: 1.2;
+  min-width: 0;
+  outline: none;
+}
+
+.tab-toolbar-search .search-input input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.tab-toolbar-search .clear-search {
+  border: none;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.tab-toolbar-search .clear-search:hover {
+  color: var(--vscode-foreground);
+}
+
+.tab-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.tab-toolbar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.tab-toolbar-controls .action-group {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.toolbar-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
   width: 100%;
 }
 
-.toolbar-stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.toggle-group {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 1px;
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  width: 100%;
 }
 
 .toolbar-stat {
@@ -929,6 +1008,291 @@ body {
 
 .item-actions .neutral {
   color: var(--vscode-descriptionForeground);
+}
+
+/* Settings Panel */
+.settings-panel {
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.03));
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.settings-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.settings-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.settings-header span {
+  color: var(--vscode-descriptionForeground);
+}
+
+.settings-header .codicon-chevron-right,
+.settings-header .codicon-chevron-down {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  transition: transform 0.15s ease;
+}
+
+.settings-header .codicon-settings-gear {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.settings-content {
+  border-top: 1px solid var(--vscode-panel-border);
+  padding: 10px;
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.settings-label .codicon {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.settings-description {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.settings-description.muted-text {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.muted-text {
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.8;
+}
+
+/* Workspace Folder Select */
+.workspace-folder-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.workspace-folder-select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.1s ease;
+}
+
+.workspace-folder-select:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.workspace-folder-select:hover {
+  border-color: var(--vscode-input-border, rgba(255, 255, 255, 0.1));
+}
+
+.workspace-folder-select option {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+}
+
+/* Clear workspace folder button */
+.workspace-folder-select-container .button.secondary.small {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--vscode-descriptionForeground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.workspace-folder-select-container .button.secondary.small:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-foreground);
+  border-color: var(--vscode-focusBorder);
+}
+
+.workspace-folder-select-container .button.secondary.small:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Button styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  white-space: nowrap;
+}
+
+.button.small {
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+.button.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--vscode-descriptionForeground);
+  border-color: var(--vscode-input-border, transparent);
+}
+
+.button.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--vscode-foreground);
+  border-color: var(--vscode-focusBorder);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.button .codicon {
+  font-size: 12px;
+}
+
+/* Git settings */
+.git-settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-row label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vscode-foreground);
+}
+
+/* Mode select uses the same look as workspace-folder-select */
+.git-mode-select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.1s ease;
+}
+
+.git-mode-select:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.git-mode-select:hover {
+  border-color: var(--vscode-input-border, rgba(255, 255, 255, 0.1));
+}
+
+.git-mode-select option {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+}
+
+.git-mode-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Group prefix input follows input styling used elsewhere */
+.git-group-prefix {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+}
+
+.git-group-prefix::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.git-group-prefix:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.git-group-prefix:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* File icon colours */
