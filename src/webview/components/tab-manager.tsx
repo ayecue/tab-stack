@@ -36,9 +36,7 @@ const TabManagerContent: React.FC = () => {
     if (state.histories.length === 0) {
       return null;
     }
-    return [...state.histories].sort((a, b) =>
-      b.historyId.localeCompare(a.historyId)
-    )[0].historyId;
+    return state.histories[0].historyId;
   }, [state.histories]);
 
   const handleCloseAllTabs = useCallback(() => {

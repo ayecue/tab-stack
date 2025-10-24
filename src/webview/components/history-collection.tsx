@@ -20,23 +20,15 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
   onDelete
 }) => {
   const { state, actions } = useTabContext();
-
-  const sortedHistory = useMemo(
-    () =>
-      [...state.histories].sort((a, b) =>
-        b.historyId.localeCompare(a.historyId)
-      ),
-    [state.histories]
-  );
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredHistory = useMemo(() => {
     if (!searchTerm.trim()) {
-      return sortedHistory;
+      return state.histories;
     }
 
     const term = searchTerm.trim().toLowerCase();
-    return sortedHistory.filter((history) => {
+    return state.histories.filter((history) => {
       const timestamp = formatTimestamp(history.historyId).toLowerCase();
       return (
         history.name.toLowerCase().includes(term) ||
@@ -44,7 +36,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
         timestamp.includes(term)
       );
     });
-  }, [sortedHistory, searchTerm]);
+  }, [state.histories, searchTerm]);
 
   return (
     <div className="collections-section history-collection">
@@ -88,7 +80,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
         </div>
       </div>
 
-      {sortedHistory.length === 0 ? (
+      {state.histories.length === 0 ? (
         <p className="section-empty">No snapshots captured yet.</p>
       ) : filteredHistory.length === 0 ? (
         <p className="section-empty">No snapshots match your search.</p>

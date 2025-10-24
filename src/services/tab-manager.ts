@@ -346,14 +346,19 @@ export class TabManagerService implements ITabManagerService {
     ]);
     const groupValues = Object.values(groups);
 
-    // Sort groups by most recently selected (descending)
     groupValues.sort((a, b) => {
       const timeA = a.lastSelectedAt || 0;
       const timeB = b.lastSelectedAt || 0;
-      return timeB - timeA; // Most recent first
+      return timeB - timeA;
     });
 
     const historyValues = Object.values(history);
+
+    historyValues.sort((a, b) => {
+      const timeA = a.createdAt || 0;
+      const timeB = b.createdAt || 0;
+      return timeB - timeA;
+    });
 
     const masterWorkspaceFolder =
       this._configService.getMasterWorkspaceFolder();
