@@ -78,6 +78,10 @@ export class TabManagerService implements ITabManagerService {
     this.initializeEvents();
   }
 
+  get config() {
+    return this._configService;
+  }
+
   get state() {
     return this._stateService;
   }
@@ -370,6 +374,7 @@ export class TabManagerService implements ITabManagerService {
 
     const masterWorkspaceFolder =
       this._configService.getMasterWorkspaceFolder();
+    const gitIntegration = this._configService.getGitIntegrationConfig();
     const availableWorkspaceFolders = this._configService
       .getAvailableWorkspaceFolders()
       .map((folder) => ({
@@ -390,7 +395,8 @@ export class TabManagerService implements ITabManagerService {
       selectedGroup: this._stateService.selectedGroup ?? null,
       quickSlots,
       masterWorkspaceFolder,
-      availableWorkspaceFolders
+      availableWorkspaceFolders,
+      gitIntegration
     });
   }
 

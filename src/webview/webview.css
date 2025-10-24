@@ -1215,6 +1215,86 @@ body {
   font-size: 12px;
 }
 
+/* Git settings */
+.git-settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-row label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vscode-foreground);
+}
+
+/* Mode select uses the same look as workspace-folder-select */
+.git-mode-select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.1s ease;
+}
+
+.git-mode-select:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.git-mode-select:hover {
+  border-color: var(--vscode-input-border, rgba(255, 255, 255, 0.1));
+}
+
+.git-mode-select option {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+}
+
+.git-mode-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Group prefix input follows input styling used elsewhere */
+.git-group-prefix {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+}
+
+.git-group-prefix::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.git-group-prefix:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.git-group-prefix:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* File icon colours */
 .icon-typescript { color: #3178c6; }
 .icon-javascript { color: #f7df1e; }

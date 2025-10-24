@@ -13,7 +13,8 @@ import {
   WebviewSwitchGroupMessage,
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
-  WebviewTabTogglePinMessage
+  WebviewTabTogglePinMessage,
+  WebviewUpdateGitIntegrationMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
 
@@ -93,6 +94,17 @@ export class MessageHandler implements Disposable {
       }
       case WebviewMessageType.ClearWorkspaceFolder: {
         await tabManager.clearWorkspaceFolder();
+        break;
+      }
+      case WebviewMessageType.UpdateGitIntegration: {
+        const { enabled, mode, groupPrefix } =
+          data as WebviewUpdateGitIntegrationMessage;
+        if (enabled != null)
+          await tabManager.config.setGitIntegrationEnabled(enabled);
+        if (mode != null) await tabManager.config.setGitIntegrationMode(mode);
+        if (groupPrefix != null)
+          await tabManager.config.setGitIntegrationGroupPrefix(groupPrefix);
+        await tabManager.triggerSync();
         break;
       }
       case WebviewMessageType.Sync: {

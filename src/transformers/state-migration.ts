@@ -1,6 +1,10 @@
 import { window } from 'vscode';
+
 import { transform as v0ToV1 } from '../transformers/state-migration/v0';
-import { createDefaultTabStateFileContent, TabStateFileContent } from '../types/tab-manager';
+import {
+  createDefaultTabStateFileContent,
+  TabStateFileContent
+} from '../types/tab-manager';
 
 export function transform(payload: { version?: number }): TabStateFileContent {
   try {

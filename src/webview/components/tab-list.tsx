@@ -9,14 +9,6 @@ interface TabListProps {
   searchTerm: string;
 }
 
-interface ColumnInfo {
-  key: string;
-  viewColumn: number | undefined;
-  activeLabel: string | null;
-  tabs: TabInfo[];
-  isActive: boolean;
-}
-
 interface TabWithIndex {
   tab: TabInfo;
   originalIndex: number;

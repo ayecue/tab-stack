@@ -1,5 +1,7 @@
 import { Disposable, Event } from 'vscode';
 
+import { ConfigService } from '../services/config';
+import { TabStateService } from '../services/tab-state';
 import { Layout } from './commands';
 import {
   ExtensionNotificationMessage,
@@ -50,6 +52,9 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
 }
 
 export interface ITabManagerService extends Disposable {
+  readonly state: TabStateService;
+  readonly config: ConfigService;
+
   refresh: () => Promise<void>;
   applyState(): Promise<void>;
   toggleTabPin(viewColumn: number, index: number): Promise<void>;

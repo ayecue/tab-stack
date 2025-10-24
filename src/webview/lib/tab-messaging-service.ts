@@ -151,6 +151,17 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
+  async updateGitIntegration(config: {
+    enabled?: boolean;
+    mode?: string;
+    groupPrefix?: string;
+  }): Promise<void> {
+    this.messenger.sendMessage({
+      type: WebviewMessageType.UpdateGitIntegration,
+      ...config
+    });
+  }
+
   getMessenger(): VSCodeMessenger {
     return this.messenger;
   }

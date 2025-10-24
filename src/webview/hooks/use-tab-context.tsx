@@ -7,6 +7,7 @@ import React, {
   useState
 } from 'react';
 
+import { GitIntegrationConfig, GitIntegrationMode } from '../../types/config';
 import {
   ExtensionMessageType,
   ExtensionNotificationKind,
@@ -35,6 +36,7 @@ interface TabState {
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
+  gitIntegration?: GitIntegrationConfig;
 }
 
 interface TabContextValue {
@@ -57,6 +59,11 @@ interface TabContextValue {
     clearQuickSlot: (groupId: string) => Promise<void>;
     selectWorkspaceFolder: (folderPath: string | null) => Promise<void>;
     clearWorkspaceFolder: () => Promise<void>;
+    updateGitIntegration: (cfg: {
+      enabled?: boolean;
+      mode?: GitIntegrationMode;
+      groupPrefix?: string;
+    }) => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -78,7 +85,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     selectedGroup: null,
     quickSlots: {},
     masterWorkspaceFolder: null,
-    availableWorkspaceFolders: []
+    availableWorkspaceFolders: [],
+    gitIntegration: undefined
   });
 
   const [messenger] = useState(() =>
@@ -103,7 +111,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           selectedGroup: event.selectedGroup,
           quickSlots: event.quickSlots,
           masterWorkspaceFolder: event.masterWorkspaceFolder,
-          availableWorkspaceFolders: event.availableWorkspaceFolders
+          availableWorkspaceFolders: event.availableWorkspaceFolders,
+          gitIntegration: event.gitIntegration
         }));
       }
     );
@@ -352,7 +361,23 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
         handleError(error, 'clear workspace folder');
         throw error;
       }
-    }, [messagingService, handleError])
+    }, [messagingService, handleError]),
+
+    updateGitIntegration: useCallback(
+      async (cfg: {
+        enabled?: boolean;
+        mode?: GitIntegrationMode;
+        groupPrefix?: string;
+      }): Promise<void> => {
+        try {
+          messagingService.updateGitIntegration(cfg);
+        } catch (error) {
+          handleError(error, 'update git settings');
+          throw error;
+        }
+      },
+      [messagingService, handleError]
+    )
   };
 
   const contextValue: TabContextValue = {

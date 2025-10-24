@@ -70,6 +70,11 @@ export class ConfigService implements Disposable {
     await config.update('mode', mode, false);
   }
 
+  async setGitIntegrationGroupPrefix(prefix: string): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.gitIntegration');
+    await config.update('groupPrefix', prefix, false);
+  }
+
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {
     return workspace.workspaceFolders || [];
   }
