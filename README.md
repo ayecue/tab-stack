@@ -1,6 +1,6 @@
 # Tab Stack
 
-Save, switch, and recover complete VS Code tab layouts—now Git‑aware, renameable, and fast.
+Save, switch, and recover complete VS Code tab layouts. Git‑aware, renameable, and fast.
 
 Create named groups and snapshots, assign quick slots for instant recall, and optionally auto‑switch groups when you change branches.
 
