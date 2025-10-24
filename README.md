@@ -9,7 +9,7 @@ Create named groups and snapshots, assign quick slots for instant recall, and op
 ## Highlights
 
 - **Save named tab groups** and reopen entire working sets with a click.
-- **Capture named snapshots** of every open tab and restore them later.
+- **Capture snapshots** of every open tab and restore them later.
 - **Assign quick slots (1–9)** for instant recall via UI, palette, or keys.
 - **Git‑aware workflows** — auto‑create or auto‑switch groups on branch change (configurable).
 - **Smart ordering** — groups are sorted by most recently used.
@@ -29,7 +29,7 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
   - Click the edit icon to rename the group (names are fully editable).
   - Assign a quick slot (1–9) from the dropdown for instant recall.
 4. In **Snapshots**:
-  - Click the camera to capture a named snapshot. You’ll see both your label and a timestamp.
+  - Click the camera to capture a snapshot.
 5. (Optional) **Git Integration**:
   - Open the Settings panel and enable Git Integration. Choose auto‑switch, auto‑create, or full‑auto. Optionally set a prefix like `git:`.
 6. Use shortcuts:
@@ -47,7 +47,7 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 | `tabStack.createGroup` | Save the current set of open tabs as a reusable group. | — |
 | `tabStack.assignQuickSlot` | Assign the current group to a quick slot (also available in the UI). | — |
 | `tabStack.deleteGroup` | Remove a saved group. | — |
-| `tabStack.snapshot` | Capture a named snapshot of every open tab (saved to history). | — |
+| `tabStack.snapshot` | Capture a snapshot of every open tab (saved to history). | — |
 | `tabStack.restoreSnapshot` | Restore one of the saved snapshots. | — |
 | `tabStack.deleteSnapshot` | Delete a snapshot from history. | — |
 | `tabStack.quickSlot1` – `tabStack.quickSlot9` | Apply the group assigned to quick slots 1–9. | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` … `9` |
@@ -60,7 +60,7 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 - **Git Integration modes** — choose auto‑switch, auto‑create, or full‑auto to match your workflow.
 - **Custom prefixes** — keep Git‑created groups tidy with a prefix like `git:` (e.g., `git:main`).
 - **MRU sorting** — your most recently used groups surface to the top automatically.
-- **Named snapshots** — descriptive labels plus timestamps make restores obvious.
+- **Snapshots** — labels with timestamps make restores obvious.
 - **Quick slots from the UI** — assign 1–9 directly from the Groups list.
 - **Quick Switch** — jump between two active contexts with a single shortcut.
 - **Layout accuracy** — column sizing and splits are tracked and refreshed automatically.
