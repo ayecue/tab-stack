@@ -49,13 +49,6 @@ export class GitService implements Disposable {
       this._disposables.push(
         this._gitAPI.onDidCloseRepository(() => this.updateRepository())
       );
-      this._disposables.push(
-        this._configService.onDidChangeConfig((changes) => {
-          if (changes.masterWorkspaceFolder !== undefined) {
-            this.updateRepository();
-          }
-        })
-      );
 
       this.updateRepository();
 

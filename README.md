@@ -9,7 +9,6 @@ Create named groups and snapshots, assign quick slots for instant recall, and op
 ## Highlights
 
 - **Save named tab groups** and reopen entire working sets with a click.
-- **Rename groups safely** — IDs stay stable, names are editable.
 - **Capture named snapshots** of every open tab and restore them later.
 - **Assign quick slots (1–9)** for instant recall via UI, palette, or keys.
 - **Git‑aware workflows** — auto‑create or auto‑switch groups on branch change (configurable).

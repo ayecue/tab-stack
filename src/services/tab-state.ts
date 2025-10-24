@@ -128,6 +128,20 @@ export class TabStateService implements Disposable {
     this._state = state;
   }
 
+  private initializeStateFromFileState(fileState: TabStateFileContent) {
+    if (fileState.selectedGroup != null) {
+      const state: StateContainer = {
+        id: nanoid(),
+        name: 'untitled',
+        state: fileState.groups[fileState.selectedGroup]!.state,
+        lastSelectedAt: 0,
+        createdAt: Date.now()
+      };
+
+      this._state = state;
+    }
+  }
+
   async getState(): Promise<StateContainer> {
     if (this._state) {
       return this._state;
@@ -163,7 +177,7 @@ export class TabStateService implements Disposable {
 
     const state: StateContainer = {
       id: nanoid(),
-      name: 'anonymous',
+      name: 'untitled',
       state: {
         tabState,
         layout: await getEditorLayout()
@@ -341,7 +355,10 @@ export class TabStateService implements Disposable {
     );
 
     await this._file.load();
-    this._file.data = transform(this._file.data);
+
+    const fileState = transform(this._file.data);
+    this.initializeStateFromFileState(fileState);
+    this._file.data = fileState;
 
     return this._file;
   }

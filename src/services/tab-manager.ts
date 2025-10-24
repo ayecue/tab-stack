@@ -106,9 +106,16 @@ export class TabManagerService implements ITabManagerService {
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
         if (changes.masterWorkspaceFolder !== undefined) {
-          await this._stateService.reloadStateFile();
+          this._stateService = null;
+
+          const newStateService = new TabStateService(this._configService);
+          await newStateService.initialize();
+          this._stateService = newStateService;
+          console.log(await newStateService.getState());
           await this.applyState();
           await this.triggerSync();
+
+          this._gitService.updateRepository();
         }
       })
     );
