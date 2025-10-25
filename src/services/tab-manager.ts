@@ -7,13 +7,13 @@ import {
   ExtensionTabsSyncMessage
 } from '../types/messages';
 import {
-  EMPTY_GROUP_SELECTION,
   ITabManagerService,
   QuickSlotIndex,
-  StateContainer
+  RenderingItem
 } from '../types/tab-manager';
 import { TabInfo } from '../types/tabs';
 import {
+  closeAllEditors,
   focusTabInGroup,
   openTab,
   pinEditor,
@@ -22,8 +22,8 @@ import {
 } from '../utils/commands';
 import { delay } from '../utils/delay';
 import {
-  closeAllTabs,
   closeTab,
+  countTabs,
   findTabByViewColumnAndIndex,
   findTabGroupByViewColumn
 } from '../utils/tab-utils';
@@ -40,7 +40,7 @@ export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100;
 
   private _rendering: boolean;
-  private _nextRenderingItem: StateContainer;
+  private _nextRenderingItem: RenderingItem;
 
   private _stateService: TabStateService;
   private _layoutService: EditorLayoutService;
@@ -215,7 +215,10 @@ export class TabManagerService implements ITabManagerService {
   async applyState() {
     if (!this._stateService) return;
 
-    this._nextRenderingItem = await this._stateService.getState();
+    this._nextRenderingItem = {
+      state: this._stateService.stateContainer,
+      previousState: this._stateService.previousStateContainer
+    };
 
     if (this._rendering) return;
 
@@ -240,17 +243,23 @@ export class TabManagerService implements ITabManagerService {
   }
 
   private async render() {
-    const currentState = this._nextRenderingItem;
+    const currentState = this._nextRenderingItem.state;
+    const previousState = this._nextRenderingItem.previousState;
 
     this._nextRenderingItem = null;
-    this._layoutService.setLayout(currentState.state.layout);
 
-    if (window.tabGroups.all.length > 0) {
-      await Promise.all(
-        window.tabGroups.all.map((tab) => window.tabGroups.close(tab, true))
-      );
+    if (countTabs() > 0) {
+      await closeAllEditors();
+
+      if (countTabs() > 0) {
+        this._stateService.setState(previousState);
+        return;
+      }
     }
 
+    console.log('Rendering tabs for group:', currentState);
+
+    this._layoutService.setLayout(currentState.state.layout);
     await setEditorLayout(currentState.state.layout);
 
     const tabGroupItems = Object.values(currentState.state.tabState.tabGroups);
@@ -342,7 +351,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async clearAllTabs(): Promise<void> {
-    await closeAllTabs();
+    await closeAllEditors();
   }
 
   async triggerSync() {
@@ -350,8 +359,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const [state, groups, history, quickSlots] = await Promise.all([
-      this._stateService.getState(),
+    const [groups, history, quickSlots] = await Promise.all([
       this._stateService.getGroups(),
       this._stateService.getHistory(),
       this._stateService.getQuickSlots()
@@ -383,7 +391,7 @@ export class TabManagerService implements ITabManagerService {
       }));
 
     this._syncViewEmitter.fire({
-      tabState: state.state.tabState,
+      tabState: this._stateService.stateContainer.state.tabState,
       histories: historyValues.map((entry) => ({
         historyId: entry.id,
         name: entry.name
@@ -392,7 +400,10 @@ export class TabManagerService implements ITabManagerService {
         groupId: group.id,
         name: group.name
       })),
-      selectedGroup: this._stateService.selectedGroup ?? null,
+      selectedGroup:
+        this._stateService.stateContainer.id in groups
+          ? this._stateService.stateContainer.id
+          : null,
       quickSlots,
       masterWorkspaceFolder,
       availableWorkspaceFolders,
@@ -405,12 +416,12 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    if (this._stateService.selectedGroup === groupId) {
+    if (this._stateService.stateContainer.id === groupId) {
       return;
     }
 
-    if (!groupId) {
-      await this._stateService.setSelectedGroup(EMPTY_GROUP_SELECTION);
+    if (groupId == null) {
+      await this._stateService.forkState();
       await this.triggerSync();
       return;
     }
@@ -570,26 +581,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const previousGroup = await this._stateService.getPreviousSelectedGroup();
-
-    if (!previousGroup) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        'No previous group to switch to'
-      );
-      return;
-    }
-
-    const didSwitch = await this._stateService.loadState(previousGroup);
-
-    if (!didSwitch) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        `Previous group "${previousGroup}" no longer exists`
-      );
-      await this.triggerSync();
-      return;
-    }
+    this._stateService.setState(this._stateService.previousStateContainer);
 
     await this.applyState();
     await this.triggerSync();

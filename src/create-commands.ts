@@ -2,7 +2,6 @@ import { commands, Disposable, window } from 'vscode';
 
 import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
-import { EMPTY_GROUP_SELECTION } from './types/tab-manager';
 
 async function requestGroupId(
   tabManagerService: TabManagerService
@@ -104,7 +103,7 @@ export function createCommands(
   const clearSelectionCommand = commands.registerCommand(
     `${EXTENSION_NAME}.clearSelection`,
     async () => {
-      await tabManagerService.switchToGroup(EMPTY_GROUP_SELECTION);
+      await tabManagerService.switchToGroup(null);
     }
   );
 

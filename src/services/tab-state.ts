@@ -7,9 +7,8 @@ import { transformTabToTabInfo } from '../transformers/tab';
 import { StorageFile } from '../types/storage';
 import {
   createDefaultTabStateFileContent,
+  createEmptyStateContainer,
   CURRENT_STATE_FILE_VERSION,
-  EMPTY_GROUP_SELECTION,
-  GroupSelectionValue,
   QuickSlotAssignments,
   QuickSlotIndex,
   StateContainer,
@@ -34,20 +33,17 @@ export class TabStateService implements Disposable {
   private _history: Record<string, StateContainer> | null;
   private _groups: Record<string, StateContainer> | null;
   // undefined = no selected group, null = not loaded
-  private _selectedGroup: GroupSelectionValue | null;
-  private _previousSelectedGroup: GroupSelectionValue | null;
   private _quickSlots: QuickSlotAssignments | null;
-  private _state: StateContainer | null;
+  private _stateContainer: StateContainer | null;
+  private _previousStateContainer: StateContainer | null;
   private _configService: ConfigService;
 
   constructor(configService: ConfigService) {
     this._configService = configService;
     this._history = null;
     this._groups = null;
-    this._selectedGroup = null;
-    this._previousSelectedGroup = null;
     this._quickSlots = null;
-    this._state = null;
+    this._stateContainer = null;
     this._pendingFile = null;
     this._file = null;
     this.save = debounce(this._save.bind(this), TabStateService.DEBOUNCE_DELAY);
@@ -55,27 +51,14 @@ export class TabStateService implements Disposable {
 
   async initialize() {
     await Promise.all([
-      this.getSelectedGroup(),
-      this.getPreviousSelectedGroup(),
       this.getGroups(),
       this.getHistory(),
       this.getQuickSlots()
     ]);
-  }
 
-  get selectedGroup() {
-    return this._selectedGroup;
-  }
-
-  async setSelectedGroup(groupId: GroupSelectionValue) {
-    if (groupId === this._selectedGroup) {
-      return;
+    if (this._stateContainer == null) {
+      await this.updateState();
     }
-
-    this._previousSelectedGroup = this._selectedGroup;
-    this._selectedGroup = groupId;
-
-    await this.save();
   }
 
   get groups() {
@@ -84,6 +67,14 @@ export class TabStateService implements Disposable {
 
   get history() {
     return this._history ?? {};
+  }
+
+  get stateContainer() {
+    return this._stateContainer;
+  }
+
+  get previousStateContainer() {
+    return this._previousStateContainer;
   }
 
   async addToHistory(state: TabManagerState): Promise<string> {
@@ -112,41 +103,27 @@ export class TabStateService implements Disposable {
   }
 
   async refreshState() {
-    this._state = null;
+    await this.updateState();
 
-    await this.getState();
-
-    if (this._selectedGroup && this._groups) {
-      this._groups[this._selectedGroup].state = this._state!.state;
+    if (this._stateContainer.id in this._groups) {
       await this.save();
     }
 
-    return this._state;
-  }
-
-  setState(state: StateContainer) {
-    this._state = state;
+    return this._stateContainer;
   }
 
   private initializeStateFromFileState(fileState: TabStateFileContent) {
-    if (fileState.selectedGroup != null) {
-      const state: StateContainer = {
-        id: nanoid(),
-        name: 'untitled',
-        state: fileState.groups[fileState.selectedGroup]!.state,
-        lastSelectedAt: 0,
-        createdAt: Date.now()
-      };
+    if (fileState.selectedGroup in fileState.groups) {
+      this._stateContainer = fileState.groups[fileState.selectedGroup];
+    }
 
-      this._state = state;
+    if (fileState.previousSelectedGroup in fileState.groups) {
+      this._previousStateContainer =
+        fileState.groups[fileState.previousSelectedGroup];
     }
   }
 
-  async getState(): Promise<StateContainer> {
-    if (this._state) {
-      return this._state;
-    }
-
+  async updateState(): Promise<void> {
     const tabState: TabState = {
       tabGroups: {},
       activeGroup: window.tabGroups.activeTabGroup.viewColumn ?? null
@@ -173,21 +150,29 @@ export class TabStateService implements Disposable {
       tabState.tabGroups[viewColumn] = tabGroupInfo;
     });
 
-    await this.getGroups();
+    const newState =
+      this._stateContainer != null
+        ? this._stateContainer
+        : createEmptyStateContainer();
 
-    const state: StateContainer = {
-      id: nanoid(),
-      name: 'untitled',
-      state: {
-        tabState,
-        layout: await getEditorLayout()
-      },
-      lastSelectedAt: 0,
-      createdAt: Date.now()
+    newState.state = {
+      tabState,
+      layout: await getEditorLayout()
     };
 
-    this._state = state;
-    return state;
+    console.log('Update state:', this._stateContainer);
+
+    this._stateContainer = newState;
+  }
+
+  async forkState(): Promise<void> {
+    this.setState(null);
+    await this.updateState();
+  }
+
+  setState(stateContainer: StateContainer): void {
+    this._previousStateContainer = this._stateContainer;
+    this._stateContainer = stateContainer;
   }
 
   async loadState(groupId: string | null): Promise<boolean> {
@@ -198,9 +183,8 @@ export class TabStateService implements Disposable {
     const groups = await this.getGroups();
 
     if (groups && groups[groupId]) {
-      this._state = groups[groupId];
-      this._state.lastSelectedAt = Date.now();
-      await this.setSelectedGroup(groupId);
+      this.setState(groups[groupId]);
+      this._stateContainer.lastSelectedAt = Date.now();
       return true;
     }
 
@@ -211,8 +195,7 @@ export class TabStateService implements Disposable {
     const history = await this.getHistory();
 
     if (history && history[historyId]) {
-      this._state = history[historyId];
-      await this.setSelectedGroup(EMPTY_GROUP_SELECTION);
+      this.setState(history[historyId]);
       return true;
     }
 
@@ -239,9 +222,7 @@ export class TabStateService implements Disposable {
     };
 
     groups[stateContainer.id] = stateContainer;
-    this._state = stateContainer;
-
-    await this.setSelectedGroup(stateContainer.id);
+    this.setState(stateContainer);
 
     return true;
   }
@@ -279,14 +260,6 @@ export class TabStateService implements Disposable {
 
     delete groups[groupId];
 
-    if (this._selectedGroup === groupId) {
-      this._selectedGroup = EMPTY_GROUP_SELECTION;
-    }
-
-    if (this._previousSelectedGroup === groupId) {
-      this._previousSelectedGroup = EMPTY_GROUP_SELECTION;
-    }
-
     const quickSlots = await this.getQuickSlots();
     const currentQuickSlotIndex = Object.keys(quickSlots).find(
       (index) => quickSlots[index] === groupId
@@ -297,7 +270,11 @@ export class TabStateService implements Disposable {
     }
 
     this._groups = groups;
-    this._state = null;
+
+    if (this._stateContainer?.id === groupId) {
+      this._stateContainer = null;
+      await this.updateState();
+    }
 
     await this.save();
 
@@ -312,9 +289,7 @@ export class TabStateService implements Disposable {
     }
 
     delete history[historyId];
-
     this._history = history;
-    this._state = null;
 
     await this.save();
 
@@ -361,34 +336,6 @@ export class TabStateService implements Disposable {
     this._file.data = fileState;
 
     return this._file;
-  }
-
-  async getSelectedGroup(): Promise<GroupSelectionValue> {
-    if (this._selectedGroup !== null) {
-      return this._selectedGroup;
-    }
-
-    const stateFile = await this.getStateFile();
-    const selectedGroup =
-      stateFile?.data?.selectedGroup || EMPTY_GROUP_SELECTION;
-
-    this._selectedGroup = selectedGroup;
-
-    return this._selectedGroup;
-  }
-
-  async getPreviousSelectedGroup(): Promise<GroupSelectionValue> {
-    if (this._previousSelectedGroup !== null) {
-      return this._previousSelectedGroup;
-    }
-
-    const stateFile = await this.getStateFile();
-    const previousSelectedGroup =
-      stateFile?.data?.previousSelectedGroup || EMPTY_GROUP_SELECTION;
-
-    this._previousSelectedGroup = previousSelectedGroup;
-
-    return this._previousSelectedGroup;
   }
 
   async getGroups(): Promise<Record<string, StateContainer>> {
@@ -466,9 +413,8 @@ export class TabStateService implements Disposable {
   async reloadStateFile(): Promise<void> {
     this._groups = null;
     this._history = null;
-    this._state = null;
-    this._selectedGroup = null;
-    this._previousSelectedGroup = null;
+    this._stateContainer = null;
+    this._previousStateContainer = null;
     this._quickSlots = null;
     this._file = null;
     this._pendingFile = null;
@@ -482,21 +428,18 @@ export class TabStateService implements Disposable {
       return;
     }
 
-    const [groups, history, selectedGroup, previousSelectedGroup, quickSlots] =
-      await Promise.all([
-        this.getGroups(),
-        this.getHistory(),
-        this.getSelectedGroup(),
-        this.getPreviousSelectedGroup(),
-        this.getQuickSlots()
-      ]);
+    const [groups, history, quickSlots] = await Promise.all([
+      this.getGroups(),
+      this.getHistory(),
+      this.getQuickSlots()
+    ]);
 
     await stateFile.save({
       version: CURRENT_STATE_FILE_VERSION,
       groups,
       history,
-      selectedGroup: selectedGroup ?? EMPTY_GROUP_SELECTION,
-      previousSelectedGroup: previousSelectedGroup ?? EMPTY_GROUP_SELECTION,
+      selectedGroup: this._stateContainer.id,
+      previousSelectedGroup: this._previousStateContainer.id,
       quickSlots
     });
   }
@@ -506,9 +449,8 @@ export class TabStateService implements Disposable {
     this._pendingFile = null;
     this._groups = null;
     this._history = null;
-    this._state = null;
-    this._selectedGroup = null;
-    this._previousSelectedGroup = null;
+    this._stateContainer = null;
+    this._previousStateContainer = null;
     this._quickSlots = null;
   }
 }
