@@ -156,6 +156,21 @@
         "category": "Tab Stack"
       },
       {
+        "command": "tabStack.createAddon",
+        "title": "Save Current Tabs as Add-on",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.applyAddon",
+        "title": "Apply Add-on (Add Tabs)",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.deleteAddon",
+        "title": "Delete Add-on",
+        "category": "Tab Stack"
+      },
+      {
         "command": "tabStack.assignQuickSlot",
         "title": "Assign Current Group to Quick Slot",
         "category": "Tab Stack"

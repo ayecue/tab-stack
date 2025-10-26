@@ -10,6 +10,7 @@ Create named groups and snapshots, assign quick slots for instant recall, and op
 
 - **Save named tab groups** and reopen entire working sets with a click.
 - **Capture snapshots** of every open tab and restore them later.
+- **Add-ons (apply without replacing)** — save reusable tab sets you can apply on top of your current layout without closing anything.
 - **Assign quick slots (1–9)** for instant recall via UI, palette, or keys.
 - **Git‑aware workflows** — auto‑create or auto‑switch groups on branch change (configurable).
 - **Smart ordering** — groups are sorted by most recently used.
@@ -35,6 +36,9 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 6. Use shortcuts:
   - Quick Switch: Cmd/Ctrl + Alt + Shift + 0
   - Quick Slots: Cmd/Ctrl + Alt + Shift + 1…9
+7. Add-ons (optional):
+  - Switch to the Add-ons tab, click + to save the current tabs as an add-on.
+  - Click an add-on to apply it — it adds tabs on top of your current layout without closing existing ones.
 
 ## Commands & shortcuts
 
@@ -50,6 +54,9 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 | `tabStack.snapshot` | Capture a snapshot of every open tab (saved to history). | — |
 | `tabStack.restoreSnapshot` | Restore one of the saved snapshots. | — |
 | `tabStack.deleteSnapshot` | Delete a snapshot from history. | — |
+| `tabStack.createAddon` | Save the current tabs as an add-on (applies without replacing). | — |
+| `tabStack.applyAddon` | Apply an add-on on top of your current layout. | — |
+| `tabStack.deleteAddon` | Delete a saved add-on. | — |
 | `tabStack.quickSlot1` – `tabStack.quickSlot9` | Apply the group assigned to quick slots 1–9. | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` … `9` |
 
 \*On macOS the shortcuts use `Cmd` instead of `Ctrl`.
@@ -65,6 +72,8 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 - **Quick Switch** — jump between two active contexts with a single shortcut.
 - **Layout accuracy** — column sizing and splits are tracked and refreshed automatically.
 - **Multi‑root** — pick which workspace folder to track in Settings.
+- **Add-ons are additive** — they never replace or close your current tabs; perfect for reusable toolsets or pin sets.
+- **Limitations** — some tab types (like certain webviews or terminals) can't be automatically reopened by VS Code. Tab Stack marks these as not recoverable so you can quickly spot them.
 
 ## Configuration
 
