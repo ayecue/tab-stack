@@ -265,8 +265,6 @@ export class TabManagerService implements ITabManagerService {
       }
     }
 
-    console.log('Rendering tabs for group:', currentState);
-
     this._layoutService.setLayout(currentState.state.layout);
     await setEditorLayout(currentState.state.layout);
 

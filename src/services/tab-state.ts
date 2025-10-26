@@ -167,8 +167,6 @@ export class TabStateService implements Disposable {
       layout: await getEditorLayout()
     };
 
-    console.log('Update state:', this._stateContainer);
-
     this._stateContainer = newState;
   }
 
