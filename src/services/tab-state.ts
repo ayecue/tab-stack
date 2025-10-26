@@ -32,6 +32,7 @@ export class TabStateService implements Disposable {
 
   private _history: Record<string, StateContainer> | null;
   private _groups: Record<string, StateContainer> | null;
+  private _addons: Record<string, StateContainer> | null;
   // undefined = no selected group, null = not loaded
   private _quickSlots: QuickSlotAssignments | null;
   private _stateContainer: StateContainer | null;
@@ -46,6 +47,7 @@ export class TabStateService implements Disposable {
     this._configService = configService;
     this._history = null;
     this._groups = null;
+  this._addons = null;
     this._quickSlots = null;
     this._stateContainer = null;
     this._pendingFile = null;
@@ -56,6 +58,7 @@ export class TabStateService implements Disposable {
     await Promise.all([
       this.getGroups(),
       this.getHistory(),
+      this.getAddons(),
       this.getQuickSlots()
     ]);
 
@@ -74,6 +77,10 @@ export class TabStateService implements Disposable {
 
   get history() {
     return this._history ?? {};
+  }
+
+  get addons() {
+    return this._addons ?? {};
   }
 
   get stateContainer() {
@@ -106,6 +113,20 @@ export class TabStateService implements Disposable {
       keysToRemove.forEach((key) => delete history[key]);
     }
 
+    return stateContainer.id;
+  }
+
+  async addToAddons(state: TabManagerState, name: string): Promise<string> {
+    const addons = await this.getAddons();
+    const stateContainer: StateContainer = {
+      id: nanoid(),
+      name,
+      state,
+      createdAt: Date.now(),
+      lastSelectedAt: 0
+    };
+
+    addons[stateContainer.id] = stateContainer;
     return stateContainer.id;
   }
 
@@ -278,6 +299,21 @@ export class TabStateService implements Disposable {
     return true;
   }
 
+  async deleteAddon(addonId: string): Promise<boolean> {
+    const addons = await this.getAddons();
+
+    if (!addons[addonId]) {
+      return false;
+    }
+
+    delete addons[addonId];
+    this._addons = addons;
+
+    this.save();
+
+    return true;
+  }
+
   private async getStateFile(): Promise<StorageFile<TabStateFileContent> | null> {
     if (this._file) {
       return this._file;
@@ -346,6 +382,19 @@ export class TabStateService implements Disposable {
     return this._history;
   }
 
+  async getAddons(): Promise<Record<string, StateContainer>> {
+    if (this._addons) {
+      return this._addons;
+    }
+
+    const stateFile = await this.getStateFile();
+    const storedAddons = stateFile?.data?.addons || {};
+
+    this._addons = storedAddons;
+
+    return this._addons;
+  }
+
   async getQuickSlots(): Promise<QuickSlotAssignments> {
     if (this._quickSlots) {
       return this._quickSlots;
@@ -410,9 +459,10 @@ export class TabStateService implements Disposable {
       return;
     }
 
-    const [groups, history, quickSlots] = await Promise.all([
+    const [groups, history, addons, quickSlots] = await Promise.all([
       this.getGroups(),
       this.getHistory(),
+      this.getAddons(),
       this.getQuickSlots()
     ]);
 
@@ -420,6 +470,7 @@ export class TabStateService implements Disposable {
       version: CURRENT_STATE_FILE_VERSION,
       groups,
       history,
+      addons,
       selectedGroup: this._stateContainer.id,
       previousSelectedGroup: this._previousStateContainer.id,
       quickSlots
@@ -431,6 +482,7 @@ export class TabStateService implements Disposable {
     this._pendingFile = null;
     this._groups = null;
     this._history = null;
+  this._addons = null;
     this._stateContainer = null;
     this._previousStateContainer = null;
     this._quickSlots = null;

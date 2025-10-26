@@ -7,11 +7,7 @@ import React, {
   useState
 } from 'react';
 
-import {
-  ApplyMode,
-  GitIntegrationConfig,
-  GitIntegrationMode
-} from '../../types/config';
+import { GitIntegrationConfig, GitIntegrationMode } from '../../types/config';
 import {
   ExtensionMessageType,
   ExtensionNotificationKind,
@@ -37,12 +33,12 @@ interface TabState {
   connectionStatus: ConnectionStatus;
   groups: Array<{ groupId: string; name: string }>;
   histories: Array<{ historyId: string; name: string }>;
+  addons: Array<{ addonId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration?: GitIntegrationConfig;
-  applyMode?: ApplyMode;
 }
 
 interface TabContextValue {
@@ -70,7 +66,9 @@ interface TabContextValue {
       mode?: GitIntegrationMode;
       groupPrefix?: string;
     }) => Promise<void>;
-    updateApplyMode: (mode: ApplyMode) => Promise<void>;
+    createAddon: (name: string) => Promise<void>;
+    deleteAddon: (addonId: string) => Promise<void>;
+    applyAddon: (addonId: string) => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -90,12 +88,12 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     connectionStatus: ConnectionStatus.Connecting,
     groups: [],
     histories: [],
+    addons: [],
     selectedGroup: null,
     quickSlots: {},
     masterWorkspaceFolder: null,
     availableWorkspaceFolders: [],
-    gitIntegration: undefined,
-    applyMode: undefined
+    gitIntegration: undefined
   });
 
   const [messenger] = useState(() =>
@@ -118,12 +116,12 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           connectionStatus: ConnectionStatus.Connected,
           groups: event.groups,
           histories: event.histories,
+          addons: event.addons,
           selectedGroup: event.selectedGroup,
           quickSlots: event.quickSlots,
           masterWorkspaceFolder: event.masterWorkspaceFolder,
           availableWorkspaceFolders: event.availableWorkspaceFolders,
-          gitIntegration: event.gitIntegration,
-          applyMode: event.applyMode
+          gitIntegration: event.gitIntegration
         }));
       }
     );
@@ -391,12 +389,38 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     )
   };
 
-  const updateApplyMode = useCallback(
-    async (mode: ApplyMode): Promise<void> => {
+  // apply mode removed
+
+  const createAddon = useCallback(
+    async (name: string): Promise<void> => {
       try {
-        messagingService.updateApplyMode(mode);
+        messagingService.createAddon(name);
       } catch (error) {
-        handleError(error, 'update apply mode');
+        handleError(error, 'create add-on');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
+  const deleteAddon = useCallback(
+    async (addonId: string): Promise<void> => {
+      try {
+        messagingService.deleteAddon(addonId);
+      } catch (error) {
+        handleError(error, 'delete add-on');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
+  const applyAddon = useCallback(
+    async (addonId: string): Promise<void> => {
+      try {
+        messagingService.applyAddon(addonId);
+      } catch (error) {
+        handleError(error, 'apply add-on');
         throw error;
       }
     },
@@ -405,7 +429,7 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
 
   const contextValue: TabContextValue = {
     state,
-    actions: { ...actions, updateApplyMode },
+    actions: { ...actions, createAddon, deleteAddon, applyAddon },
     messenger
   };
 

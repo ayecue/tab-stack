@@ -1,4 +1,3 @@
-import { ApplyMode } from '../../types/config';
 import {
   WebviewAddToHistoryMessage,
   WebviewAssignQuickSlotMessage,
@@ -16,7 +15,9 @@ import {
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
-  WebviewUpdateApplyModeMessage
+  WebviewCreateAddonMessage,
+  WebviewDeleteAddonMessage,
+  WebviewApplyAddonMessage
 } from '../../types/messages';
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { VSCodeMessenger } from './vscode-messenger';
@@ -164,10 +165,28 @@ export class TabMessagingService {
     });
   }
 
-  async updateApplyMode(mode: ApplyMode): Promise<void> {
-    const message: WebviewUpdateApplyModeMessage = {
-      type: WebviewMessageType.UpdateApplyMode,
-      mode
+  // apply mode removed
+
+  async createAddon(name: string): Promise<void> {
+    const message: WebviewCreateAddonMessage = {
+      type: WebviewMessageType.NewAddon,
+      name
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async deleteAddon(addonId: string): Promise<void> {
+    const message: WebviewDeleteAddonMessage = {
+      type: WebviewMessageType.DeleteAddon,
+      addonId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async applyAddon(addonId: string): Promise<void> {
+    const message: WebviewApplyAddonMessage = {
+      type: WebviewMessageType.ApplyAddon,
+      addonId
     };
     this.messenger.sendMessage(message);
   }

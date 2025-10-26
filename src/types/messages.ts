@@ -1,4 +1,4 @@
-import { ApplyMode, GitIntegrationConfig, GitIntegrationMode } from './config';
+import { GitIntegrationConfig, GitIntegrationMode } from './config';
 import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
 import { TabState } from './tabs';
 
@@ -28,12 +28,12 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   tabState: TabState;
   histories: Array<{ historyId: string; name: string }>;
   groups: Array<{ groupId: string; name: string }>;
+  addons: Array<{ addonId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
-  applyMode: ApplyMode;
   rendering: boolean;
 }
 
@@ -54,7 +54,9 @@ export enum WebviewMessageType {
   SelectWorkspaceFolder = 'select-workspace-folder',
   ClearWorkspaceFolder = 'clear-workspace-folder',
   UpdateGitIntegration = 'update-git-integration',
-  UpdateApplyMode = 'update-apply-mode'
+  NewAddon = 'new-addon',
+  DeleteAddon = 'delete-addon',
+  ApplyAddon = 'apply-addon'
 }
 
 export interface BaseWebviewMessage {
@@ -146,7 +148,19 @@ export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
   groupPrefix?: string;
 }
 
-export interface WebviewUpdateApplyModeMessage extends BaseWebviewMessage {
-  type: WebviewMessageType.UpdateApplyMode;
-  mode: ApplyMode;
+// Removed apply-mode messaging
+
+export interface WebviewCreateAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.NewAddon;
+  name: string;
+}
+
+export interface WebviewDeleteAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.DeleteAddon;
+  addonId: string;
+}
+
+export interface WebviewApplyAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ApplyAddon;
+  addonId: string;
 }

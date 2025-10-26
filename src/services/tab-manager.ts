@@ -1,7 +1,7 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { Disposable, EventEmitter, window } from 'vscode';
 
-import { ApplyMode, GitIntegrationMode } from '../types/config';
+import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
@@ -276,9 +276,7 @@ export class TabManagerService implements ITabManagerService {
 
     this._nextRenderingItem = null;
 
-    const applyMode = this._configService.getApplyMode();
-
-    if (applyMode === ApplyMode.Replace && countTabs() > 0) {
+    if (countTabs() > 0) {
       await closeAllEditors();
 
       if (countTabs() > 0) {
@@ -389,9 +387,10 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const [groups, history, quickSlots] = await Promise.all([
+    const [groups, history, addons, quickSlots] = await Promise.all([
       this._stateService.getGroups(),
       this._stateService.getHistory(),
+      this._stateService.getAddons(),
       this._stateService.getQuickSlots()
     ]);
     const groupValues = Object.values(groups);
@@ -403,6 +402,13 @@ export class TabManagerService implements ITabManagerService {
     });
 
     const historyValues = Object.values(history);
+    const addonValues = Object.values(addons);
+
+    addonValues.sort((a, b) => {
+      const timeA = a.createdAt || 0;
+      const timeB = b.createdAt || 0;
+      return timeB - timeA;
+    });
 
     historyValues.sort((a, b) => {
       const timeA = a.createdAt || 0;
@@ -430,6 +436,7 @@ export class TabManagerService implements ITabManagerService {
         groupId: group.id,
         name: group.name
       })),
+      addons: addonValues.map((addon) => ({ addonId: addon.id, name: addon.name })),
       selectedGroup:
         this._stateService.stateContainer.id in groups
           ? this._stateService.stateContainer.id
@@ -438,9 +445,58 @@ export class TabManagerService implements ITabManagerService {
       masterWorkspaceFolder,
       availableWorkspaceFolders,
       gitIntegration,
-      applyMode: this._configService.getApplyMode(),
       rendering: this._rendering
     });
+  }
+
+  async createAddon(name: string): Promise<void> {
+    if (!this._stateService) return;
+    const currentState = this._stateService.stateContainer.state;
+    await this._stateService.addToAddons(currentState, name);
+    await this.triggerSync();
+  }
+
+  async deleteAddon(addonId: string): Promise<void> {
+    if (!this._stateService) return;
+    const deleted = await this._stateService.deleteAddon(addonId);
+    if (!deleted) {
+      this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
+      return;
+    }
+    await this.triggerSync();
+  }
+
+  async applyAddon(addonId: string): Promise<void> {
+    if (!this._stateService) return;
+    const addons = await this._stateService.getAddons();
+    const addon = addons[addonId];
+    if (!addon) {
+      this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
+      return;
+    }
+
+    // Open all tabs from addon without closing existing editors or changing selection/layout
+    const tabGroups = Object.values(addon.state.tabState.tabGroups);
+    const pinnedTabs: { tab: TabInfo; index: number }[] = [];
+    const activeTabs: { tab: TabInfo; index: number }[] = [];
+
+    for (const group of tabGroups) {
+      for (let i = 0; i < group.tabs.length; i++) {
+        const tab = group.tabs[i];
+        if (tab.isActive) activeTabs.push({ tab, index: i });
+        await openTab(tab);
+        if (tab.isPinned) pinnedTabs.push({ tab, index: i });
+      }
+    }
+
+    for (let i = 0; i < pinnedTabs.length; i++) {
+      const { tab, index } = pinnedTabs[i];
+      await pinEditor(tab.viewColumn, index, false);
+    }
+
+    // Do not change focus or layout in additive apply
+    await this._stateService.refreshState();
+    await this.triggerSync();
   }
 
   async switchToGroup(groupId: string | null) {

@@ -14,8 +14,10 @@ import {
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
-  WebviewUpdateApplyModeMessage,
-  WebviewUpdateGitIntegrationMessage
+  WebviewUpdateGitIntegrationMessage,
+  WebviewCreateAddonMessage,
+  WebviewDeleteAddonMessage,
+  WebviewApplyAddonMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
 
@@ -108,10 +110,19 @@ export class MessageHandler implements Disposable {
         await tabManager.triggerSync();
         break;
       }
-      case WebviewMessageType.UpdateApplyMode: {
-        const { mode } = data as WebviewUpdateApplyModeMessage;
-        await tabManager.config.setApplyMode(mode);
-        await tabManager.triggerSync();
+      case WebviewMessageType.NewAddon: {
+        const { name } = data as WebviewCreateAddonMessage;
+        await tabManager.createAddon(name);
+        break;
+      }
+      case WebviewMessageType.DeleteAddon: {
+        const { addonId } = data as WebviewDeleteAddonMessage;
+        await tabManager.deleteAddon(addonId);
+        break;
+      }
+      case WebviewMessageType.ApplyAddon: {
+        const { addonId } = data as WebviewApplyAddonMessage;
+        await tabManager.applyAddon(addonId);
         break;
       }
       case WebviewMessageType.Sync: {
