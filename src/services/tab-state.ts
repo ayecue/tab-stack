@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid';
 import { Disposable, Uri, window, workspace } from 'vscode';
 
 import { transform } from '../transformers/state-migration';
-import { transformTabToTabInfo } from '../transformers/tab';
 import { StorageFile } from '../types/storage';
 import {
   createDefaultTabStateFileContent,
@@ -15,10 +14,11 @@ import {
   TabManagerState,
   TabStateFileContent
 } from '../types/tab-manager';
-import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
+import { TabState } from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
+import { getTabState } from '../utils/tab-utils';
 import { ConfigService } from './config';
 
 export class TabStateService implements Disposable {
@@ -109,10 +109,10 @@ export class TabStateService implements Disposable {
     return stateContainer.id;
   }
 
-  async refreshState() {
-    await this.updateState();
+  async refreshState(): Promise<StateContainer> {
+    const newStateContainer = await this.updateState();
     this.save();
-    return this._stateContainer;
+    return newStateContainer;
   }
 
   private initializeStateFromFileState(fileState: TabStateFileContent) {
@@ -126,45 +126,24 @@ export class TabStateService implements Disposable {
     }
   }
 
-  async updateState(): Promise<void> {
-    const tabState: TabState = {
-      tabGroups: {},
-      activeGroup: window.tabGroups.activeTabGroup.viewColumn ?? null
-    };
-
-    window.tabGroups.all.forEach((group) => {
-      const viewColumn = group.viewColumn || 0;
-      const tabGroupInfo: TabGroupInfo = {
-        tabs: [],
-        activeTab: undefined,
-        viewColumn: viewColumn || 0
-      };
-
-      group.tabs.forEach((tab) => {
-        const tabInfo: TabInfo = transformTabToTabInfo(tab, group.viewColumn);
-
-        if (tab.isActive) {
-          tabGroupInfo.activeTab = tabInfo;
-        }
-
-        tabGroupInfo.tabs.push(tabInfo);
-      });
-
-      tabState.tabGroups[viewColumn] = tabGroupInfo;
-    });
-
+  async updateState(): Promise<StateContainer> {
+    const tabState: TabState = getTabState();
+    const layout = await getEditorLayout();
     const newState =
-      this._stateContainer != null
-        ? this._stateContainer
-        : createEmptyStateContainer();
+      this._stateContainer == null
+        ? createEmptyStateContainer()
+        : this._stateContainer;
 
     newState.state = {
       tabState,
-      layout: await getEditorLayout()
+      layout
     };
 
     this._stateContainer = newState;
+    return this._stateContainer;
   }
+
+  private create;
 
   async forkState(): Promise<void> {
     this.setState(null);
@@ -215,11 +194,11 @@ export class TabStateService implements Disposable {
       return false;
     }
 
-    const snapshot = await this.refreshState();
+    const newStateContainer = await this.refreshState();
     const stateContainer: StateContainer = {
       id: nanoid(),
       name,
-      state: snapshot.state,
+      state: newStateContainer.state,
       createdAt: Date.now(),
       lastSelectedAt: Date.now()
     };
@@ -246,8 +225,8 @@ export class TabStateService implements Disposable {
   }
 
   async addCurrentStateToHistory(): Promise<string> {
-    const snapshot = await this.refreshState();
-    const id = await this.addToHistory(snapshot.state);
+    const newStateContainer = await this.refreshState();
+    const id = await this.addToHistory(newStateContainer.state);
 
     this.save();
 

@@ -2,7 +2,8 @@ import { Layout, LayoutGroup } from '../types/commands';
 
 function areLayoutGroupsEqual(
   left?: LayoutGroup[],
-  right?: LayoutGroup[]
+  right?: LayoutGroup[],
+  ignoreSize: boolean = false
 ): boolean {
   const queue: [[LayoutGroup[], LayoutGroup[]]] = [[left, right]];
 
@@ -23,7 +24,7 @@ function areLayoutGroupsEqual(
       const leftGroup = leftGroups[index];
       const rightGroup = rightGroups[index];
 
-      if (leftGroup.size !== rightGroup.size) {
+      if (leftGroup.size !== rightGroup.size && !ignoreSize) {
         return false;
       }
 
@@ -34,13 +35,17 @@ function areLayoutGroupsEqual(
   return true;
 }
 
-export function isLayoutEqual(left?: Layout, right?: Layout): boolean {
+export function isLayoutEqual(
+  left?: Layout,
+  right?: Layout,
+  ignoreSize?: boolean
+): boolean {
   if (left == null || right == null) {
     return left === right;
   }
 
   return (
     left.orientation === right.orientation &&
-    areLayoutGroupsEqual(left.groups, right.groups)
+    areLayoutGroupsEqual(left.groups, right.groups, ignoreSize)
   );
 }

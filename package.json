@@ -78,6 +78,9 @@
     "workspace",
     "productivity"
   ],
+  "activationEvents": [
+    "*"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [

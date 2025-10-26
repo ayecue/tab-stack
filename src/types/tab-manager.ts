@@ -76,8 +76,8 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
 }
 
 export interface RenderingItem {
-  state: StateContainer;
-  previousState: StateContainer | null;
+  stateContainer: StateContainer;
+  previousStateContainer: StateContainer;
 }
 
 export interface ITabManagerService extends Disposable {
@@ -85,7 +85,7 @@ export interface ITabManagerService extends Disposable {
   readonly config: ConfigService;
 
   refresh: DebouncedFunction<() => Promise<void>>;
-  applyState(): Promise<void>;
+  applyState(oldStateContainer: StateContainer): Promise<void>;
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
   openTab(viewColumn: number, index: number): Promise<void>;
   closeTab(viewColumn: number, index: number): Promise<void>;

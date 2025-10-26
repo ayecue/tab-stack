@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Fix selection not getting persisted when group gets deselected
 
+### Added
+
+- Check for state changes prior to applying a group or snapshot
+
 ## [1.0.9] - 26-10-2025
 
 ### Added
