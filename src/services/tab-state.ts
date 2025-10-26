@@ -23,7 +23,7 @@ import { ConfigService } from './config';
 
 export class TabStateService implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
-  static readonly DEBOUNCE_DELAY = 200 as const;
+  static readonly SAVE_DEBOUNCE_DELAY = 200 as const;
 
   save: () => Promise<void>;
 
@@ -39,6 +39,10 @@ export class TabStateService implements Disposable {
   private _configService: ConfigService;
 
   constructor(configService: ConfigService) {
+    this.save = debounce(
+      this._save.bind(this),
+      TabStateService.SAVE_DEBOUNCE_DELAY
+    );
     this._configService = configService;
     this._history = null;
     this._groups = null;
@@ -46,7 +50,6 @@ export class TabStateService implements Disposable {
     this._stateContainer = null;
     this._pendingFile = null;
     this._file = null;
-    this.save = debounce(this._save.bind(this), TabStateService.DEBOUNCE_DELAY);
   }
 
   async initialize() {

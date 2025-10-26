@@ -1,3 +1,4 @@
+import debounce from 'debounce';
 import { Disposable, EventEmitter, window } from 'vscode';
 
 import { GitIntegrationMode } from '../types/config';
@@ -38,6 +39,7 @@ import { TabStateService } from './tab-state';
 
 export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100;
+  static readonly REFRESH_DEBOUNCE_DELAY = 100;
 
   private _rendering: boolean;
   private _nextRenderingItem: RenderingItem;
@@ -57,11 +59,17 @@ export class TabManagerService implements ITabManagerService {
 
   private _disposables: Disposable[] = [];
 
+  refresh: () => Promise<void>;
+
   constructor(
     layoutService: EditorLayoutService,
     configService: ConfigService,
     gitService: GitService | null = null
   ) {
+    this.refresh = debounce(
+      this._refresh.bind(this),
+      TabManagerService.REFRESH_DEBOUNCE_DELAY
+    );
     this._nextRenderingItem = null;
     this._stateService = null;
     this._rendering = false;
@@ -200,7 +208,7 @@ export class TabManagerService implements ITabManagerService {
     }
   }
 
-  async refresh() {
+  private async _refresh() {
     if (!this._stateService) {
       return;
     }
