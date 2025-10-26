@@ -143,20 +143,6 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
       );
       return true;
     }
-    case TabKind.TabInputWebview: {
-      const webviewTab = tab as TabInfoWebview;
-      await commands.executeCommand(
-        'vscode.openWith',
-        tab.label,
-        webviewTab.viewType,
-        {
-          viewColumn: tab.viewColumn,
-          preview: false,
-          preserveFocus: true
-        }
-      );
-      return true;
-    }
     case TabKind.TabInputNotebook: {
       const notebookTab = tab as TabInfoNotebook;
       await commands.executeCommand(
@@ -186,6 +172,7 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
       );
       return true;
     }
+    case TabKind.TabInputWebview:
     case TabKind.TabInputTerminal:
     case TabKind.Unknown:
     default:

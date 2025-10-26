@@ -40,12 +40,6 @@ export function transformTabToTabInfo(tab: Tab, viewColumn: number): TabInfo {
       viewType: tab.input.viewType,
       kind: TabKind.TabInputCustom
     };
-  } else if (tab.input instanceof TabInputWebview) {
-    return {
-      ...base,
-      viewType: tab.input.viewType,
-      kind: TabKind.TabInputWebview
-    };
   } else if (tab.input instanceof TabInputNotebook) {
     return {
       ...base,
