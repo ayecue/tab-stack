@@ -1,4 +1,4 @@
-import debounce from 'debounce';
+import debounce, { DebouncedFunction } from 'debounce';
 import { Disposable, EventEmitter, window } from 'vscode';
 
 import { GitIntegrationMode } from '../types/config';
@@ -16,17 +16,21 @@ import { TabInfo } from '../types/tabs';
 import {
   closeAllEditors,
   focusTabInGroup,
+  getEditorLayout,
   openTab,
   pinEditor,
   setEditorLayout,
   unpinEditor
 } from '../utils/commands';
 import { delay } from '../utils/delay';
+import { isLayoutEqual } from '../utils/is-layout-equal';
 import {
   closeTab,
   countTabs,
   findTabByViewColumnAndIndex,
-  findTabGroupByViewColumn
+  findTabGroupByViewColumn,
+  getTabState,
+  isTabStateEqual
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
@@ -59,7 +63,7 @@ export class TabManagerService implements ITabManagerService {
 
   private _disposables: Disposable[] = [];
 
-  refresh: () => Promise<void>;
+  refresh: DebouncedFunction<() => Promise<void>>;
 
   constructor(
     layoutService: EditorLayoutService,
@@ -103,7 +107,6 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async attachStateService() {
-    if (this._stateService != null) this._stateService.dispose();
     this._stateService = null;
     const newStateService = new TabStateService(this._configService);
     await newStateService.initialize();
@@ -208,7 +211,7 @@ export class TabManagerService implements ITabManagerService {
     }
   }
 
-  private async _refresh() {
+  private async _refresh(): Promise<void> {
     if (!this._stateService) {
       return;
     }
@@ -224,8 +227,8 @@ export class TabManagerService implements ITabManagerService {
     if (!this._stateService) return;
 
     this._nextRenderingItem = {
-      state: this._stateService.stateContainer,
-      previousState: this._stateService.previousStateContainer
+      stateContainer: this._stateService.stateContainer,
+      previousStateContainer: this._stateService.previousStateContainer
     };
 
     if (this._rendering) return;
@@ -238,6 +241,21 @@ export class TabManagerService implements ITabManagerService {
 
     while (this._nextRenderingItem !== null) {
       try {
+        if (
+          isTabStateEqual(
+            getTabState(),
+            this._nextRenderingItem.stateContainer.state.tabState
+          ) &&
+          isLayoutEqual(
+            await getEditorLayout(),
+            this._nextRenderingItem.stateContainer.state.layout,
+            true
+          )
+        ) {
+          this._nextRenderingItem = null;
+          continue;
+        }
+
         await this.render();
         // Introduce a small delay to allow VS Code to process UI updates
         await delay(TabManagerService.RENDER_COOLDOWN_MS);
@@ -251,8 +269,9 @@ export class TabManagerService implements ITabManagerService {
   }
 
   private async render() {
-    const currentState = this._nextRenderingItem.state;
-    const previousState = this._nextRenderingItem.previousState;
+    const currentStateContainer = this._nextRenderingItem.stateContainer;
+    const previousStateContainer =
+      this._nextRenderingItem.previousStateContainer;
 
     this._nextRenderingItem = null;
 
@@ -260,23 +279,25 @@ export class TabManagerService implements ITabManagerService {
       await closeAllEditors();
 
       if (countTabs() > 0) {
-        this._stateService.setState(previousState);
+        this._stateService.setState(previousStateContainer);
         return;
       }
     }
 
-    this._layoutService.setLayout(currentState.state.layout);
-    await setEditorLayout(currentState.state.layout);
+    this._layoutService.setLayout(currentStateContainer.state.layout);
+    await setEditorLayout(currentStateContainer.state.layout);
 
-    const tabGroupItems = Object.values(currentState.state.tabState.tabGroups);
+    const tabGroupItems = Object.values(
+      currentStateContainer.state.tabState.tabGroups
+    );
     const pinnedTabs: { tab: TabInfo; index: number }[] = [];
     const activeTabs: { tab: TabInfo; index: number }[] = [];
     const focusedViewColumn =
-      currentState.state.tabState.tabGroups[
-        currentState.state.tabState.activeGroup
+      currentStateContainer.state.tabState.tabGroups[
+        currentStateContainer.state.tabState.activeGroup
       ].viewColumn;
-    const focusedIndex = currentState.state.tabState.tabGroups[
-      currentState.state.tabState.activeGroup
+    const focusedIndex = currentStateContainer.state.tabState.tabGroups[
+      currentStateContainer.state.tabState.activeGroup
     ].tabs.findIndex((tab) => tab.isActive);
 
     await Promise.all(
@@ -588,7 +609,6 @@ export class TabManagerService implements ITabManagerService {
     }
 
     this._stateService.setState(this._stateService.previousStateContainer);
-
     await this.applyState();
     await this.triggerSync();
   }

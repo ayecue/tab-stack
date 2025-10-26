@@ -8,7 +8,7 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
@@ -47,7 +47,7 @@
     "compile:node": "node build-node.cjs",
     "compile:webview": "node build-webview.cjs",
     "compile:browser": "node build-browser.cjs",
-    "compile:extension": "vsce package --out extension.vsix",
+    "compile:extension": "vsce package --out extension.vsix --allow-star-activation",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "watch": "tsc -watch -p ./",
@@ -77,6 +77,9 @@
     "tab snapshots",
     "workspace",
     "productivity"
+  ],
+  "activationEvents": [
+    "*"
   ],
   "contributes": {
     "viewsContainers": {
