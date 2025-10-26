@@ -231,7 +231,7 @@ export class TabStateService implements Disposable {
   }
 
   async renameGroup(groupId: string, newName: string): Promise<boolean> {
-    const [groups] = await Promise.all([this.getGroups()]);
+    const groups = await this.getGroups();
 
     if (groups[groupId] == null) {
       return false;

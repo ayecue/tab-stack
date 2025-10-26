@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.9] - 26-10-2025
+
+## Added
+
+- Improve handling of unsaved tabs when switching groups
+
 ## [1.0.8] - 23-10-2025
 
 ### Added
