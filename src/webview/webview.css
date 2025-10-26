@@ -10,6 +10,7 @@
   flex: 1 1 auto;
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .section-search:focus-within {
@@ -42,14 +43,18 @@
 .section-search .clear-search:hover {
   color: var(--vscode-foreground);
 }
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   font-family: var(--vscode-font-family);
   font-size: var(--vscode-font-size);
   color: var(--vscode-foreground);
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+  margin: 0;
+  overflow: hidden; /* disable page scroll; inner panels manage their own scroll */
   border: 0;
 }
 
@@ -58,6 +63,7 @@ body {
   flex-direction: column;
   gap: 8px;
   min-height: 100%;
+  height: 100%;
 }
 
 .notification {
@@ -144,6 +150,14 @@ body {
   flex-direction: column;
   gap: 10px;
   align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0; /* allow children to shrink and scroll */
+}
+
+/* Main content area should scroll when content exceeds available height */
+.tab-manager-main {
+  overflow-y: auto;
+  min-height: 0;
 }
 .tab-kind-indicator {
   display: inline-flex;
