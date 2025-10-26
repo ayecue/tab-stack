@@ -31,3 +31,10 @@ export async function closeAllTabs(): Promise<void> {
     await window.tabGroups.close(group, true);
   }
 }
+
+export function countTabs(): number {
+  return window.tabGroups.all.reduce(
+    (total, group) => total + group.tabs.length,
+    0
+  );
+}

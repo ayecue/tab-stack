@@ -1,8 +1,6 @@
 import { nanoid } from 'nanoid';
 
 import {
-  EMPTY_GROUP_SELECTION,
-  GroupSelectionValue,
   QuickSlotAssignments,
   StateContainer,
   TabManagerState
@@ -11,8 +9,8 @@ import {
 export interface TabStateFileContentV0 {
   groups: Record<string, TabManagerState>;
   history: Record<string, TabManagerState>;
-  selectedGroup: GroupSelectionValue;
-  previousSelectedGroup: GroupSelectionValue;
+  selectedGroup: string;
+  previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;
 }
 
@@ -20,8 +18,8 @@ export interface TabStateFileContentV1 {
   version?: number;
   groups: Record<string, StateContainer>;
   history: Record<string, StateContainer>;
-  selectedGroup: GroupSelectionValue;
-  previousSelectedGroup: GroupSelectionValue;
+  selectedGroup: string;
+  previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;
 }
 
@@ -31,8 +29,8 @@ export function transform(payload: any): TabStateFileContentV1 {
     version: 1,
     groups: {},
     history: {},
-    selectedGroup: EMPTY_GROUP_SELECTION,
-    previousSelectedGroup: EMPTY_GROUP_SELECTION,
+    selectedGroup: null,
+    previousSelectedGroup: null,
     quickSlots: {}
   };
 

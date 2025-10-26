@@ -12,6 +12,10 @@ import {
   TabKind
 } from '../types/tabs';
 
+export async function closeAllEditors(): Promise<void> {
+  await commands.executeCommand('workbench.action.closeAllEditors');
+}
+
 export async function getEditorLayout(): Promise<Layout> {
   return await commands.executeCommand('vscode.getEditorLayout');
 }

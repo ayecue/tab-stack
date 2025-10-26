@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import { Disposable, Event } from 'vscode';
 
 import { ConfigService } from '../services/config';
@@ -7,7 +8,7 @@ import {
   ExtensionNotificationMessage,
   ExtensionTabsSyncMessage
 } from './messages';
-import { TabState } from './tabs';
+import { TabInfo, TabState } from './tabs';
 
 export type QuickSlotIndex = number;
 
@@ -26,8 +27,30 @@ export interface StateContainer {
   lastSelectedAt: number;
 }
 
-export const EMPTY_GROUP_SELECTION: undefined = void 0;
-export type GroupSelectionValue = string | typeof EMPTY_GROUP_SELECTION;
+export function createEmptyStateContainer(): StateContainer {
+  return {
+    id: nanoid(),
+    name: 'untitled',
+    state: {
+      tabState: {
+        tabGroups: {
+          0: {
+            tabs: [] as TabInfo[],
+            viewColumn: 0,
+            activeTab: undefined
+          }
+        },
+        activeGroup: 0
+      },
+      layout: {
+        orientation: 0,
+        groups: []
+      }
+    },
+    lastSelectedAt: 0,
+    createdAt: Date.now()
+  };
+}
 
 export const CURRENT_STATE_FILE_VERSION = 1;
 
@@ -35,8 +58,8 @@ export interface TabStateFileContent {
   version?: number;
   groups: Record<string, StateContainer>;
   history: Record<string, StateContainer>;
-  selectedGroup: GroupSelectionValue;
-  previousSelectedGroup: GroupSelectionValue;
+  selectedGroup: string;
+  previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;
 }
 
@@ -45,10 +68,15 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
     version: CURRENT_STATE_FILE_VERSION,
     groups: {},
     history: {},
-    selectedGroup: EMPTY_GROUP_SELECTION,
-    previousSelectedGroup: EMPTY_GROUP_SELECTION,
+    selectedGroup: null,
+    previousSelectedGroup: null,
     quickSlots: {}
   };
+}
+
+export interface RenderingItem {
+  state: StateContainer;
+  previousState: StateContainer | null;
 }
 
 export interface ITabManagerService extends Disposable {
