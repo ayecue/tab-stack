@@ -47,7 +47,7 @@
     "compile:node": "node build-node.cjs",
     "compile:webview": "node build-webview.cjs",
     "compile:browser": "node build-browser.cjs",
-    "compile:extension": "vsce package --out extension.vsix",
+    "compile:extension": "vsce package --out extension.vsix --allow-star-activation",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "watch": "tsc -watch -p ./",
