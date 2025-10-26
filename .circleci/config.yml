@@ -30,7 +30,7 @@ jobs:
           command: echo 'export PACKAGE_VERSION=$(node -pe "require(\"./package.json\").version")' >> $BASH_ENV
       - run:
           name: Publish extension to Open VSX
-          command: ./node_modules/.bin/ovsx publish -p ${OPEN_VSX_TOKEN}
+          command: ./node_modules/.bin/ovsx publish -p ${OPEN_VSX_TOKEN} --allow-star-activation
   publish-vsce: 
     docker:
       - image: cimg/node:20.18.0
@@ -43,7 +43,7 @@ jobs:
           command: echo 'export PACKAGE_VERSION=$(node -pe "require(\"./package.json\").version")' >> $BASH_ENV
       - run:
           name: Publish extension to MS Marketplace
-          command: ./node_modules/.bin/vsce publish -p ${VSCE_TOKEN} ${PACKAGE_VERSION}
+          command: ./node_modules/.bin/vsce publish -p ${VSCE_TOKEN} ${PACKAGE_VERSION} --allow-star-activation
 
 workflows:
   main:
