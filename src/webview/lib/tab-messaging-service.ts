@@ -1,8 +1,11 @@
 import {
   WebviewAddToHistoryMessage,
+  WebviewApplyAddonMessage,
   WebviewAssignQuickSlotMessage,
   WebviewClearAllTabsMessage,
   WebviewClearWorkspaceFolderMessage,
+  WebviewCreateAddonMessage,
+  WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
@@ -14,10 +17,7 @@ import {
   WebviewSyncMessage,
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
-  WebviewTabTogglePinMessage,
-  WebviewCreateAddonMessage,
-  WebviewDeleteAddonMessage,
-  WebviewApplyAddonMessage
+  WebviewTabTogglePinMessage
 } from '../../types/messages';
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { VSCodeMessenger } from './vscode-messenger';

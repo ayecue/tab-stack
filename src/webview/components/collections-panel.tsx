@@ -1,16 +1,18 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { AddonsCollection } from './addons-collection';
 import { GroupsCollection } from './groups-collection';
 import { HistoryCollection } from './history-collection';
-import { AddonsCollection } from './addons-collection';
 
 export const CollectionsPanel: React.FC = () => {
   const { actions } = useTabContext();
   const [deletingKeys, setDeletingKeys] = useState<Set<string>>(
     () => new Set()
   );
-  const [activeTab, setActiveTab] = useState<'groups' | 'history' | 'addons'>('groups');
+  const [activeTab, setActiveTab] = useState<'groups' | 'history' | 'addons'>(
+    'groups'
+  );
 
   const markDeleting = useCallback((key: string) => {
     setDeletingKeys((prev) => {

@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
 
@@ -77,7 +83,9 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
       return state.addons;
     }
     const term = searchTerm.trim().toLowerCase();
-    return state.addons.filter((addon) => addon.name.toLowerCase().includes(term));
+    return state.addons.filter((addon) =>
+      addon.name.toLowerCase().includes(term)
+    );
   }, [state.addons, searchTerm]);
 
   return (
@@ -213,7 +221,10 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
                       disabled={isDeleting}
                       title="Apply add-on"
                     >
-                      <i className="codicon codicon-arrow-right" aria-hidden="true" />
+                      <i
+                        className="codicon codicon-arrow-right"
+                        aria-hidden="true"
+                      />
                     </button>
                     <button
                       type="button"
@@ -233,11 +244,13 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
             );
           })}
 
-          {filteredAddons.length === 0 && state.addons.length > 0 && !isCreating && (
-            <li className="section-empty" aria-live="polite">
-              No add-ons match that search.
-            </li>
-          )}
+          {filteredAddons.length === 0 &&
+            state.addons.length > 0 &&
+            !isCreating && (
+              <li className="section-empty" aria-live="polite">
+                No add-ons match that search.
+              </li>
+            )}
         </ul>
       )}
     </div>

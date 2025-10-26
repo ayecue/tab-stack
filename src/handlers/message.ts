@@ -2,7 +2,10 @@ import { Disposable } from 'vscode';
 
 import {
   BaseWebviewMessage,
+  WebviewApplyAddonMessage,
   WebviewAssignQuickSlotMessage,
+  WebviewCreateAddonMessage,
+  WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
@@ -14,10 +17,7 @@ import {
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
-  WebviewUpdateGitIntegrationMessage,
-  WebviewCreateAddonMessage,
-  WebviewDeleteAddonMessage,
-  WebviewApplyAddonMessage
+  WebviewUpdateGitIntegrationMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
 

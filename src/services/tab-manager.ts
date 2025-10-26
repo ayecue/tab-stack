@@ -25,6 +25,7 @@ import {
 import { delay } from '../utils/delay';
 import { isLayoutEqual } from '../utils/is-layout-equal';
 import {
+  applyTabState,
   closeTab,
   countTabs,
   findTabByViewColumnAndIndex,
@@ -287,46 +288,11 @@ export class TabManagerService implements ITabManagerService {
 
     this._layoutService.setLayout(currentStateContainer.state.layout);
     await setEditorLayout(currentStateContainer.state.layout);
-
-    const tabGroupItems = Object.values(
-      currentStateContainer.state.tabState.tabGroups
-    );
-    const pinnedTabs: { tab: TabInfo; index: number }[] = [];
-    const activeTabs: { tab: TabInfo; index: number }[] = [];
-    const focusedViewColumn =
-      currentStateContainer.state.tabState.tabGroups[
-        currentStateContainer.state.tabState.activeGroup
-      ].viewColumn;
-    const focusedIndex = currentStateContainer.state.tabState.tabGroups[
-      currentStateContainer.state.tabState.activeGroup
-    ].tabs.findIndex((tab) => tab.isActive);
-
-    await Promise.all(
-      tabGroupItems.map(async (group) => {
-        return await Promise.all(
-          group.tabs.map(async (tab, index) => {
-            if (tab.isActive) activeTabs.push({ tab, index });
-            await openTab(tab);
-            if (tab.isPinned) pinnedTabs.push({ tab, index });
-          })
-        );
-      })
-    );
-
-    for (let i = 0; i < pinnedTabs.length; i++) {
-      const { tab, index } = pinnedTabs[i];
-      await pinEditor(tab.viewColumn, index, false);
-    }
-
-    for (let i = 0; i < activeTabs.length; i++) {
-      const { tab, index } = activeTabs[i];
-      if (tab.viewColumn === focusedViewColumn && index === focusedIndex) {
-        continue;
-      }
-      await focusTabInGroup(tab.viewColumn, index);
-    }
-
-    await focusTabInGroup(focusedViewColumn, focusedIndex);
+    await applyTabState(currentStateContainer.state.tabState, {
+      preserveActiveTab: true,
+      preservePinnedTabs: true,
+      preserveTabFocus: true
+    });
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
@@ -436,7 +402,10 @@ export class TabManagerService implements ITabManagerService {
         groupId: group.id,
         name: group.name
       })),
-      addons: addonValues.map((addon) => ({ addonId: addon.id, name: addon.name })),
+      addons: addonValues.map((addon) => ({
+        addonId: addon.id,
+        name: addon.name
+      })),
       selectedGroup:
         this._stateService.stateContainer.id in groups
           ? this._stateService.stateContainer.id
@@ -475,26 +444,12 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    // Open all tabs from addon without closing existing editors or changing selection/layout
-    const tabGroups = Object.values(addon.state.tabState.tabGroups);
-    const pinnedTabs: { tab: TabInfo; index: number }[] = [];
-    const activeTabs: { tab: TabInfo; index: number }[] = [];
+    await applyTabState(addon.state.tabState, {
+      preserveActiveTab: false,
+      preservePinnedTabs: true,
+      preserveTabFocus: false
+    });
 
-    for (const group of tabGroups) {
-      for (let i = 0; i < group.tabs.length; i++) {
-        const tab = group.tabs[i];
-        if (tab.isActive) activeTabs.push({ tab, index: i });
-        await openTab(tab);
-        if (tab.isPinned) pinnedTabs.push({ tab, index: i });
-      }
-    }
-
-    for (let i = 0; i < pinnedTabs.length; i++) {
-      const { tab, index } = pinnedTabs[i];
-      await pinEditor(tab.viewColumn, index, false);
-    }
-
-    // Do not change focus or layout in additive apply
     await this._stateService.refreshState();
     await this.triggerSync();
   }

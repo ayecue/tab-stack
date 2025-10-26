@@ -1,6 +1,10 @@
 import { Disposable, EventEmitter, workspace, WorkspaceFolder } from 'vscode';
 
-import { ConfigChangeEvent, GitIntegrationConfig, GitIntegrationMode } from '../types/config';
+import {
+  ConfigChangeEvent,
+  GitIntegrationConfig,
+  GitIntegrationMode
+} from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 
 export class ConfigService implements Disposable {
@@ -56,7 +60,6 @@ export class ConfigService implements Disposable {
     };
   }
 
-
   async setGitIntegrationEnabled(enabled: boolean): Promise<void> {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('enabled', enabled, false);
@@ -71,7 +74,6 @@ export class ConfigService implements Disposable {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('groupPrefix', prefix, false);
   }
-
 
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {
     return workspace.workspaceFolders || [];

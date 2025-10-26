@@ -47,7 +47,7 @@ export class TabStateService implements Disposable {
     this._configService = configService;
     this._history = null;
     this._groups = null;
-  this._addons = null;
+    this._addons = null;
     this._quickSlots = null;
     this._stateContainer = null;
     this._pendingFile = null;
@@ -482,7 +482,7 @@ export class TabStateService implements Disposable {
     this._pendingFile = null;
     this._groups = null;
     this._history = null;
-  this._addons = null;
+    this._addons = null;
     this._stateContainer = null;
     this._previousStateContainer = null;
     this._quickSlots = null;

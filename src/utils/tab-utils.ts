@@ -8,6 +8,7 @@ import {
   TabKind,
   TabState
 } from '../types/tabs';
+import { focusTabInGroup, openTab, pinEditor } from './commands';
 
 export function findTabByViewColumnAndIndex(
   viewColumn: number,
@@ -141,4 +142,56 @@ export function getTabState() {
   });
 
   return tabState;
+}
+
+export interface ApplyTabStateOptions {
+  preservePinnedTabs: boolean;
+  preserveTabFocus: boolean;
+  preserveActiveTab: boolean;
+}
+
+export async function applyTabState(
+  tabState: TabState,
+  options: ApplyTabStateOptions
+): Promise<void> {
+  const tabGroupItems = Object.values(tabState.tabGroups);
+  const pinnedTabs: { tab: TabInfo; index: number }[] = [];
+  const activeTabs: { tab: TabInfo; index: number }[] = [];
+  const focusedViewColumn = tabState.tabGroups[tabState.activeGroup].viewColumn;
+  const focusedIndex = tabState.tabGroups[tabState.activeGroup].tabs.findIndex(
+    (tab) => tab.isActive
+  );
+
+  await Promise.all(
+    tabGroupItems.map(async (group) => {
+      return await Promise.all(
+        group.tabs.map(async (tab, index) => {
+          if (tab.isActive) activeTabs.push({ tab, index });
+          await openTab(tab);
+          if (tab.isPinned) pinnedTabs.push({ tab, index });
+        })
+      );
+    })
+  );
+
+  if (options.preservePinnedTabs) {
+    for (let i = 0; i < pinnedTabs.length; i++) {
+      const { tab, index } = pinnedTabs[i];
+      await pinEditor(tab.viewColumn, index, false);
+    }
+  }
+
+  if (options.preserveActiveTab) {
+    for (let i = 0; i < activeTabs.length; i++) {
+      const { tab, index } = activeTabs[i];
+      if (tab.viewColumn === focusedViewColumn && index === focusedIndex) {
+        continue;
+      }
+      await focusTabInGroup(tab.viewColumn, index);
+    }
+  }
+
+  if (options.preserveTabFocus) {
+    await focusTabInGroup(focusedViewColumn, focusedIndex);
+  }
 }
