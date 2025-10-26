@@ -8,7 +8,7 @@ import {
   ExtensionNotificationMessage,
   ExtensionTabsSyncMessage
 } from './messages';
-import { TabState } from './tabs';
+import { TabInfo, TabState } from './tabs';
 
 export type QuickSlotIndex = number;
 
@@ -32,8 +32,20 @@ export function createEmptyStateContainer(): StateContainer {
     id: nanoid(),
     name: 'untitled',
     state: {
-      tabState: { tabGroups: {}, activeGroup: null },
-      layout: { orientation: 0, groups: [] }
+      tabState: {
+        tabGroups: {
+          0: {
+            tabs: [] as TabInfo[],
+            viewColumn: 0,
+            activeTab: undefined
+          }
+        },
+        activeGroup: 0
+      },
+      layout: {
+        orientation: 0,
+        groups: []
+      }
     },
     lastSelectedAt: 0,
     createdAt: Date.now()
