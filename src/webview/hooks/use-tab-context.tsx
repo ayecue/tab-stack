@@ -32,6 +32,7 @@ enum ConnectionStatus {
 interface TabState {
   payload: TabStatePayload | null;
   loading: boolean;
+  rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
   groups: Array<{ groupId: string; name: string }>;
@@ -84,6 +85,7 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
   const [state, setState] = useState<TabState>({
     payload: null,
     loading: true,
+    rendering: false,
     error: null,
     connectionStatus: ConnectionStatus.Connecting,
     groups: [],
@@ -111,6 +113,7 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           ...prev,
           payload: event.tabState,
           loading: false,
+          rendering: event.rendering,
           error: null,
           connectionStatus: ConnectionStatus.Connected,
           groups: event.groups,

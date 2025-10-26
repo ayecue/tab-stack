@@ -238,6 +238,7 @@ export class TabManagerService implements ITabManagerService {
 
   private async next() {
     this._rendering = true;
+    await this.triggerSync().catch(console.error);
 
     while (this._nextRenderingItem !== null) {
       try {
@@ -264,8 +265,8 @@ export class TabManagerService implements ITabManagerService {
       }
     }
 
-    await this.triggerSync().catch(console.error);
     this._rendering = false;
+    await this.triggerSync().catch(console.error);
   }
 
   private async render() {
@@ -437,7 +438,8 @@ export class TabManagerService implements ITabManagerService {
       masterWorkspaceFolder,
       availableWorkspaceFolders,
       gitIntegration,
-      applyMode: this._configService.getApplyMode()
+      applyMode: this._configService.getApplyMode(),
+      rendering: this._rendering
     });
   }
 

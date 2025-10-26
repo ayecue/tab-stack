@@ -86,7 +86,7 @@ const TabManagerContent: React.FC = () => {
 
       <Header
         connectionStatus={state.connectionStatus}
-        isLoading={state.loading}
+        isLoading={state.loading || state.rendering}
       />
 
       <div className="tab-manager-shell">
@@ -100,7 +100,7 @@ const TabManagerContent: React.FC = () => {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             totals={totals}
-            isLoading={state.loading}
+            isLoading={state.loading || state.rendering}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             actions={{
@@ -116,10 +116,10 @@ const TabManagerContent: React.FC = () => {
               onCloseAll: handleCloseAllTabs
             }}
             disabled={{
-              saveGroup: !hasTabs,
-              snapshot: !hasTabs,
-              restoreSnapshot: !lastSnapshotId,
-              closeAll: !hasTabs
+              saveGroup: !hasTabs || state.rendering,
+              snapshot: !hasTabs || state.rendering,
+              restoreSnapshot: !lastSnapshotId || state.rendering,
+              closeAll: !hasTabs || state.rendering
             }}
           />
 

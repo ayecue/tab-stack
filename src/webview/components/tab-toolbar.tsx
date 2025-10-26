@@ -77,7 +77,7 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             className="icon-button"
             onClick={actions.onSaveGroup}
             title="Save current tabs as group"
-            disabled={disabled?.saveGroup}
+            disabled={isLoading || disabled?.saveGroup}
           >
             <i className="codicon codicon-archive" aria-hidden="true" />
           </button>
@@ -86,7 +86,7 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             className="icon-button"
             onClick={actions.onSnapshot}
             title="Snapshot current tabs"
-            disabled={disabled?.snapshot}
+            disabled={isLoading || disabled?.snapshot}
           >
             <i className="codicon codicon-device-camera" aria-hidden="true" />
           </button>
@@ -95,7 +95,7 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             className="icon-button"
             onClick={actions.onRestoreSnapshot}
             title="Restore last snapshot"
-            disabled={disabled?.restoreSnapshot}
+            disabled={isLoading || disabled?.restoreSnapshot}
           >
             <i className="codicon codicon-history" aria-hidden="true" />
           </button>
@@ -104,7 +104,7 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             className="icon-button danger"
             onClick={actions.onCloseAll}
             title="Close every open tab"
-            disabled={disabled?.closeAll}
+            disabled={isLoading || disabled?.closeAll}
           >
             <i className="codicon codicon-close-all" aria-hidden="true" />
           </button>

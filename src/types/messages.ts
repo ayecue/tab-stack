@@ -34,6 +34,7 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
   applyMode: ApplyMode;
+  rendering: boolean;
 }
 
 export enum WebviewMessageType {

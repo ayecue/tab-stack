@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Add apply mode setting
+- Add indicator tab state gets applied
 
 ## [1.0.10] - 26-10-2025
 

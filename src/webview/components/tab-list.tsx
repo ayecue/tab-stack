@@ -93,11 +93,11 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
 
   const totalVisibleTabs = flatList.length;
 
-  if (state.loading) {
+  if (state.loading || state.rendering) {
     return (
       <div className="tab-empty-state">
         <i className="codicon codicon-sync" aria-hidden="true" />
-        <p>Loading tabs…</p>
+        <p>{state.rendering ? 'Applying tabs…' : 'Loading tabs…'}</p>
       </div>
     );
   }
