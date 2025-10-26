@@ -421,7 +421,14 @@ export class TabManagerService implements ITabManagerService {
   async createAddon(name: string): Promise<void> {
     if (!this._stateService) return;
     const currentState = this._stateService.stateContainer.state;
-    await this._stateService.addToAddons(currentState, name);
+    const id = await this._stateService.addToAddons(currentState, name);
+    if (!id) {
+      this.notify(
+        ExtensionNotificationKind.Warning,
+        `Add-on "${name}" already exists`
+      );
+      return;
+    }
     await this.triggerSync();
   }
 

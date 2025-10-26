@@ -91,7 +91,7 @@ export class TabStateService implements Disposable {
     return this._previousStateContainer;
   }
 
-  async addToHistory(state: TabManagerState): Promise<string> {
+  async addToHistory(state: TabManagerState): Promise<StateContainer | null> {
     const history = await this.getHistory();
     const stateContainer: StateContainer = {
       id: nanoid(),
@@ -113,11 +113,22 @@ export class TabStateService implements Disposable {
       keysToRemove.forEach((key) => delete history[key]);
     }
 
-    return stateContainer.id;
+    return stateContainer;
   }
 
-  async addToAddons(state: TabManagerState, name: string): Promise<string> {
+  async addToAddons(
+    state: TabManagerState,
+    name: string
+  ): Promise<StateContainer | null> {
     const addons = await this.getAddons();
+    const isNameAlreadyExisting = Object.values(addons).some(
+      (a) => a.name === name
+    );
+
+    if (isNameAlreadyExisting) {
+      return null;
+    }
+
     const stateContainer: StateContainer = {
       id: nanoid(),
       name,
@@ -127,7 +138,8 @@ export class TabStateService implements Disposable {
     };
 
     addons[stateContainer.id] = stateContainer;
-    return stateContainer.id;
+    this.save();
+    return stateContainer;
   }
 
   async refreshState(): Promise<StateContainer> {
@@ -205,14 +217,14 @@ export class TabStateService implements Disposable {
     return false;
   }
 
-  async createGroup(name: string): Promise<boolean> {
+  async createGroup(name: string): Promise<StateContainer | null> {
     const groups = await this.getGroups();
     const isNameAlreadyExisting = Object.values(groups).some(
       (g) => g.name === name
     );
 
     if (isNameAlreadyExisting) {
-      return false;
+      return null;
     }
 
     const newStateContainer = await this.refreshState();
@@ -227,7 +239,7 @@ export class TabStateService implements Disposable {
     groups[stateContainer.id] = stateContainer;
     this.setState(stateContainer);
 
-    return true;
+    return stateContainer;
   }
 
   async renameGroup(groupId: string, newName: string): Promise<boolean> {
@@ -245,13 +257,13 @@ export class TabStateService implements Disposable {
     return true;
   }
 
-  async addCurrentStateToHistory(): Promise<string> {
-    const newStateContainer = await this.refreshState();
-    const id = await this.addToHistory(newStateContainer.state);
+  async addCurrentStateToHistory(): Promise<StateContainer | null> {
+    const lastStateContainer = await this.refreshState();
+    const newStateContainer = await this.addToHistory(lastStateContainer.state);
 
     this.save();
 
-    return id;
+    return newStateContainer;
   }
 
   async deleteGroup(groupId: string): Promise<boolean> {
