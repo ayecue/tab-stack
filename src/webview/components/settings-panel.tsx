@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import { GitIntegrationMode } from '../../types/config';
+import { ApplyMode, GitIntegrationMode } from '../../types/config';
 import { useTabContext } from '../hooks/use-tab-context';
 
 export const SettingsPanel: React.FC = () => {
@@ -48,6 +48,16 @@ export const SettingsPanel: React.FC = () => {
       const groupPrefix = event.target.value;
       void actions.updateGitIntegration({ groupPrefix }).catch((error) => {
         console.error('Failed to update git setting: groupPrefix', error);
+      });
+    },
+    [actions]
+  );
+
+  const handleApplyModeChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const mode = event.target.value as ApplyMode;
+      void actions.updateApplyMode(mode).catch((error) => {
+        console.error('Failed to update apply mode', error);
       });
     },
     [actions]
@@ -122,6 +132,31 @@ export const SettingsPanel: React.FC = () => {
                 No workspace folders available
               </p>
             )}
+          </div>
+
+          <div className="settings-section">
+            <label className="settings-label" htmlFor="apply-mode-select">
+              <i className="codicon codicon-merge" aria-hidden="true" />
+              Apply Mode
+            </label>
+            <p className="settings-description">
+              Choose how tabs are applied when switching groups or restoring
+              snapshots. Replace will close current editors first (default).
+              Append will keep your current editors and add the new tabs
+              alongside.
+            </p>
+            <div className="form-row">
+              <label htmlFor="apply-mode-select">Mode</label>
+              <select
+                id="apply-mode-select"
+                className="apply-mode-select"
+                value={state.applyMode || ApplyMode.Replace}
+                onChange={handleApplyModeChange}
+              >
+                <option value={ApplyMode.Replace}>Replace</option>
+                <option value={ApplyMode.Append}>Append</option>
+              </select>
+            </div>
           </div>
 
           <div className="settings-section">

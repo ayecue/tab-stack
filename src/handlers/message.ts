@@ -14,6 +14,7 @@ import {
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
+  WebviewUpdateApplyModeMessage,
   WebviewUpdateGitIntegrationMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
@@ -104,6 +105,12 @@ export class MessageHandler implements Disposable {
         if (mode != null) await tabManager.config.setGitIntegrationMode(mode);
         if (groupPrefix != null)
           await tabManager.config.setGitIntegrationGroupPrefix(groupPrefix);
+        await tabManager.triggerSync();
+        break;
+      }
+      case WebviewMessageType.UpdateApplyMode: {
+        const { mode } = data as WebviewUpdateApplyModeMessage;
+        await tabManager.config.setApplyMode(mode);
         await tabManager.triggerSync();
         break;
       }

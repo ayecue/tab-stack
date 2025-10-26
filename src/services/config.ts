@@ -1,6 +1,7 @@
 import { Disposable, EventEmitter, workspace, WorkspaceFolder } from 'vscode';
 
 import {
+  ApplyMode,
   ConfigChangeEvent,
   GitIntegrationConfig,
   GitIntegrationMode
@@ -28,10 +29,14 @@ export class ConfigService implements Disposable {
 
       if (
         e.affectsConfiguration('tabStack.masterWorkspaceFolder') ||
-        e.affectsConfiguration('tabStack.gitIntegration')
+        e.affectsConfiguration('tabStack.gitIntegration') ||
+        e.affectsConfiguration('tabStack.applyMode')
       ) {
         if (e.affectsConfiguration('tabStack.gitIntegration')) {
           changes.gitIntegration = this.getGitIntegrationConfig();
+        }
+        if (e.affectsConfiguration('tabStack.applyMode')) {
+          changes.applyMode = this.getApplyMode();
         }
         this._onDidChangeConfig.fire(changes);
       }
@@ -60,6 +65,11 @@ export class ConfigService implements Disposable {
     };
   }
 
+  getApplyMode(): ApplyMode {
+    const config = workspace.getConfiguration('tabStack');
+    return config.get<ApplyMode>('applyMode', ApplyMode.Replace);
+  }
+
   async setGitIntegrationEnabled(enabled: boolean): Promise<void> {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('enabled', enabled, false);
@@ -73,6 +83,11 @@ export class ConfigService implements Disposable {
   async setGitIntegrationGroupPrefix(prefix: string): Promise<void> {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('groupPrefix', prefix, false);
+  }
+
+  async setApplyMode(mode: ApplyMode): Promise<void> {
+    const config = workspace.getConfiguration('tabStack');
+    await config.update('applyMode', mode, false);
   }
 
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {

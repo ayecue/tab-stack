@@ -291,6 +291,19 @@
           "type": "string",
           "default": "git:",
           "description": "Prefix for automatically created git-based groups (e.g., 'git:main', 'git:feature/login')."
+        },
+        "tabStack.applyMode": {
+          "type": "string",
+          "enum": [
+            "replace",
+            "append"
+          ],
+          "enumDescriptions": [
+            "Replace the current editors when applying a group or snapshot",
+            "Append the tabs to the current editors without closing them"
+          ],
+          "default": "replace",
+          "description": "How tabs are applied: replace existing editors (default) or append without closing current editors."
         }
       }
     }

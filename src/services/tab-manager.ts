@@ -1,7 +1,7 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { Disposable, EventEmitter, window } from 'vscode';
 
-import { GitIntegrationMode } from '../types/config';
+import { ApplyMode, GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
@@ -275,7 +275,9 @@ export class TabManagerService implements ITabManagerService {
 
     this._nextRenderingItem = null;
 
-    if (countTabs() > 0) {
+    const applyMode = this._configService.getApplyMode();
+
+    if (applyMode === ApplyMode.Replace && countTabs() > 0) {
       await closeAllEditors();
 
       if (countTabs() > 0) {
@@ -434,7 +436,8 @@ export class TabManagerService implements ITabManagerService {
       quickSlots,
       masterWorkspaceFolder,
       availableWorkspaceFolders,
-      gitIntegration
+      gitIntegration,
+      applyMode: this._configService.getApplyMode()
     });
   }
 

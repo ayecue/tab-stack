@@ -1,4 +1,4 @@
-import { GitIntegrationConfig, GitIntegrationMode } from './config';
+import { ApplyMode, GitIntegrationConfig, GitIntegrationMode } from './config';
 import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
 import { TabState } from './tabs';
 
@@ -33,6 +33,7 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
+  applyMode: ApplyMode;
 }
 
 export enum WebviewMessageType {
@@ -51,7 +52,8 @@ export enum WebviewMessageType {
   Sync = 'sync',
   SelectWorkspaceFolder = 'select-workspace-folder',
   ClearWorkspaceFolder = 'clear-workspace-folder',
-  UpdateGitIntegration = 'update-git-integration'
+  UpdateGitIntegration = 'update-git-integration',
+  UpdateApplyMode = 'update-apply-mode'
 }
 
 export interface BaseWebviewMessage {
@@ -141,4 +143,9 @@ export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
   enabled?: boolean;
   mode?: GitIntegrationMode;
   groupPrefix?: string;
+}
+
+export interface WebviewUpdateApplyModeMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.UpdateApplyMode;
+  mode: ApplyMode;
 }

@@ -1,3 +1,4 @@
+import { ApplyMode } from '../../types/config';
 import {
   WebviewAddToHistoryMessage,
   WebviewAssignQuickSlotMessage,
@@ -14,7 +15,8 @@ import {
   WebviewSyncMessage,
   WebviewTabCloseMessage,
   WebviewTabOpenMessage,
-  WebviewTabTogglePinMessage
+  WebviewTabTogglePinMessage,
+  WebviewUpdateApplyModeMessage
 } from '../../types/messages';
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { VSCodeMessenger } from './vscode-messenger';
@@ -160,6 +162,14 @@ export class TabMessagingService {
       type: WebviewMessageType.UpdateGitIntegration,
       ...config
     });
+  }
+
+  async updateApplyMode(mode: ApplyMode): Promise<void> {
+    const message: WebviewUpdateApplyModeMessage = {
+      type: WebviewMessageType.UpdateApplyMode,
+      mode
+    };
+    this.messenger.sendMessage(message);
   }
 
   getMessenger(): VSCodeMessenger {

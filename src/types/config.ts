@@ -4,6 +4,11 @@ export enum GitIntegrationMode {
   FullAuto = 'full-auto'
 }
 
+export enum ApplyMode {
+  Replace = 'replace',
+  Append = 'append'
+}
+
 export interface GitIntegrationConfig {
   enabled: boolean;
   mode: GitIntegrationMode;
@@ -13,4 +18,5 @@ export interface GitIntegrationConfig {
 export interface ConfigChangeEvent {
   masterWorkspaceFolder: string | null;
   gitIntegration?: GitIntegrationConfig;
+  applyMode?: ApplyMode;
 }

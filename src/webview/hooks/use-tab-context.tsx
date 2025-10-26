@@ -7,7 +7,11 @@ import React, {
   useState
 } from 'react';
 
-import { GitIntegrationConfig, GitIntegrationMode } from '../../types/config';
+import {
+  ApplyMode,
+  GitIntegrationConfig,
+  GitIntegrationMode
+} from '../../types/config';
 import {
   ExtensionMessageType,
   ExtensionNotificationKind,
@@ -37,6 +41,7 @@ interface TabState {
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration?: GitIntegrationConfig;
+  applyMode?: ApplyMode;
 }
 
 interface TabContextValue {
@@ -64,6 +69,7 @@ interface TabContextValue {
       mode?: GitIntegrationMode;
       groupPrefix?: string;
     }) => Promise<void>;
+    updateApplyMode: (mode: ApplyMode) => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -86,7 +92,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     quickSlots: {},
     masterWorkspaceFolder: null,
     availableWorkspaceFolders: [],
-    gitIntegration: undefined
+    gitIntegration: undefined,
+    applyMode: undefined
   });
 
   const [messenger] = useState(() =>
@@ -112,7 +119,8 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           quickSlots: event.quickSlots,
           masterWorkspaceFolder: event.masterWorkspaceFolder,
           availableWorkspaceFolders: event.availableWorkspaceFolders,
-          gitIntegration: event.gitIntegration
+          gitIntegration: event.gitIntegration,
+          applyMode: event.applyMode
         }));
       }
     );
@@ -380,9 +388,21 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     )
   };
 
+  const updateApplyMode = useCallback(
+    async (mode: ApplyMode): Promise<void> => {
+      try {
+        messagingService.updateApplyMode(mode);
+      } catch (error) {
+        handleError(error, 'update apply mode');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
   const contextValue: TabContextValue = {
     state,
-    actions,
+    actions: { ...actions, updateApplyMode },
     messenger
   };
 

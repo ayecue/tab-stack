@@ -5,8 +5,7 @@ import {
   TabInputNotebookDiff,
   TabInputTerminal,
   TabInputText,
-  TabInputTextDiff,
-  TabInputWebview
+  TabInputTextDiff
 } from 'vscode';
 
 import { TabInfo, TabInfoBase, TabKind } from '../types/tabs';

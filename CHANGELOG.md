@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 26-10-2025
+
+### Fix
+
+- Show properly that webview tabs cannot be recovered
+
+### Added
+
+- Add apply mode setting
+
 ## [1.0.10] - 26-10-2025
 
 ### Fix
