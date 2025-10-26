@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fix
 
 - Show properly that webview tabs cannot be recovered
+- Fix tab search visual alignment
 
 ### Added
 

@@ -82,7 +82,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  padding-bottom: 4px;
+  padding: 4px 0;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
@@ -99,6 +99,7 @@ body {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
+  line-height: 1;
   background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.06));
   border: 1px solid transparent;
   text-transform: capitalize;
@@ -246,6 +247,7 @@ body {
   border-radius: 4px;
   background: var(--vscode-input-background);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-toolbar-search .search-input:focus-within {
