@@ -25,6 +25,7 @@ import {
 import { delay } from '../utils/delay';
 import { isLayoutEqual } from '../utils/is-layout-equal';
 import {
+  applyTabState,
   closeTab,
   countTabs,
   findTabByViewColumnAndIndex,
@@ -238,6 +239,7 @@ export class TabManagerService implements ITabManagerService {
 
   private async next() {
     this._rendering = true;
+    await this.triggerSync().catch(console.error);
 
     while (this._nextRenderingItem !== null) {
       try {
@@ -264,8 +266,8 @@ export class TabManagerService implements ITabManagerService {
       }
     }
 
-    await this.triggerSync().catch(console.error);
     this._rendering = false;
+    await this.triggerSync().catch(console.error);
   }
 
   private async render() {
@@ -286,46 +288,11 @@ export class TabManagerService implements ITabManagerService {
 
     this._layoutService.setLayout(currentStateContainer.state.layout);
     await setEditorLayout(currentStateContainer.state.layout);
-
-    const tabGroupItems = Object.values(
-      currentStateContainer.state.tabState.tabGroups
-    );
-    const pinnedTabs: { tab: TabInfo; index: number }[] = [];
-    const activeTabs: { tab: TabInfo; index: number }[] = [];
-    const focusedViewColumn =
-      currentStateContainer.state.tabState.tabGroups[
-        currentStateContainer.state.tabState.activeGroup
-      ].viewColumn;
-    const focusedIndex = currentStateContainer.state.tabState.tabGroups[
-      currentStateContainer.state.tabState.activeGroup
-    ].tabs.findIndex((tab) => tab.isActive);
-
-    await Promise.all(
-      tabGroupItems.map(async (group) => {
-        return await Promise.all(
-          group.tabs.map(async (tab, index) => {
-            if (tab.isActive) activeTabs.push({ tab, index });
-            await openTab(tab);
-            if (tab.isPinned) pinnedTabs.push({ tab, index });
-          })
-        );
-      })
-    );
-
-    for (let i = 0; i < pinnedTabs.length; i++) {
-      const { tab, index } = pinnedTabs[i];
-      await pinEditor(tab.viewColumn, index, false);
-    }
-
-    for (let i = 0; i < activeTabs.length; i++) {
-      const { tab, index } = activeTabs[i];
-      if (tab.viewColumn === focusedViewColumn && index === focusedIndex) {
-        continue;
-      }
-      await focusTabInGroup(tab.viewColumn, index);
-    }
-
-    await focusTabInGroup(focusedViewColumn, focusedIndex);
+    await applyTabState(currentStateContainer.state.tabState, {
+      preserveActiveTab: true,
+      preservePinnedTabs: true,
+      preserveTabFocus: true
+    });
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
@@ -386,9 +353,10 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const [groups, history, quickSlots] = await Promise.all([
+    const [groups, history, addons, quickSlots] = await Promise.all([
       this._stateService.getGroups(),
       this._stateService.getHistory(),
+      this._stateService.getAddons(),
       this._stateService.getQuickSlots()
     ]);
     const groupValues = Object.values(groups);
@@ -400,6 +368,13 @@ export class TabManagerService implements ITabManagerService {
     });
 
     const historyValues = Object.values(history);
+    const addonValues = Object.values(addons);
+
+    addonValues.sort((a, b) => {
+      const timeA = a.createdAt || 0;
+      const timeB = b.createdAt || 0;
+      return timeB - timeA;
+    });
 
     historyValues.sort((a, b) => {
       const timeA = a.createdAt || 0;
@@ -427,6 +402,10 @@ export class TabManagerService implements ITabManagerService {
         groupId: group.id,
         name: group.name
       })),
+      addons: addonValues.map((addon) => ({
+        addonId: addon.id,
+        name: addon.name
+      })),
       selectedGroup:
         this._stateService.stateContainer.id in groups
           ? this._stateService.stateContainer.id
@@ -434,8 +413,52 @@ export class TabManagerService implements ITabManagerService {
       quickSlots,
       masterWorkspaceFolder,
       availableWorkspaceFolders,
-      gitIntegration
+      gitIntegration,
+      rendering: this._rendering
     });
+  }
+
+  async createAddon(name: string): Promise<void> {
+    if (!this._stateService) return;
+    const currentState = this._stateService.stateContainer.state;
+    const id = await this._stateService.addToAddons(currentState, name);
+    if (!id) {
+      this.notify(
+        ExtensionNotificationKind.Warning,
+        `Add-on "${name}" already exists`
+      );
+      return;
+    }
+    await this.triggerSync();
+  }
+
+  async deleteAddon(addonId: string): Promise<void> {
+    if (!this._stateService) return;
+    const deleted = await this._stateService.deleteAddon(addonId);
+    if (!deleted) {
+      this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
+      return;
+    }
+    await this.triggerSync();
+  }
+
+  async applyAddon(addonId: string): Promise<void> {
+    if (!this._stateService) return;
+    const addons = await this._stateService.getAddons();
+    const addon = addons[addonId];
+    if (!addon) {
+      this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
+      return;
+    }
+
+    await applyTabState(addon.state.tabState, {
+      preserveActiveTab: false,
+      preservePinnedTabs: true,
+      preserveTabFocus: false
+    });
+
+    await this._stateService.refreshState();
+    await this.triggerSync();
   }
 
   async switchToGroup(groupId: string | null) {

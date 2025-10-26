@@ -2,7 +2,10 @@ import { Disposable } from 'vscode';
 
 import {
   BaseWebviewMessage,
+  WebviewApplyAddonMessage,
   WebviewAssignQuickSlotMessage,
+  WebviewCreateAddonMessage,
+  WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
@@ -105,6 +108,21 @@ export class MessageHandler implements Disposable {
         if (groupPrefix != null)
           await tabManager.config.setGitIntegrationGroupPrefix(groupPrefix);
         await tabManager.triggerSync();
+        break;
+      }
+      case WebviewMessageType.NewAddon: {
+        const { name } = data as WebviewCreateAddonMessage;
+        await tabManager.createAddon(name);
+        break;
+      }
+      case WebviewMessageType.DeleteAddon: {
+        const { addonId } = data as WebviewDeleteAddonMessage;
+        await tabManager.deleteAddon(addonId);
+        break;
+      }
+      case WebviewMessageType.ApplyAddon: {
+        const { addonId } = data as WebviewApplyAddonMessage;
+        await tabManager.applyAddon(addonId);
         break;
       }
       case WebviewMessageType.Sync: {

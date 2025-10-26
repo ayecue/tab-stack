@@ -28,11 +28,13 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   tabState: TabState;
   histories: Array<{ historyId: string; name: string }>;
   groups: Array<{ groupId: string; name: string }>;
+  addons: Array<{ addonId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
+  rendering: boolean;
 }
 
 export enum WebviewMessageType {
@@ -51,7 +53,10 @@ export enum WebviewMessageType {
   Sync = 'sync',
   SelectWorkspaceFolder = 'select-workspace-folder',
   ClearWorkspaceFolder = 'clear-workspace-folder',
-  UpdateGitIntegration = 'update-git-integration'
+  UpdateGitIntegration = 'update-git-integration',
+  NewAddon = 'new-addon',
+  DeleteAddon = 'delete-addon',
+  ApplyAddon = 'apply-addon'
 }
 
 export interface BaseWebviewMessage {
@@ -141,4 +146,19 @@ export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
   enabled?: boolean;
   mode?: GitIntegrationMode;
   groupPrefix?: string;
+}
+
+export interface WebviewCreateAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.NewAddon;
+  name: string;
+}
+
+export interface WebviewDeleteAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.DeleteAddon;
+  addonId: string;
+}
+
+export interface WebviewApplyAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ApplyAddon;
+  addonId: string;
 }

@@ -28,10 +28,12 @@ enum ConnectionStatus {
 interface TabState {
   payload: TabStatePayload | null;
   loading: boolean;
+  rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
   groups: Array<{ groupId: string; name: string }>;
   histories: Array<{ historyId: string; name: string }>;
+  addons: Array<{ addonId: string; name: string }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
@@ -64,6 +66,9 @@ interface TabContextValue {
       mode?: GitIntegrationMode;
       groupPrefix?: string;
     }) => Promise<void>;
+    createAddon: (name: string) => Promise<void>;
+    deleteAddon: (addonId: string) => Promise<void>;
+    applyAddon: (addonId: string) => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -78,10 +83,12 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
   const [state, setState] = useState<TabState>({
     payload: null,
     loading: true,
+    rendering: false,
     error: null,
     connectionStatus: ConnectionStatus.Connecting,
     groups: [],
     histories: [],
+    addons: [],
     selectedGroup: null,
     quickSlots: {},
     masterWorkspaceFolder: null,
@@ -104,10 +111,12 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
           ...prev,
           payload: event.tabState,
           loading: false,
+          rendering: event.rendering,
           error: null,
           connectionStatus: ConnectionStatus.Connected,
           groups: event.groups,
           histories: event.histories,
+          addons: event.addons,
           selectedGroup: event.selectedGroup,
           quickSlots: event.quickSlots,
           masterWorkspaceFolder: event.masterWorkspaceFolder,
@@ -380,9 +389,45 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     )
   };
 
+  const createAddon = useCallback(
+    async (name: string): Promise<void> => {
+      try {
+        messagingService.createAddon(name);
+      } catch (error) {
+        handleError(error, 'create add-on');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
+  const deleteAddon = useCallback(
+    async (addonId: string): Promise<void> => {
+      try {
+        messagingService.deleteAddon(addonId);
+      } catch (error) {
+        handleError(error, 'delete add-on');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
+  const applyAddon = useCallback(
+    async (addonId: string): Promise<void> => {
+      try {
+        messagingService.applyAddon(addonId);
+      } catch (error) {
+        handleError(error, 'apply add-on');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
   const contextValue: TabContextValue = {
     state,
-    actions,
+    actions: { ...actions, createAddon, deleteAddon, applyAddon },
     messenger
   };
 

@@ -1,8 +1,11 @@
 import {
   WebviewAddToHistoryMessage,
+  WebviewApplyAddonMessage,
   WebviewAssignQuickSlotMessage,
   WebviewClearAllTabsMessage,
   WebviewClearWorkspaceFolderMessage,
+  WebviewCreateAddonMessage,
+  WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewMessageType,
@@ -160,6 +163,30 @@ export class TabMessagingService {
       type: WebviewMessageType.UpdateGitIntegration,
       ...config
     });
+  }
+
+  async createAddon(name: string): Promise<void> {
+    const message: WebviewCreateAddonMessage = {
+      type: WebviewMessageType.NewAddon,
+      name
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async deleteAddon(addonId: string): Promise<void> {
+    const message: WebviewDeleteAddonMessage = {
+      type: WebviewMessageType.DeleteAddon,
+      addonId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async applyAddon(addonId: string): Promise<void> {
+    const message: WebviewApplyAddonMessage = {
+      type: WebviewMessageType.ApplyAddon,
+      addonId
+    };
+    this.messenger.sendMessage(message);
   }
 
   getMessenger(): VSCodeMessenger {

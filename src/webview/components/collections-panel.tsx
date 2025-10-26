@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { AddonsCollection } from './addons-collection';
 import { GroupsCollection } from './groups-collection';
 import { HistoryCollection } from './history-collection';
 
@@ -9,7 +10,9 @@ export const CollectionsPanel: React.FC = () => {
   const [deletingKeys, setDeletingKeys] = useState<Set<string>>(
     () => new Set()
   );
-  const [activeTab, setActiveTab] = useState<'groups' | 'history'>('groups');
+  const [activeTab, setActiveTab] = useState<'groups' | 'history' | 'addons'>(
+    'groups'
+  );
 
   const markDeleting = useCallback((key: string) => {
     setDeletingKeys((prev) => {
@@ -57,10 +60,26 @@ export const CollectionsPanel: React.FC = () => {
     [actions, markDeleting, clearDeleting]
   );
 
+  const handleDeleteAddon = useCallback(
+    async (addonId: string) => {
+      const key = `addon:${addonId}`;
+      markDeleting(key);
+      try {
+        await actions.deleteAddon(addonId);
+      } catch (error) {
+        console.error('Failed to delete add-on', error);
+      } finally {
+        clearDeleting(key);
+      }
+    },
+    [actions, markDeleting, clearDeleting]
+  );
+
   const tabs = useMemo(
     () => [
       { id: 'groups' as const, label: 'Groups' },
-      { id: 'history' as const, label: 'Snapshots' }
+      { id: 'history' as const, label: 'Snapshots' },
+      { id: 'addons' as const, label: 'Add-ons' }
     ],
     []
   );
@@ -83,15 +102,22 @@ export const CollectionsPanel: React.FC = () => {
       </header>
 
       <div className="collections-panel-body">
-        {activeTab === 'groups' ? (
+        {activeTab === 'groups' && (
           <GroupsCollection
             deletingKeys={deletingKeys}
             onDelete={handleDeleteGroup}
           />
-        ) : (
+        )}
+        {activeTab === 'history' && (
           <HistoryCollection
             deletingKeys={deletingKeys}
             onDelete={handleDeleteHistory}
+          />
+        )}
+        {activeTab === 'addons' && (
+          <AddonsCollection
+            deletingKeys={deletingKeys}
+            onDelete={handleDeleteAddon}
           />
         )}
       </div>

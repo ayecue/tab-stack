@@ -59,6 +59,7 @@ export interface TabStateFileContent {
   version?: number;
   groups: Record<string, StateContainer>;
   history: Record<string, StateContainer>;
+  addons?: Record<string, StateContainer>;
   selectedGroup: string;
   previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;
@@ -69,6 +70,7 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
     version: CURRENT_STATE_FILE_VERSION,
     groups: {},
     history: {},
+    addons: {},
     selectedGroup: null,
     previousSelectedGroup: null,
     quickSlots: {}
@@ -97,6 +99,9 @@ export interface ITabManagerService extends Disposable {
   takeSnapshot(): Promise<void>;
   recoverSnapshot(historyId: string): Promise<void>;
   deleteSnapshot(historyId: string): Promise<void>;
+  createAddon(name: string): Promise<void>;
+  deleteAddon(addonId: string): Promise<void>;
+  applyAddon(addonId: string): Promise<void>;
   assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): Promise<void>;
   applyQuickSlot(slot: QuickSlotIndex): Promise<void>;
   quickSwitch(): Promise<void>;

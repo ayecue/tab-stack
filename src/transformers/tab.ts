@@ -5,8 +5,7 @@ import {
   TabInputNotebookDiff,
   TabInputTerminal,
   TabInputText,
-  TabInputTextDiff,
-  TabInputWebview
+  TabInputTextDiff
 } from 'vscode';
 
 import { TabInfo, TabInfoBase, TabKind } from '../types/tabs';
@@ -39,12 +38,6 @@ export function transformTabToTabInfo(tab: Tab, viewColumn: number): TabInfo {
       uri: tab.input.uri.toString(),
       viewType: tab.input.viewType,
       kind: TabKind.TabInputCustom
-    };
-  } else if (tab.input instanceof TabInputWebview) {
-    return {
-      ...base,
-      viewType: tab.input.viewType,
-      kind: TabKind.TabInputWebview
     };
   } else if (tab.input instanceof TabInputNotebook) {
     return {

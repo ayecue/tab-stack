@@ -32,6 +32,7 @@ export class TabStateService implements Disposable {
 
   private _history: Record<string, StateContainer> | null;
   private _groups: Record<string, StateContainer> | null;
+  private _addons: Record<string, StateContainer> | null;
   // undefined = no selected group, null = not loaded
   private _quickSlots: QuickSlotAssignments | null;
   private _stateContainer: StateContainer | null;
@@ -46,6 +47,7 @@ export class TabStateService implements Disposable {
     this._configService = configService;
     this._history = null;
     this._groups = null;
+    this._addons = null;
     this._quickSlots = null;
     this._stateContainer = null;
     this._pendingFile = null;
@@ -56,6 +58,7 @@ export class TabStateService implements Disposable {
     await Promise.all([
       this.getGroups(),
       this.getHistory(),
+      this.getAddons(),
       this.getQuickSlots()
     ]);
 
@@ -76,6 +79,10 @@ export class TabStateService implements Disposable {
     return this._history ?? {};
   }
 
+  get addons() {
+    return this._addons ?? {};
+  }
+
   get stateContainer() {
     return this._stateContainer;
   }
@@ -84,7 +91,7 @@ export class TabStateService implements Disposable {
     return this._previousStateContainer;
   }
 
-  async addToHistory(state: TabManagerState): Promise<string> {
+  async addToHistory(state: TabManagerState): Promise<StateContainer | null> {
     const history = await this.getHistory();
     const stateContainer: StateContainer = {
       id: nanoid(),
@@ -106,7 +113,33 @@ export class TabStateService implements Disposable {
       keysToRemove.forEach((key) => delete history[key]);
     }
 
-    return stateContainer.id;
+    return stateContainer;
+  }
+
+  async addToAddons(
+    state: TabManagerState,
+    name: string
+  ): Promise<StateContainer | null> {
+    const addons = await this.getAddons();
+    const isNameAlreadyExisting = Object.values(addons).some(
+      (a) => a.name === name
+    );
+
+    if (isNameAlreadyExisting) {
+      return null;
+    }
+
+    const stateContainer: StateContainer = {
+      id: nanoid(),
+      name,
+      state,
+      createdAt: Date.now(),
+      lastSelectedAt: 0
+    };
+
+    addons[stateContainer.id] = stateContainer;
+    this.save();
+    return stateContainer;
   }
 
   async refreshState(): Promise<StateContainer> {
@@ -184,14 +217,14 @@ export class TabStateService implements Disposable {
     return false;
   }
 
-  async createGroup(name: string): Promise<boolean> {
+  async createGroup(name: string): Promise<StateContainer | null> {
     const groups = await this.getGroups();
     const isNameAlreadyExisting = Object.values(groups).some(
       (g) => g.name === name
     );
 
     if (isNameAlreadyExisting) {
-      return false;
+      return null;
     }
 
     const newStateContainer = await this.refreshState();
@@ -206,7 +239,7 @@ export class TabStateService implements Disposable {
     groups[stateContainer.id] = stateContainer;
     this.setState(stateContainer);
 
-    return true;
+    return stateContainer;
   }
 
   async renameGroup(groupId: string, newName: string): Promise<boolean> {
@@ -224,13 +257,13 @@ export class TabStateService implements Disposable {
     return true;
   }
 
-  async addCurrentStateToHistory(): Promise<string> {
-    const newStateContainer = await this.refreshState();
-    const id = await this.addToHistory(newStateContainer.state);
+  async addCurrentStateToHistory(): Promise<StateContainer | null> {
+    const lastStateContainer = await this.refreshState();
+    const newStateContainer = await this.addToHistory(lastStateContainer.state);
 
     this.save();
 
-    return id;
+    return newStateContainer;
   }
 
   async deleteGroup(groupId: string): Promise<boolean> {
@@ -272,6 +305,21 @@ export class TabStateService implements Disposable {
 
     delete history[historyId];
     this._history = history;
+
+    this.save();
+
+    return true;
+  }
+
+  async deleteAddon(addonId: string): Promise<boolean> {
+    const addons = await this.getAddons();
+
+    if (!addons[addonId]) {
+      return false;
+    }
+
+    delete addons[addonId];
+    this._addons = addons;
 
     this.save();
 
@@ -346,6 +394,19 @@ export class TabStateService implements Disposable {
     return this._history;
   }
 
+  async getAddons(): Promise<Record<string, StateContainer>> {
+    if (this._addons) {
+      return this._addons;
+    }
+
+    const stateFile = await this.getStateFile();
+    const storedAddons = stateFile?.data?.addons || {};
+
+    this._addons = storedAddons;
+
+    return this._addons;
+  }
+
   async getQuickSlots(): Promise<QuickSlotAssignments> {
     if (this._quickSlots) {
       return this._quickSlots;
@@ -410,9 +471,10 @@ export class TabStateService implements Disposable {
       return;
     }
 
-    const [groups, history, quickSlots] = await Promise.all([
+    const [groups, history, addons, quickSlots] = await Promise.all([
       this.getGroups(),
       this.getHistory(),
+      this.getAddons(),
       this.getQuickSlots()
     ]);
 
@@ -420,6 +482,7 @@ export class TabStateService implements Disposable {
       version: CURRENT_STATE_FILE_VERSION,
       groups,
       history,
+      addons,
       selectedGroup: this._stateContainer.id,
       previousSelectedGroup: this._previousStateContainer.id,
       quickSlots
@@ -431,6 +494,7 @@ export class TabStateService implements Disposable {
     this._pendingFile = null;
     this._groups = null;
     this._history = null;
+    this._addons = null;
     this._stateContainer = null;
     this._previousStateContainer = null;
     this._quickSlots = null;

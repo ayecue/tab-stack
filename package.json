@@ -8,7 +8,7 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
@@ -153,6 +153,21 @@
       {
         "command": "tabStack.deleteSnapshot",
         "title": "Delete Tabs Snapshot",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.createAddon",
+        "title": "Save Current Tabs as Add-on",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.applyAddon",
+        "title": "Apply Add-on (Add Tabs)",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.deleteAddon",
+        "title": "Delete Add-on",
         "category": "Tab Stack"
       },
       {

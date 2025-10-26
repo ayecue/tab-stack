@@ -451,9 +451,6 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                     onKeyDown={(event) => event.stopPropagation()}
                   >
                     <div className="slot-selector">
-                      <label htmlFor={slotControlId} className="sr-only">
-                        Quick slot
-                      </label>
                       <select
                         id={slotControlId}
                         value={assignedSlot ? assignedSlot.toString() : ''}

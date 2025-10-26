@@ -37,6 +37,40 @@ async function requestNewGroupId(): Promise<string | null> {
   });
 }
 
+async function requestAddonId(
+  tabManagerService: TabManagerService
+): Promise<string | null> {
+  const addons = await tabManagerService.state.getAddons();
+  const addonNames = Object.values(addons).map((addon) => addon.name);
+
+  if (addonNames.length === 0) {
+    window.showWarningMessage('No add-ons available.');
+    return null;
+  }
+
+  const addonName = await window.showQuickPick(addonNames, {
+    title: 'Select the add-on to apply'
+  });
+
+  if (!addonName) {
+    window.showWarningMessage('Invalid add-on.');
+    return null;
+  }
+
+  const addonId = Object.values(addons).find(
+    (addon) => addon.name === addonName
+  )?.id;
+
+  return addonId ?? null;
+}
+
+async function requestNewAddonName(): Promise<string | null> {
+  return await window.showInputBox({
+    prompt: 'Name the new add-on (applies without replacing)',
+    placeHolder: 'e.g. Debugging Tools'
+  });
+}
+
 async function requestSnapshotId(
   tabManagerService: TabManagerService
 ): Promise<string | null> {
@@ -178,6 +212,50 @@ export function createCommands(
     }
   );
 
+  const createAddonCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.createAddon`,
+    async (addonNameParam?: string) => {
+      const input = addonNameParam || (await requestNewAddonName());
+      const addonName = input?.trim();
+
+      if (!addonName) {
+        return;
+      }
+
+      await tabManagerService.createAddon(addonName);
+    }
+  );
+
+  const applyAddonCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.applyAddon`,
+    async (addonNameParam?: string) => {
+      const addons = await tabManagerService.state.getAddons();
+      const addonIdParam = Object.values(addons).find(
+        (addon) => addon.name === addonNameParam
+      )?.id;
+      const addonId = addonIdParam || (await requestAddonId(tabManagerService));
+      if (!addonId) {
+        return;
+      }
+      await tabManagerService.applyAddon(addonId);
+    }
+  );
+
+  const deleteAddonCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.deleteAddon`,
+    async (addonNameParam?: string) => {
+      const addons = await tabManagerService.state.getAddons();
+      const addonIdParam = Object.values(addons).find(
+        (addon) => addon.name === addonNameParam
+      )?.id;
+      const addonId = addonIdParam || (await requestAddonId(tabManagerService));
+      if (!addonId) {
+        return;
+      }
+      await tabManagerService.deleteAddon(addonId);
+    }
+  );
+
   const assignQuickSlotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.assignQuickSlot`,
     async (groupNameParam?: string, slotIndexParam?: string) => {
@@ -223,6 +301,9 @@ export function createCommands(
     snapshotCommand,
     restoreSnapshotCommand,
     deleteSnapshotCommand,
+    createAddonCommand,
+    applyAddonCommand,
+    deleteAddonCommand,
     assignQuickSlotCommand,
     ...quickSlotCommands
   ];
