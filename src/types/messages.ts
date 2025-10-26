@@ -148,8 +148,6 @@ export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
   groupPrefix?: string;
 }
 
-// Removed apply-mode messaging
-
 export interface WebviewCreateAddonMessage extends BaseWebviewMessage {
   type: WebviewMessageType.NewAddon;
   name: string;

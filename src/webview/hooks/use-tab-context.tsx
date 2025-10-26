@@ -389,8 +389,6 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     )
   };
 
-  // apply mode removed
-
   const createAddon = useCallback(
     async (name: string): Promise<void> => {
       try {

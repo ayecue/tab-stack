@@ -165,8 +165,6 @@ export class TabMessagingService {
     });
   }
 
-  // apply mode removed
-
   async createAddon(name: string): Promise<void> {
     const message: WebviewCreateAddonMessage = {
       type: WebviewMessageType.NewAddon,
