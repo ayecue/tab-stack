@@ -30,7 +30,12 @@ jobs:
           command: echo 'export PACKAGE_VERSION=$(node -pe "require(\"./package.json\").version")' >> $BASH_ENV
       - run:
           name: Publish extension to Open VSX
-          command: yes | ./node_modules/.bin/ovsx publish -p ${OPEN_VSX_TOKEN}
+          command: |
+            set +o pipefail
+            yes | ./node_modules/.bin/ovsx publish -p "${OPEN_VSX_TOKEN}"
+            code=${PIPESTATUS[1]}
+            set -o pipefail
+            exit $code
   publish-vsce: 
     docker:
       - image: cimg/node:20.18.0
