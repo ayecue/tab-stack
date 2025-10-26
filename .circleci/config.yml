@@ -30,7 +30,7 @@ jobs:
           command: echo 'export PACKAGE_VERSION=$(node -pe "require(\"./package.json\").version")' >> $BASH_ENV
       - run:
           name: Publish extension to Open VSX
-          command: ./node_modules/.bin/ovsx publish -p ${OPEN_VSX_TOKEN} --allow-star-activation
+          command: ./node_modules/.bin/ovsx publish --allow-star-activation -p ${OPEN_VSX_TOKEN}
   publish-vsce: 
     docker:
       - image: cimg/node:20.18.0
