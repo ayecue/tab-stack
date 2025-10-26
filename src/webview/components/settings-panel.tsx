@@ -53,8 +53,6 @@ export const SettingsPanel: React.FC = () => {
     [actions]
   );
 
-  // Apply Mode removed
-
   return (
     <div className="settings-panel">
       <button
@@ -125,8 +123,6 @@ export const SettingsPanel: React.FC = () => {
               </p>
             )}
           </div>
-
-          {/* Apply Mode section removed */}
 
           <div className="settings-section">
             <label className="settings-label" htmlFor="git-enabled">

@@ -1255,34 +1255,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Apply mode select aligns with VS Code input styling (mirrors .git-mode-select) */
-.apply-mode-select {
-  width: 100%;
-  padding: 5px 8px;
-  font-size: 11px;
-  font-family: var(--vscode-font-family);
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
-  border: 1px solid var(--vscode-input-border, transparent);
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.1s ease;
-}
-
-.apply-mode-select:focus {
-  border-color: var(--vscode-focusBorder);
-}
-
-.apply-mode-select:hover {
-  border-color: var(--vscode-input-border, rgba(255, 255, 255, 0.1));
-}
-
-.apply-mode-select option {
-  background: var(--vscode-dropdown-background);
-  color: var(--vscode-dropdown-foreground);
-}
-
 /* Group prefix input follows input styling used elsewhere */
 .git-group-prefix {
   width: 100%;
