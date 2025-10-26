@@ -62,6 +62,10 @@ export class TabStateService implements Disposable {
     if (this._stateContainer == null) {
       await this.updateState();
     }
+
+    if (this._previousStateContainer == null) {
+      this._previousStateContainer = createEmptyStateContainer();
+    }
   }
 
   get groups() {
