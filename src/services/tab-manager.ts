@@ -1,4 +1,4 @@
-import debounce from 'debounce';
+import debounce, { DebouncedFunction } from 'debounce';
 import { Disposable, EventEmitter, window } from 'vscode';
 
 import { GitIntegrationMode } from '../types/config';
@@ -59,7 +59,7 @@ export class TabManagerService implements ITabManagerService {
 
   private _disposables: Disposable[] = [];
 
-  refresh: () => Promise<void>;
+  refresh: DebouncedFunction<() => Promise<void>>;
 
   constructor(
     layoutService: EditorLayoutService,
@@ -588,7 +588,6 @@ export class TabManagerService implements ITabManagerService {
     }
 
     this._stateService.setState(this._stateService.previousStateContainer);
-
     await this.applyState();
     await this.triggerSync();
   }

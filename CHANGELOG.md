@@ -2,9 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.10] - 26-10-2025
+
+### Fix
+
+- Fix selection not getting persisted when group gets deselected
+
 ## [1.0.9] - 26-10-2025
 
-## Added
+### Added
 
 - Improve handling of unsaved tabs when switching groups
 

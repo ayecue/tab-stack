@@ -1,3 +1,4 @@
+import { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Event } from 'vscode';
 
@@ -83,7 +84,7 @@ export interface ITabManagerService extends Disposable {
   readonly state: TabStateService;
   readonly config: ConfigService;
 
-  refresh: () => Promise<void>;
+  refresh: DebouncedFunction<() => Promise<void>>;
   applyState(): Promise<void>;
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
   openTab(viewColumn: number, index: number): Promise<void>;

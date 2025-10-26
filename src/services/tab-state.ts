@@ -1,4 +1,4 @@
-import debounce from 'debounce';
+import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Uri, window, workspace } from 'vscode';
 
@@ -25,7 +25,7 @@ export class TabStateService implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
   static readonly SAVE_DEBOUNCE_DELAY = 200 as const;
 
-  save: () => Promise<void>;
+  save: DebouncedFunction<() => Promise<void>>;
 
   private _pendingFile: Promise<StorageFile<TabStateFileContent>> | null;
   private _file: StorageFile<TabStateFileContent> | null;
@@ -111,11 +111,7 @@ export class TabStateService implements Disposable {
 
   async refreshState() {
     await this.updateState();
-
-    if (this._stateContainer.id in this._groups) {
-      await this.save();
-    }
-
+    this.save();
     return this._stateContainer;
   }
 
@@ -173,11 +169,13 @@ export class TabStateService implements Disposable {
   async forkState(): Promise<void> {
     this.setState(null);
     await this.updateState();
+    this.save();
   }
 
   setState(stateContainer: StateContainer): void {
     this._previousStateContainer = this._stateContainer;
     this._stateContainer = stateContainer;
+    this.save();
   }
 
   async loadState(groupId: string | null): Promise<boolean> {
@@ -242,7 +240,7 @@ export class TabStateService implements Disposable {
     const metaData = groups[groupId];
     metaData.name = newName;
 
-    await this.save();
+    this.save();
 
     return true;
   }
@@ -251,7 +249,7 @@ export class TabStateService implements Disposable {
     const snapshot = await this.refreshState();
     const id = await this.addToHistory(snapshot.state);
 
-    await this.save();
+    this.save();
 
     return id;
   }
@@ -281,7 +279,7 @@ export class TabStateService implements Disposable {
       await this.updateState();
     }
 
-    await this.save();
+    this.save();
 
     return true;
   }
@@ -296,7 +294,7 @@ export class TabStateService implements Disposable {
     delete history[historyId];
     this._history = history;
 
-    await this.save();
+    this.save();
 
     return true;
   }
@@ -407,7 +405,7 @@ export class TabStateService implements Disposable {
       quickSlots[existingSlot] = null;
     }
 
-    await this.save();
+    this.save();
   }
 
   async getQuickSlotAssignment(slot: QuickSlotIndex): Promise<string | null> {
