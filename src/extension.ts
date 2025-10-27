@@ -31,7 +31,7 @@ export async function activate(context: ExtensionContext) {
     gitInitialized ? gitService : null
   );
 
-  await tabManagerService.attachStateService();
+  await tabManagerService.attachStateHandler();
 
   const viewManagerProvider = new ViewManagerProvider(
     context,

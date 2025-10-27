@@ -105,7 +105,7 @@ export class TabManagerService implements ITabManagerService {
     return this._notifyViewEmitter.event;
   }
 
-  async attachStateService() {
+  async attachStateHandler() {
     this._stateHandler = null;
     const newStateService = new TabStateHandler(this._configService);
     await newStateService.initialize();
@@ -127,7 +127,7 @@ export class TabManagerService implements ITabManagerService {
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
         if (changes.masterWorkspaceFolder !== undefined) {
-          await this.attachStateService();
+          await this.attachStateHandler();
           this._gitService.updateRepository();
         }
       })
