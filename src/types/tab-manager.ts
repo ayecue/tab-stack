@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { Disposable, Event } from 'vscode';
 
 import { ConfigService } from '../services/config';
-import { TabStateService } from '../services/tab-state';
+import { TabStateHandler } from '../handlers/tab-state';
 import { Layout } from './commands';
 import {
   ExtensionNotificationMessage,
@@ -83,7 +83,7 @@ export interface RenderingItem {
 }
 
 export interface ITabManagerService extends Disposable {
-  readonly state: TabStateService;
+  readonly state: TabStateHandler;
   readonly config: ConfigService;
 
   refresh: DebouncedFunction<() => Promise<void>>;

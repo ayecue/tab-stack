@@ -1,6 +1,6 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
-import { Disposable, Uri, window, workspace } from 'vscode';
+import { Disposable, Uri, workspace } from 'vscode';
 
 import { transform } from '../transformers/state-migration';
 import { StorageFile } from '../types/storage';
@@ -19,9 +19,9 @@ import { getEditorLayout } from '../utils/commands';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { getTabState } from '../utils/tab-utils';
-import { ConfigService } from './config';
+import { ConfigService } from '../services/config';
 
-export class TabStateService implements Disposable {
+export class TabStateHandler implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
   static readonly SAVE_DEBOUNCE_DELAY = 200 as const;
 
@@ -42,7 +42,7 @@ export class TabStateService implements Disposable {
   constructor(configService: ConfigService) {
     this.save = debounce(
       this._save.bind(this),
-      TabStateService.SAVE_DEBOUNCE_DELAY
+      TabStateHandler.SAVE_DEBOUNCE_DELAY
     );
     this._configService = configService;
     this._history = null;
@@ -105,10 +105,10 @@ export class TabStateService implements Disposable {
 
     const keys = Object.keys(history);
 
-    if (keys.length > TabStateService.MAX_HISTORY) {
+    if (keys.length > TabStateHandler.MAX_HISTORY) {
       const keysToRemove = keys.slice(
         0,
-        keys.length - TabStateService.MAX_HISTORY
+        keys.length - TabStateHandler.MAX_HISTORY
       );
       keysToRemove.forEach((key) => delete history[key]);
     }
