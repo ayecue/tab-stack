@@ -122,12 +122,6 @@ export class TabManagerService implements ITabManagerService {
       window.tabGroups.onDidChangeTabGroups(() => void this.refresh())
     );
     this._disposables.push(
-      window.onDidChangeActiveTextEditor(() => void this.refresh())
-    );
-    this._disposables.push(
-      window.onDidChangeTextEditorOptions(() => void this.refresh())
-    );
-    this._disposables.push(
       this._layoutService.onDidChangeLayout(() => void this.refresh())
     );
     this._disposables.push(
