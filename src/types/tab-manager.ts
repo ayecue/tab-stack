@@ -2,8 +2,8 @@ import { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Event } from 'vscode';
 
-import { ConfigService } from '../services/config';
 import { TabStateHandler } from '../handlers/tab-state';
+import { ConfigService } from '../services/config';
 import { Layout } from './commands';
 import {
   ExtensionNotificationMessage,
@@ -100,6 +100,7 @@ export interface ITabManagerService extends Disposable {
   recoverSnapshot(historyId: string): Promise<void>;
   deleteSnapshot(historyId: string): Promise<void>;
   createAddon(name: string): Promise<void>;
+  renameAddon(addonId: string, newName: string): Promise<void>;
   deleteAddon(addonId: string): Promise<void>;
   applyAddon(addonId: string): Promise<void>;
   assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): Promise<void>;

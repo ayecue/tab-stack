@@ -24,6 +24,11 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [editingAddonId, setEditingAddonId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const renameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) {
@@ -31,6 +36,13 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
       inputRef.current.select();
     }
   }, [isCreating]);
+
+  useEffect(() => {
+    if (editingAddonId && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [editingAddonId]);
 
   const startCreate = useCallback(() => {
     setIsCreating(true);
@@ -43,6 +55,13 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
     setNewAddonName('');
     setLocalError(null);
     setIsSaving(false);
+  }, []);
+
+  const cancelRename = useCallback(() => {
+    setEditingAddonId(null);
+    setRenameValue('');
+    setRenameError(null);
+    setIsRenaming(false);
   }, []);
 
   const submitCreate = useCallback(async () => {
@@ -63,6 +82,55 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
       setIsSaving(false);
     }
   }, [actions, newAddonName, cancelCreate]);
+
+  const startRename = useCallback(
+    (addonId: string, currentName: string) => {
+      cancelCreate();
+      setEditingAddonId(addonId);
+      setRenameValue(currentName);
+      setRenameError(null);
+      setIsRenaming(false);
+    },
+    [cancelCreate]
+  );
+
+  const submitRename = useCallback(async () => {
+    if (!editingAddonId) return;
+    const normalized = renameValue.trim();
+    if (!normalized) {
+      setRenameError('Add-on name is required');
+      renameInputRef.current?.focus();
+      return;
+    }
+
+    const currentAddon = state.addons.find((a) => a.addonId === editingAddonId);
+    if (normalized === currentAddon?.name) {
+      cancelRename();
+      return;
+    }
+
+    if (
+      state.addons.some(
+        (a) => a.name === normalized && a.addonId !== editingAddonId
+      )
+    ) {
+      setRenameError('An add-on with this name already exists');
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+      return;
+    }
+
+    try {
+      setIsRenaming(true);
+      await actions.renameAddon(editingAddonId, normalized);
+      cancelRename();
+    } catch (error) {
+      console.error('Failed to rename add-on', error);
+      setRenameError('Unable to rename add-on');
+      setIsRenaming(false);
+      renameInputRef.current?.focus();
+    }
+  }, [actions, editingAddonId, renameValue, cancelRename, state.addons]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -178,19 +246,22 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
           {filteredAddons.map((addon) => {
             const { addonId, name } = addon;
             const isDeleting = deletingKeys.has(`addon:${addonId}`);
+            const isEditing = editingAddonId === addonId;
             return (
               <li
                 key={addonId}
-                className="section-item"
+                className={`section-item${isEditing ? ' editing' : ''}`}
                 tabIndex={0}
                 onClick={() => {
                   if (isDeleting) return;
+                  if (isEditing) return;
                   void actions.applyAddon(addonId).catch((error) => {
                     console.error('Failed to apply add-on', error);
                   });
                 }}
                 onKeyDown={(event) => {
                   if (isDeleting) return;
+                  if (isEditing) return;
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
                     void actions.applyAddon(addonId).catch((error) => {
@@ -202,13 +273,98 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
               >
                 <div className="item-row">
                   <div className="item-primary">
-                    <span className="item-name">{name}</span>
+                    {isEditing ? (
+                      <>
+                        <input
+                          ref={renameInputRef}
+                          type="text"
+                          value={renameValue}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            setRenameValue(event.target.value);
+                            if (renameError) {
+                              setRenameError(null);
+                            }
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              void submitRename();
+                            }
+                            if (event.key === 'Escape') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              cancelRename();
+                            }
+                          }}
+                          aria-label="Rename add-on"
+                          disabled={isRenaming}
+                        />
+                        <div className="inline-form-actions">
+                          <button
+                            type="button"
+                            className="action-save"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void submitRename();
+                            }}
+                            disabled={isRenaming}
+                            aria-label="Save add-on name"
+                          >
+                            <i
+                              className="codicon codicon-check"
+                              aria-hidden="true"
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            className="action-cancel"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              cancelRename();
+                            }}
+                            disabled={isRenaming}
+                            aria-label="Cancel rename"
+                          >
+                            <i
+                              className="codicon codicon-close"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <span className="item-name">{name}</span>
+                    )}
                   </div>
+                  {isEditing && renameError && (
+                    <span className="form-error" role="alert">
+                      {renameError}
+                    </span>
+                  )}
                   <div
                     className="item-actions"
                     onClick={(event) => event.stopPropagation()}
                     onKeyDown={(event) => event.stopPropagation()}
                   >
+                    {!isEditing && (
+                      <button
+                        type="button"
+                        className="neutral"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          startRename(addonId, name);
+                        }}
+                        disabled={isDeleting}
+                        title="Rename add-on"
+                      >
+                        <i
+                          className="codicon codicon-edit"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="neutral"
@@ -218,7 +374,7 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
                           console.error('Failed to apply add-on', error);
                         });
                       }}
-                      disabled={isDeleting}
+                      disabled={isDeleting || isEditing}
                       title="Apply add-on"
                     >
                       <i
@@ -233,7 +389,7 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
                         event.stopPropagation();
                         void onDelete(addonId);
                       }}
-                      disabled={isDeleting}
+                      disabled={isDeleting || isEditing}
                       title="Delete add-on"
                     >
                       <i className="codicon codicon-trash" aria-hidden="true" />

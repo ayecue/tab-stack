@@ -55,6 +55,7 @@ export enum WebviewMessageType {
   ClearWorkspaceFolder = 'clear-workspace-folder',
   UpdateGitIntegration = 'update-git-integration',
   NewAddon = 'new-addon',
+  RenameAddon = 'rename-addon',
   DeleteAddon = 'delete-addon',
   ApplyAddon = 'apply-addon'
 }
@@ -161,4 +162,10 @@ export interface WebviewDeleteAddonMessage extends BaseWebviewMessage {
 export interface WebviewApplyAddonMessage extends BaseWebviewMessage {
   type: WebviewMessageType.ApplyAddon;
   addonId: string;
+}
+
+export interface WebviewRenameAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.RenameAddon;
+  addonId: string;
+  name: string;
 }

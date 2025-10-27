@@ -15,12 +15,14 @@ interface TabToolbarProps {
   actions: {
     onRefresh: () => void;
     onSaveGroup: () => void;
+    onCreateAddon: () => void;
     onSnapshot: () => void;
     onRestoreSnapshot: () => void;
     onCloseAll: () => void;
   };
   disabled?: {
     saveGroup?: boolean;
+    createAddon?: boolean;
     snapshot?: boolean;
     restoreSnapshot?: boolean;
     closeAll?: boolean;
@@ -80,6 +82,15 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             disabled={isLoading || disabled?.saveGroup}
           >
             <i className="codicon codicon-archive" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={actions.onCreateAddon}
+            title="Save current tabs as add-on"
+            disabled={isLoading || disabled?.createAddon}
+          >
+            <i className="codicon codicon-extensions" aria-hidden="true" />
           </button>
           <button
             type="button"

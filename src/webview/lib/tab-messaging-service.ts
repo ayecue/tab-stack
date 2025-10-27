@@ -11,6 +11,7 @@ import {
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
+  WebviewRenameAddonMessage,
   WebviewRenameGroupMessage,
   WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
@@ -185,6 +186,15 @@ export class TabMessagingService {
     const message: WebviewApplyAddonMessage = {
       type: WebviewMessageType.ApplyAddon,
       addonId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async renameAddon(addonId: string, newName: string): Promise<void> {
+    const message: WebviewRenameAddonMessage = {
+      type: WebviewMessageType.RenameAddon,
+      addonId,
+      name: newName
     };
     this.messenger.sendMessage(message);
   }

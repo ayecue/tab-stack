@@ -11,6 +11,7 @@ import {
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
+  WebviewRenameAddonMessage,
   WebviewRenameGroupMessage,
   WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
@@ -118,6 +119,11 @@ export class MessageHandler implements Disposable {
       case WebviewMessageType.DeleteAddon: {
         const { addonId } = data as WebviewDeleteAddonMessage;
         await tabManager.deleteAddon(addonId);
+        break;
+      }
+      case WebviewMessageType.RenameAddon: {
+        const { addonId, name } = data as WebviewRenameAddonMessage;
+        await tabManager.renameAddon(addonId, name);
         break;
       }
       case WebviewMessageType.ApplyAddon: {

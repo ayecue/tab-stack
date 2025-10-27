@@ -67,6 +67,7 @@ interface TabContextValue {
       groupPrefix?: string;
     }) => Promise<void>;
     createAddon: (name: string) => Promise<void>;
+    renameAddon: (addonId: string, name: string) => Promise<void>;
     deleteAddon: (addonId: string) => Promise<void>;
     applyAddon: (addonId: string) => Promise<void>;
   };
@@ -425,9 +426,21 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     [messagingService, handleError]
   );
 
+  const renameAddon = useCallback(
+    async (addonId: string, name: string): Promise<void> => {
+      try {
+        messagingService.renameAddon(addonId, name);
+      } catch (error) {
+        handleError(error, 'rename add-on');
+        throw error;
+      }
+    },
+    [messagingService, handleError]
+  );
+
   const contextValue: TabContextValue = {
     state,
-    actions: { ...actions, createAddon, deleteAddon, applyAddon },
+    actions: { ...actions, createAddon, deleteAddon, applyAddon, renameAddon },
     messenger
   };
 

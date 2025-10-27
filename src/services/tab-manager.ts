@@ -1,6 +1,7 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { Disposable, EventEmitter, window } from 'vscode';
 
+import { TabStateHandler } from '../handlers/tab-state';
 import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
@@ -38,7 +39,6 @@ import {
   GitRepositoryOpenEvent,
   GitService
 } from './git';
-import { TabStateHandler } from '../handlers/tab-state';
 
 export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100;
@@ -107,9 +107,9 @@ export class TabManagerService implements ITabManagerService {
 
   async attachStateHandler() {
     this._stateHandler = null;
-    const newStateService = new TabStateHandler(this._configService);
-    await newStateService.initialize();
-    this._stateHandler = newStateService;
+    const newStateHandler = new TabStateHandler(this._configService);
+    await newStateHandler.initialize();
+    this._stateHandler = newStateHandler;
     await this.applyState();
     await this.triggerSync();
   }
@@ -434,6 +434,19 @@ export class TabManagerService implements ITabManagerService {
     await this.triggerSync();
   }
 
+  async renameAddon(addonId: string, newName: string): Promise<void> {
+    if (!this._stateHandler) return;
+    const renamed = await this._stateHandler.renameAddon(addonId, newName);
+    if (!renamed) {
+      this.notify(
+        ExtensionNotificationKind.Warning,
+        `Renaming "${addonId}" failed`
+      );
+      return;
+    }
+    await this.triggerSync();
+  }
+
   async applyAddon(addonId: string): Promise<void> {
     if (!this._stateHandler) return;
     const addons = await this._stateHandler.getAddons();
@@ -504,11 +517,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const normalizedNextGroupId = nextGroupId.trim();
-    const result = await this._stateHandler.renameGroup(
-      groupId,
-      normalizedNextGroupId
-    );
+    const result = await this._stateHandler.renameGroup(groupId, nextGroupId);
 
     if (!result) {
       this.notify(

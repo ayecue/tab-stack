@@ -2,6 +2,7 @@ import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Uri, workspace } from 'vscode';
 
+import { ConfigService } from '../services/config';
 import { transform } from '../transformers/state-migration';
 import { StorageFile } from '../types/storage';
 import {
@@ -19,7 +20,6 @@ import { getEditorLayout } from '../utils/commands';
 import { InMemoryJsonFile } from '../utils/in-memory-json-file';
 import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { getTabState } from '../utils/tab-utils';
-import { ConfigService } from '../services/config';
 
 export class TabStateHandler implements Disposable {
   static readonly MAX_HISTORY: number = 10 as const;
@@ -320,6 +320,21 @@ export class TabStateHandler implements Disposable {
 
     delete addons[addonId];
     this._addons = addons;
+
+    this.save();
+
+    return true;
+  }
+
+  async renameAddon(addonId: string, newName: string): Promise<boolean> {
+    const addons = await this.getAddons();
+
+    if (addons[addonId] == null) {
+      return false;
+    }
+
+    const metaData = addons[addonId];
+    metaData.name = newName;
 
     this.save();
 

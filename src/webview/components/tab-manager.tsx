@@ -73,6 +73,15 @@ const TabManagerContent: React.FC = () => {
       .catch((error) => console.error('Failed to restore snapshot', error));
   }, [actions, lastSnapshotId]);
 
+  const handleCreateAddon = useCallback(() => {
+    const name = `Addon ${new Date().toLocaleTimeString()}`;
+    if (name) {
+      void actions
+        .createAddon(name.trim())
+        .catch((error) => console.error('Failed to create add-on', error));
+    }
+  }, [actions]);
+
   const hasTabs = totals.openTabs > 0;
 
   return (
@@ -111,12 +120,14 @@ const TabManagerContent: React.FC = () => {
                     console.error('Failed to refresh tabs', error)
                   ),
               onSaveGroup: handleSaveGroup,
+              onCreateAddon: handleCreateAddon,
               onSnapshot: handleSnapshot,
               onRestoreSnapshot: handleRestoreSnapshot,
               onCloseAll: handleCloseAllTabs
             }}
             disabled={{
               saveGroup: !hasTabs || state.rendering,
+              createAddon: !hasTabs || state.rendering,
               snapshot: !hasTabs || state.rendering,
               restoreSnapshot: !lastSnapshotId || state.rendering,
               closeAll: !hasTabs || state.rendering
