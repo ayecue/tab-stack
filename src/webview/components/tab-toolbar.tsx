@@ -1,5 +1,14 @@
 import React from 'react';
 
+export type FilterType =
+  | 'all'
+  | 'text'
+  | 'diff'
+  | 'notebook'
+  | 'webview'
+  | 'custom'
+  | 'terminal';
+
 interface TabToolbarProps {
   viewMode: 'columns' | 'flat';
   onViewModeChange: (mode: 'columns' | 'flat') => void;
@@ -12,6 +21,16 @@ interface TabToolbarProps {
   isLoading: boolean;
   searchTerm: string;
   onSearchChange: (term: string) => void;
+  filters?: {
+    pinnedOnly: boolean;
+    dirtyOnly: boolean;
+    type: FilterType;
+  };
+  onFiltersChange?: (next: {
+    pinnedOnly?: boolean;
+    dirtyOnly?: boolean;
+    type?: FilterType;
+  }) => void;
   actions: {
     onRefresh: () => void;
     onSaveGroup: () => void;
@@ -36,6 +55,8 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
   isLoading,
   searchTerm,
   onSearchChange,
+  filters,
+  onFiltersChange,
   actions,
   disabled
 }) => {
@@ -119,6 +140,44 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
           >
             <i className="codicon codicon-close-all" aria-hidden="true" />
           </button>
+        </div>
+        <div className="filter-group" role="group" aria-label="Tab filters">
+          <button
+            type="button"
+            className={`icon-button${filters?.pinnedOnly ? ' active' : ''}`}
+            onClick={() =>
+              onFiltersChange?.({ pinnedOnly: !filters?.pinnedOnly })
+            }
+            title="Show pinned only"
+            aria-pressed={!!filters?.pinnedOnly}
+          >
+            <i className="codicon codicon-pin" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={`icon-button${filters?.dirtyOnly ? ' active' : ''}`}
+            onClick={() =>
+              onFiltersChange?.({ dirtyOnly: !filters?.dirtyOnly })
+            }
+            title="Show modified (dirty) only"
+            aria-pressed={!!filters?.dirtyOnly}
+          >
+            <i className="codicon codicon-pencil" aria-hidden="true" />
+          </button>
+          <select
+            className="type-select"
+            aria-label="Filter by tab type"
+            value={filters?.type ?? 'all'}
+            onChange={(e) => onFiltersChange?.({ type: e.target.value as any })}
+          >
+            <option value="all">All types</option>
+            <option value="text">Text</option>
+            <option value="diff">Diff</option>
+            <option value="notebook">Notebook</option>
+            <option value="webview">Webview</option>
+            <option value="custom">Custom</option>
+            <option value="terminal">Terminal</option>
+          </select>
         </div>
       </div>
 

@@ -3,7 +3,11 @@ import { nanoid } from 'nanoid';
 import { Disposable, Uri, workspace } from 'vscode';
 
 import { ConfigService } from '../services/config';
-import { transform } from '../transformers/state-migration';
+import { transform as migrate } from '../transformers/migration';
+import {
+  toAbsoluteTabStateFile,
+  toRelativeTabStateFile
+} from '../transformers/tab-uris';
 import { StorageFile } from '../types/storage';
 import {
   createDefaultTabStateFileContent,
@@ -374,7 +378,7 @@ export class TabStateHandler implements Disposable {
 
     await this._file.load();
 
-    const fileState = transform(this._file.data);
+    const fileState = migrate(this._file.data);
     this.initializeStateFromFileState(fileState);
     this._file.data = fileState;
 
@@ -479,6 +483,30 @@ export class TabStateHandler implements Disposable {
     this._file = null;
     this._pendingFile = null;
     await this.initialize();
+  }
+
+  async exportStateFile(): Promise<TabStateFileContent> {
+    const file = await this.getStateFile();
+
+    if (!file) {
+      return;
+    }
+
+    return toRelativeTabStateFile(file.data);
+  }
+
+  async importStateFile(
+    fileContent: TabStateFileContent
+  ): Promise<boolean> {
+    const workspaceFolder = this._configService.getMasterWorkspaceFolder();
+
+    if (!workspaceFolder) {
+      return false;
+    }
+
+    const newContent = toAbsoluteTabStateFile(fileContent, Uri.parse(workspaceFolder));
+    this._file.data = newContent;
+    this.save();
   }
 
   private async _save() {

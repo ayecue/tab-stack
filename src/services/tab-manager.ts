@@ -1,5 +1,12 @@
 import debounce, { DebouncedFunction } from 'debounce';
-import { Disposable, EventEmitter, window } from 'vscode';
+import {
+  Disposable,
+  EventEmitter,
+  Uri,
+  window as vsWindow,
+  window,
+  workspace
+} from 'vscode';
 
 import { TabStateHandler } from '../handlers/tab-state';
 import { GitIntegrationMode } from '../types/config';
@@ -11,7 +18,8 @@ import {
 import {
   ITabManagerService,
   QuickSlotIndex,
-  RenderingItem
+  RenderingItem,
+  TabStateFileContent
 } from '../types/tab-manager';
 import {
   closeAllEditors,
@@ -338,6 +346,49 @@ export class TabManagerService implements ITabManagerService {
 
   async clearAllTabs(): Promise<void> {
     await closeAllEditors();
+  }
+
+  async exportStateFile(exportUri: string): Promise<void> {
+    if (!this._stateHandler) return;
+
+    const fileContent = await this._stateHandler.exportStateFile();
+    const data = await workspace.encode(JSON.stringify(fileContent, null, 2));
+    await workspace.fs.writeFile(Uri.parse(exportUri), data);
+    this.notify(
+      ExtensionNotificationKind.Info,
+      'Tab Stack collections exported successfully.'
+    );
+  }
+
+  async importStateFile(importUri: string): Promise<void> {
+    if (!this._stateHandler) return;
+
+    const data = await workspace.fs.readFile(Uri.file(importUri));
+    let fileContent: TabStateFileContent | null = null;
+
+    try {
+      fileContent = JSON.parse(
+        await workspace.decode(data)
+      ) as TabStateFileContent;
+    } catch {
+      this.notify(
+        ExtensionNotificationKind.Error,
+        'Invalid export file. Could not parse JSON.'
+      );
+      return;
+    }
+
+    const result = await this._stateHandler.importStateFile(fileContent);
+
+    if (!result) {
+      this.notify(
+        ExtensionNotificationKind.Warning,
+        'No workspace to make paths absolute. Set Tab Stack master workspace first.'
+      );
+      return;
+    }
+
+    await this.triggerSync();
   }
 
   async triggerSync() {

@@ -16,8 +16,8 @@ export class PersistentJsonFile<T> implements StorageFile<T> {
   async load() {
     try {
       const fileContent = await workspace.fs.readFile(this._filePath);
-      const decoder = new TextDecoder();
-      this._data = JSON.parse(decoder.decode(fileContent)) as T;
+      const content = await workspace.decode(fileContent);
+      this._data = JSON.parse(content) as T;
     } catch (error) {
       this.save(this._defaultDataProvider()).catch(console.error);
     }

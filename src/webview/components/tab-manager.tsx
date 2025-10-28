@@ -5,12 +5,17 @@ import { CollectionsPanel } from './collections-panel';
 import { Header } from './header';
 import { SettingsPanel } from './settings-panel';
 import { TabList } from './tab-list';
-import { TabToolbar } from './tab-toolbar';
+import { FilterType, TabToolbar } from './tab-toolbar';
 
 const TabManagerContent: React.FC = () => {
   const { state, actions } = useTabContext();
   const [viewMode, setViewMode] = useState<'columns' | 'flat'>('columns');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filters, setFilters] = useState({
+    pinnedOnly: false,
+    dirtyOnly: false,
+    type: 'all' as FilterType
+  });
 
   const totals = useMemo(() => {
     const tabGroups = state.payload?.tabGroups ?? {};
@@ -112,6 +117,10 @@ const TabManagerContent: React.FC = () => {
             isLoading={state.loading || state.rendering}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            filters={filters}
+            onFiltersChange={(next) =>
+              setFilters((prev) => ({ ...prev, ...next }))
+            }
             actions={{
               onRefresh: () =>
                 void actions
@@ -134,7 +143,11 @@ const TabManagerContent: React.FC = () => {
             }}
           />
 
-          <TabList viewMode={viewMode} searchTerm={searchTerm} />
+          <TabList
+            viewMode={viewMode}
+            searchTerm={searchTerm}
+            filters={filters}
+          />
         </section>
       </div>
     </div>

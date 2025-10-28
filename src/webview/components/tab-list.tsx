@@ -1,12 +1,24 @@
 import React, { useMemo } from 'react';
 
-import { TabInfo } from '../../types/tabs';
+import { TabInfo, TabKind } from '../../types/tabs';
 import { useTabContext } from '../hooks/use-tab-context';
 import { TabItem } from './tab-item';
 
 interface TabListProps {
   viewMode: 'columns' | 'flat';
   searchTerm: string;
+  filters?: {
+    pinnedOnly: boolean;
+    dirtyOnly: boolean;
+    type:
+      | 'all'
+      | 'text'
+      | 'diff'
+      | 'notebook'
+      | 'webview'
+      | 'custom'
+      | 'terminal';
+  };
 }
 
 interface TabWithIndex {
@@ -14,7 +26,11 @@ interface TabWithIndex {
   originalIndex: number;
 }
 
-export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
+export const TabList: React.FC<TabListProps> = ({
+  viewMode,
+  searchTerm,
+  filters
+}) => {
   const { state, actions } = useTabContext();
   const tabGroups = state.payload?.tabGroups ?? {};
   const getColumnLabel = (viewColumn: number) => {
@@ -55,6 +71,37 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
     return false;
   };
 
+  const matchesType = (tab: TabInfo): boolean => {
+    const type = filters?.type ?? 'all';
+    if (type === 'all') return true;
+    switch (type) {
+      case 'text':
+        return tab.kind === TabKind.TabInputText;
+      case 'diff':
+        return (
+          tab.kind === TabKind.TabInputTextDiff ||
+          tab.kind === TabKind.TabInputNotebookDiff
+        );
+      case 'notebook':
+        return tab.kind === TabKind.TabInputNotebook;
+      case 'webview':
+        return tab.kind === TabKind.TabInputWebview;
+      case 'custom':
+        return tab.kind === TabKind.TabInputCustom;
+      case 'terminal':
+        return tab.kind === TabKind.TabInputTerminal;
+      default:
+        return true;
+    }
+  };
+
+  const passesFilters = (tab: TabInfo): boolean => {
+    if (filters?.pinnedOnly && !tab.isPinned) return false;
+    if (filters?.dirtyOnly && !(tab as any).isDirty) return false;
+    if (!matchesType(tab)) return false;
+    return true;
+  };
+
   const columns = useMemo(() => {
     return Object.values(tabGroups).map((group) => {
       const displayName = group.activeTab ? group.activeTab.label : null;
@@ -66,9 +113,11 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
       }));
 
       // Filter tabs based on search term while preserving original indices
-      const filteredTabs = searchTerm.trim()
-        ? tabsWithIndices.filter(({ tab }) => matchesSearch(tab, searchTerm))
-        : tabsWithIndices;
+      const filteredTabs = (
+        searchTerm.trim()
+          ? tabsWithIndices.filter(({ tab }) => matchesSearch(tab, searchTerm))
+          : tabsWithIndices
+      ).filter(({ tab }) => passesFilters(tab));
 
       return {
         viewColumn: group.viewColumn,
@@ -77,7 +126,7 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
         isActive: state.payload?.activeGroup === group.viewColumn
       };
     });
-  }, [tabGroups, searchTerm, state.payload?.activeGroup]);
+  }, [tabGroups, searchTerm, state.payload?.activeGroup, filters]);
 
   const flatList = useMemo(() => {
     return columns.flatMap((group) =>
