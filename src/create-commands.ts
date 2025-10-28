@@ -268,13 +268,40 @@ export function createCommands(
         return;
       }
       const slotIndex =
-        slotIndexParam == null
+        slotIndexParam != null
           ? Number(slotIndexParam)
           : await requestSlotIndex();
-      if (slotIndex === null && slotIndex > 0 && slotIndex < 10) {
+
+      // Validate slot index (must be 1-9)
+      if (slotIndex < 1 || slotIndex > 9) {
+        window.showWarningMessage('Invalid quick slot index. Choose 1-9.');
         return;
       }
       await tabManagerService.assignQuickSlot(slotIndex, groupId);
+    }
+  );
+
+  const clearQuickSlotCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.clearQuickSlot`,
+    async (slotIndexParam?: string) => {
+      const slotIndex =
+        slotIndexParam != null
+          ? Number(slotIndexParam)
+          : await requestSlotIndex();
+
+      if (slotIndex < 1 || slotIndex > 9) {
+        window.showWarningMessage('Invalid quick slot index. Choose 1-9.');
+        return;
+      }
+
+      await tabManagerService.assignQuickSlot(slotIndex, null);
+    }
+  );
+
+  const clearAllTabsCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.clearAllTabs`,
+    async () => {
+      await tabManagerService.clearAllTabs();
     }
   );
 
@@ -305,6 +332,8 @@ export function createCommands(
     applyAddonCommand,
     deleteAddonCommand,
     assignQuickSlotCommand,
+    clearQuickSlotCommand,
+    clearAllTabsCommand,
     ...quickSlotCommands
   ];
 }

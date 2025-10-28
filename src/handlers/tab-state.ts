@@ -22,7 +22,6 @@ import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { getTabState } from '../utils/tab-utils';
 
 export class TabStateHandler implements Disposable {
-  static readonly MAX_HISTORY: number = 10 as const;
   static readonly SAVE_DEBOUNCE_DELAY = 200 as const;
 
   save: DebouncedFunction<() => Promise<void>>;
@@ -105,11 +104,10 @@ export class TabStateHandler implements Disposable {
 
     const keys = Object.keys(history);
 
-    if (keys.length > TabStateHandler.MAX_HISTORY) {
-      const keysToRemove = keys.slice(
-        0,
-        keys.length - TabStateHandler.MAX_HISTORY
-      );
+    const maxEntries = this._configService.getHistoryMaxEntries();
+
+    if (keys.length > maxEntries) {
+      const keysToRemove = keys.slice(0, keys.length - maxEntries);
       keysToRemove.forEach((key) => delete history[key]);
     }
 
@@ -444,6 +442,12 @@ export class TabStateHandler implements Disposable {
       this.getGroups()
     ]);
 
+    if (groupId == null) {
+      quickSlots[slot] = null;
+      this.save();
+      return;
+    }
+
     if (!groups[groupId]) {
       return;
     }
@@ -452,9 +456,7 @@ export class TabStateHandler implements Disposable {
       (index) => quickSlots[index] === groupId
     );
 
-    if (slot != null) {
-      quickSlots[slot] = groupId;
-    }
+    quickSlots[slot] = groupId;
 
     if (existingSlot != null) {
       quickSlots[existingSlot] = null;

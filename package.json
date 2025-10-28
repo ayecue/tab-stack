@@ -176,6 +176,16 @@
         "category": "Tab Stack"
       },
       {
+        "command": "tabStack.clearQuickSlot",
+        "title": "Clear Quick Slot Assignment",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.clearAllTabs",
+        "title": "Close All Tabs",
+        "category": "Tab Stack"
+      },
+      {
         "command": "tabStack.quickSlot1",
         "title": "Apply Quick Slot 1",
         "category": "Tab Stack"
@@ -306,6 +316,13 @@
           "type": "string",
           "default": "git:",
           "description": "Prefix for automatically created git-based groups (e.g., 'git:main', 'git:feature/login')."
+        },
+        "tabStack.history.maxEntries": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Maximum number of snapshots to retain in history. Older entries are pruned automatically."
         }
       }
     }
