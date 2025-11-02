@@ -187,6 +187,37 @@ export const SettingsPanel: React.FC = () => {
               <p className="settings-description muted-text">Loading…</p>
             )}
           </div>
+
+          <div className="settings-section">
+            <label className="settings-label">
+              <i className="codicon codicon-save" aria-hidden="true" />
+              State file
+            </label>
+            <p className="settings-description">
+              Import or export the full tab manager state as a JSON file.
+            </p>
+            <div className="form-row">
+              <button
+                className="button"
+                type="button"
+                onClick={() => actions.exportStateFile()}
+                title="Export state to a JSON file"
+              >
+                <i className="codicon codicon-export" aria-hidden="true" />
+                Export state file
+              </button>
+
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => actions.importStateFile()}
+                title="Import state from a JSON file"
+              >
+                <i className="codicon codicon-import" aria-hidden="true" />
+                Import state file
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

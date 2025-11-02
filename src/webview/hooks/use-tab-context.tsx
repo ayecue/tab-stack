@@ -70,6 +70,8 @@ interface TabContextValue {
     renameAddon: (addonId: string, name: string) => Promise<void>;
     deleteAddon: (addonId: string) => Promise<void>;
     applyAddon: (addonId: string) => Promise<void>;
+    exportStateFile: () => Promise<void>;
+    importStateFile: () => Promise<void>;
   };
   messenger: VSCodeMessenger;
 }
@@ -387,7 +389,25 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
         }
       },
       [messagingService, handleError]
-    )
+    ),
+
+    exportStateFile: useCallback(async (): Promise<void> => {
+      try {
+        messagingService.exportStateFile();
+      } catch (error) {
+        handleError(error, 'export state file');
+        throw error;
+      }
+    }, [messagingService, handleError]),
+
+    importStateFile: useCallback(async (): Promise<void> => {
+      try {
+        messagingService.importStateFile();
+      } catch (error) {
+        handleError(error, 'import state file');
+        throw error;
+      }
+    }, [messagingService, handleError])
   };
 
   const createAddon = useCallback(

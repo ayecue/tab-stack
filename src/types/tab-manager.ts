@@ -111,6 +111,9 @@ export interface ITabManagerService extends Disposable {
 
   triggerSync(): Promise<void>;
 
+  exportStateFile(exportUri: string): Promise<void>;
+  importStateFile(importUri: string): Promise<void>;
+
   onDidSyncTabs: Event<Omit<ExtensionTabsSyncMessage, 'type'>>;
   onDidNotify: Event<Omit<ExtensionNotificationMessage, 'type'>>;
 }

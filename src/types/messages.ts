@@ -57,7 +57,9 @@ export enum WebviewMessageType {
   NewAddon = 'new-addon',
   RenameAddon = 'rename-addon',
   DeleteAddon = 'delete-addon',
-  ApplyAddon = 'apply-addon'
+  ApplyAddon = 'apply-addon',
+  ExportStateFile = 'export-state-file',
+  ImportStateFile = 'import-state-file'
 }
 
 export interface BaseWebviewMessage {
@@ -168,4 +170,12 @@ export interface WebviewRenameAddonMessage extends BaseWebviewMessage {
   type: WebviewMessageType.RenameAddon;
   addonId: string;
   name: string;
+}
+
+export interface WebviewExportStateFileMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ExportStateFile;
+}
+
+export interface WebviewImportStateFileMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ImportStateFile;
 }

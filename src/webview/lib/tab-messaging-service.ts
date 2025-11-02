@@ -8,6 +8,8 @@ import {
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
+  WebviewExportStateFileMessage,
+  WebviewImportStateFileMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
@@ -195,6 +197,20 @@ export class TabMessagingService {
       type: WebviewMessageType.RenameAddon,
       addonId,
       name: newName
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async exportStateFile(): Promise<void> {
+    const message: WebviewExportStateFileMessage = {
+      type: WebviewMessageType.ExportStateFile
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  async importStateFile(): Promise<void> {
+    const message: WebviewImportStateFileMessage = {
+      type: WebviewMessageType.ImportStateFile
     };
     this.messenger.sendMessage(message);
   }

@@ -1,4 +1,4 @@
-import { Disposable } from 'vscode';
+import { Disposable, window } from 'vscode';
 
 import {
   BaseWebviewMessage,
@@ -8,6 +8,8 @@ import {
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
+  WebviewExportStateFileMessage,
+  WebviewImportStateFileMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
@@ -129,6 +131,31 @@ export class MessageHandler implements Disposable {
       case WebviewMessageType.ApplyAddon: {
         const { addonId } = data as WebviewApplyAddonMessage;
         await tabManager.applyAddon(addonId);
+        break;
+      }
+      case WebviewMessageType.ExportStateFile: {
+        const { type } = data as WebviewExportStateFileMessage;
+        const saveUri = await window.showSaveDialog({
+          filters: { JSON: ['json'] },
+          saveLabel: 'Export Tab Manager State',
+          title: 'Export Tab Manager State'
+        });
+        if (saveUri) {
+          await tabManager.exportStateFile(saveUri.toString());
+        }
+        break;
+      }
+      case WebviewMessageType.ImportStateFile: {
+        const { type } = data as WebviewImportStateFileMessage;
+        const openUris = await window.showOpenDialog({
+          canSelectMany: false,
+          filters: { JSON: ['json'] },
+          openLabel: 'Import Tab Manager State',
+          title: 'Import Tab Manager State'
+        });
+        if (openUris && openUris[0]) {
+          await tabManager.importStateFile(openUris[0].fsPath);
+        }
         break;
       }
       case WebviewMessageType.Sync: {

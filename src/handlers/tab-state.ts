@@ -495,16 +495,17 @@ export class TabStateHandler implements Disposable {
     return toRelativeTabStateFile(file.data);
   }
 
-  async importStateFile(
-    fileContent: TabStateFileContent
-  ): Promise<boolean> {
+  async importStateFile(fileContent: TabStateFileContent): Promise<boolean> {
     const workspaceFolder = this._configService.getMasterWorkspaceFolder();
 
     if (!workspaceFolder) {
       return false;
     }
 
-    const newContent = toAbsoluteTabStateFile(fileContent, Uri.parse(workspaceFolder));
+    const newContent = toAbsoluteTabStateFile(
+      fileContent,
+      Uri.parse(workspaceFolder)
+    );
     this._file.data = newContent;
     this.save();
   }
