@@ -32,14 +32,14 @@ export class TabMessagingService {
     this.messenger = messenger;
   }
 
-  async refreshTabs(): Promise<void> {
+  refreshTabs(): void {
     const message: WebviewSyncMessage = {
       type: WebviewMessageType.Sync
     };
     this.messenger.sendMessage(message);
   }
 
-  async openTab(index: number, columnView: number): Promise<void> {
+  openTab(index: number, columnView: number): void {
     const message: WebviewTabOpenMessage = {
       type: WebviewMessageType.TabOpen,
       index,
@@ -48,7 +48,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async closeTab(index: number, columnView: number): Promise<void> {
+  closeTab(index: number, columnView: number): void {
     const message: WebviewTabCloseMessage = {
       type: WebviewMessageType.TabClose,
       index,
@@ -57,14 +57,14 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async clearAllTabs(): Promise<void> {
+  clearAllTabs(): void {
     const message: WebviewClearAllTabsMessage = {
       type: WebviewMessageType.ClearAllTabs
     };
     this.messenger.sendMessage(message);
   }
 
-  async toggleTabPin(index: number, columnView: number): Promise<void> {
+  toggleTabPin(index: number, columnView: number): void {
     const message: WebviewTabTogglePinMessage = {
       type: WebviewMessageType.TabTogglePin,
       index,
@@ -73,7 +73,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async switchToGroup(groupId: string | null): Promise<void> {
+  switchToGroup(groupId: string | null): void {
     const message: WebviewSwitchGroupMessage = {
       type: WebviewMessageType.SwitchGroup,
       groupId
@@ -81,7 +81,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async createGroup(groupId: string): Promise<void> {
+  createGroup(groupId: string): void {
     const message: WebviewNewGroupMessage = {
       type: WebviewMessageType.NewGroup,
       groupId
@@ -89,7 +89,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async renameGroup(groupId: string, newName: string): Promise<void> {
+  renameGroup(groupId: string, newName: string): void {
     const message: WebviewRenameGroupMessage = {
       type: WebviewMessageType.RenameGroup,
       groupId,
@@ -98,7 +98,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async deleteGroup(groupId: string): Promise<void> {
+  deleteGroup(groupId: string): void {
     const message: WebviewDeleteGroupMessage = {
       type: WebviewMessageType.DeleteGroup,
       groupId
@@ -106,7 +106,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async addToHistory(label?: string): Promise<void> {
+  addToHistory(label?: string): void {
     const message: WebviewAddToHistoryMessage = {
       type: WebviewMessageType.AddToHistory,
       label
@@ -114,7 +114,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async deleteHistory(historyId: string): Promise<void> {
+  deleteHistory(historyId: string): void {
     const message: WebviewDeleteHistoryMessage = {
       type: WebviewMessageType.DeleteHistory,
       historyId
@@ -122,7 +122,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async recoverState(historyId: string): Promise<void> {
+  recoverState(historyId: string): void {
     const message: WebviewRecoverStateMessage = {
       type: WebviewMessageType.RecoverState,
       historyId
@@ -130,10 +130,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async assignQuickSlot(
-    slot: QuickSlotIndex,
-    groupId: string | null
-  ): Promise<void> {
+  assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): void {
     const message: WebviewAssignQuickSlotMessage = {
       type: WebviewMessageType.AssignQuickSlot,
       slot,
@@ -142,7 +139,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async selectWorkspaceFolder(folderPath: string | null): Promise<void> {
+  selectWorkspaceFolder(folderPath: string | null): void {
     const message: WebviewSelectWorkspaceFolderMessage = {
       type: WebviewMessageType.SelectWorkspaceFolder,
       folderPath
@@ -150,25 +147,25 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async clearWorkspaceFolder(): Promise<void> {
+  clearWorkspaceFolder(): void {
     const message: WebviewClearWorkspaceFolderMessage = {
       type: WebviewMessageType.ClearWorkspaceFolder
     };
     this.messenger.sendMessage(message);
   }
 
-  async updateGitIntegration(config: {
+  updateGitIntegration(config: {
     enabled?: boolean;
     mode?: string;
     groupPrefix?: string;
-  }): Promise<void> {
+  }): void {
     this.messenger.sendMessage({
       type: WebviewMessageType.UpdateGitIntegration,
       ...config
     });
   }
 
-  async createAddon(name: string): Promise<void> {
+  createAddon(name: string): void {
     const message: WebviewCreateAddonMessage = {
       type: WebviewMessageType.NewAddon,
       name
@@ -176,7 +173,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async deleteAddon(addonId: string): Promise<void> {
+  deleteAddon(addonId: string): void {
     const message: WebviewDeleteAddonMessage = {
       type: WebviewMessageType.DeleteAddon,
       addonId
@@ -184,7 +181,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async applyAddon(addonId: string): Promise<void> {
+  applyAddon(addonId: string): void {
     const message: WebviewApplyAddonMessage = {
       type: WebviewMessageType.ApplyAddon,
       addonId
@@ -192,7 +189,7 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async renameAddon(addonId: string, newName: string): Promise<void> {
+  renameAddon(addonId: string, newName: string): void {
     const message: WebviewRenameAddonMessage = {
       type: WebviewMessageType.RenameAddon,
       addonId,
@@ -201,14 +198,14 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
-  async exportStateFile(): Promise<void> {
+  exportStateFile(): void {
     const message: WebviewExportStateFileMessage = {
       type: WebviewMessageType.ExportStateFile
     };
     this.messenger.sendMessage(message);
   }
 
-  async importStateFile(): Promise<void> {
+  importStateFile(): void {
     const message: WebviewImportStateFileMessage = {
       type: WebviewMessageType.ImportStateFile
     };

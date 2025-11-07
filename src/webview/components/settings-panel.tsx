@@ -4,53 +4,43 @@ import { GitIntegrationMode } from '../../types/config';
 import { useTabContext } from '../hooks/use-tab-context';
 
 export const SettingsPanel: React.FC = () => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleWorkspaceFolderChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
-      void actions.selectWorkspaceFolder(value || null).catch((error) => {
-        console.error('Failed to select workspace folder', error);
-      });
+      messagingService.selectWorkspaceFolder(value || null);
     },
-    [actions]
+    [messagingService]
   );
 
   const handleClearWorkspaceFolder = useCallback(() => {
-    void actions.clearWorkspaceFolder().catch((error) => {
-      console.error('Failed to clear workspace folder', error);
-    });
-  }, [actions]);
+    messagingService.clearWorkspaceFolder();
+  }, [messagingService]);
 
   const handleGitEnabledChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const enabled = event.target.checked;
-      void actions.updateGitIntegration({ enabled }).catch((error) => {
-        console.error('Failed to update git setting: enabled', error);
-      });
+      messagingService.updateGitIntegration({ enabled });
     },
-    [actions]
+    [messagingService]
   );
 
   const handleGitModeChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const mode = event.target.value as GitIntegrationMode;
-      void actions.updateGitIntegration({ mode }).catch((error) => {
-        console.error('Failed to update git setting: mode', error);
-      });
+      messagingService.updateGitIntegration({ mode });
     },
-    [actions]
+    [messagingService]
   );
 
   const handleGitGroupPrefixChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const groupPrefix = event.target.value;
-      void actions.updateGitIntegration({ groupPrefix }).catch((error) => {
-        console.error('Failed to update git setting: groupPrefix', error);
-      });
+      messagingService.updateGitIntegration({ groupPrefix });
     },
-    [actions]
+    [messagingService]
   );
 
   return (
@@ -198,10 +188,10 @@ export const SettingsPanel: React.FC = () => {
             </p>
             <div className="form-row button-row">
               <button
-                className="button"
+                className="button secondary"
                 type="button"
-                onClick={() => actions.exportStateFile()}
-                title="Export state to a JSON file"
+                onClick={() => messagingService.exportStateFile()}
+                title="Export current state to a JSON file"
               >
                 <i className="codicon codicon-export" aria-hidden="true" />
                 Export state file
@@ -210,7 +200,7 @@ export const SettingsPanel: React.FC = () => {
               <button
                 className="button secondary"
                 type="button"
-                onClick={() => actions.importStateFile()}
+                onClick={() => messagingService.importStateFile()}
                 title="Import state from a JSON file"
               >
                 <i className="codicon codicon-import" aria-hidden="true" />

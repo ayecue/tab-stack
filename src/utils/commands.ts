@@ -8,7 +8,6 @@ import {
   TabInfoNotebookDiff,
   TabInfoText,
   TabInfoTextDiff,
-  TabInfoWebview,
   TabKind
 } from '../types/tabs';
 

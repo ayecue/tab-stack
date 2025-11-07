@@ -8,8 +8,6 @@ import {
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
-  WebviewExportStateFileMessage,
-  WebviewImportStateFileMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
@@ -134,7 +132,6 @@ export class MessageHandler implements Disposable {
         break;
       }
       case WebviewMessageType.ExportStateFile: {
-        const { type } = data as WebviewExportStateFileMessage;
         const saveUri = await window.showSaveDialog({
           filters: { JSON: ['json'] },
           saveLabel: 'Export Tab Manager State',
@@ -146,7 +143,6 @@ export class MessageHandler implements Disposable {
         break;
       }
       case WebviewMessageType.ImportStateFile: {
-        const { type } = data as WebviewImportStateFileMessage;
         const openUris = await window.showOpenDialog({
           canSelectMany: false,
           filters: { JSON: ['json'] },

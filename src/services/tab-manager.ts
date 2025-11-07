@@ -1,12 +1,5 @@
 import debounce, { DebouncedFunction } from 'debounce';
-import {
-  Disposable,
-  EventEmitter,
-  Uri,
-  window as vsWindow,
-  window,
-  workspace
-} from 'vscode';
+import { Disposable, EventEmitter, Uri, window, workspace } from 'vscode';
 
 import { TabStateHandler } from '../handlers/tab-state';
 import { GitIntegrationMode } from '../types/config';

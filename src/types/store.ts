@@ -2,7 +2,6 @@ import {
   QuickSlotAssignments,
   QuickSlotIndex,
   StateContainer,
-  TabManagerState,
   TabStateFileContent
 } from './tab-manager';
 

@@ -19,7 +19,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
   deletingKeys,
   onDelete
 }) => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredHistory = useMemo(() => {
@@ -47,9 +47,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
             type="button"
             className="section-action"
             onClick={() => {
-              void actions.captureHistory().catch((error) => {
-                console.error('Failed to capture history', error);
-              });
+              messagingService.addToHistory();
             }}
             aria-label="Capture new snapshot"
           >
@@ -94,9 +92,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
               if (isDeleting) {
                 return;
               }
-              void actions.recoverHistory(historyId).catch((error) => {
-                console.error('Failed to recover history', error);
-              });
+              messagingService.recoverState(historyId);
             };
 
             return (

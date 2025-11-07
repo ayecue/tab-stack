@@ -31,7 +31,7 @@ export const TabList: React.FC<TabListProps> = ({
   searchTerm,
   filters
 }) => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const tabGroups = state.payload?.tabGroups ?? {};
   const getColumnLabel = (viewColumn: number) => {
     return `Column ${viewColumn}`;
@@ -175,9 +175,15 @@ export const TabList: React.FC<TabListProps> = ({
           <TabItem
             key={`${tab.viewColumn}:${tab.label}`}
             tab={tab}
-            onOpen={() => void actions.openTab(tabGroupIndex, tab)}
-            onClose={() => void actions.closeTab(tabGroupIndex, tab)}
-            onTogglePin={() => void actions.togglePin(tabGroupIndex, tab)}
+            onOpen={() =>
+              messagingService.openTab(tabGroupIndex, tab.viewColumn)
+            }
+            onClose={() =>
+              messagingService.closeTab(tabGroupIndex, tab.viewColumn)
+            }
+            onTogglePin={() =>
+              messagingService.toggleTabPin(tabGroupIndex, tab.viewColumn)
+            }
             viewColumnLabel={label}
             isColumnActive={isActive}
           />
@@ -205,9 +211,15 @@ export const TabList: React.FC<TabListProps> = ({
                 <TabItem
                   key={`${tab.viewColumn}:${originalIndex}:${tab.label}`}
                   tab={tab}
-                  onOpen={() => void actions.openTab(originalIndex, tab)}
-                  onClose={() => void actions.closeTab(originalIndex, tab)}
-                  onTogglePin={() => void actions.togglePin(originalIndex, tab)}
+                  onOpen={() =>
+                    messagingService.openTab(originalIndex, tab.viewColumn)
+                  }
+                  onClose={() =>
+                    messagingService.closeTab(originalIndex, tab.viewColumn)
+                  }
+                  onTogglePin={() =>
+                    messagingService.toggleTabPin(originalIndex, tab.viewColumn)
+                  }
                   viewColumnLabel={columnLabel}
                   isColumnActive={isActive}
                 />

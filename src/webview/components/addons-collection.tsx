@@ -17,7 +17,7 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
   deletingKeys,
   onDelete
 }) => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const [isCreating, setIsCreating] = useState(false);
   const [newAddonName, setNewAddonName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
@@ -74,14 +74,14 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
 
     try {
       setIsSaving(true);
-      await actions.createAddon(normalized);
+      messagingService.createAddon(normalized);
       cancelCreate();
     } catch (error) {
       console.error('Failed to create add-on', error);
       setLocalError('Unable to save add-on');
       setIsSaving(false);
     }
-  }, [actions, newAddonName, cancelCreate]);
+  }, [messagingService, newAddonName, cancelCreate]);
 
   const startRename = useCallback(
     (addonId: string, currentName: string) => {
@@ -122,7 +122,7 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
 
     try {
       setIsRenaming(true);
-      await actions.renameAddon(editingAddonId, normalized);
+      messagingService.renameAddon(editingAddonId, normalized);
       cancelRename();
     } catch (error) {
       console.error('Failed to rename add-on', error);
@@ -130,7 +130,13 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
       setIsRenaming(false);
       renameInputRef.current?.focus();
     }
-  }, [actions, editingAddonId, renameValue, cancelRename, state.addons]);
+  }, [
+    messagingService,
+    editingAddonId,
+    renameValue,
+    cancelRename,
+    state.addons
+  ]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -255,18 +261,14 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
                 onClick={() => {
                   if (isDeleting) return;
                   if (isEditing) return;
-                  void actions.applyAddon(addonId).catch((error) => {
-                    console.error('Failed to apply add-on', error);
-                  });
+                  messagingService.applyAddon(addonId);
                 }}
                 onKeyDown={(event) => {
                   if (isDeleting) return;
                   if (isEditing) return;
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    void actions.applyAddon(addonId).catch((error) => {
-                      console.error('Failed to apply add-on', error);
-                    });
+                    messagingService.applyAddon(addonId);
                   }
                 }}
                 title="Apply this add-on (adds tabs without replacing)"
@@ -370,9 +372,7 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
                       className="neutral"
                       onClick={(event) => {
                         event.stopPropagation();
-                        void actions.applyAddon(addonId).catch((error) => {
-                          console.error('Failed to apply add-on', error);
-                        });
+                        messagingService.applyAddon(addonId);
                       }}
                       disabled={isDeleting || isEditing}
                       title="Apply add-on"

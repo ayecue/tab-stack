@@ -18,7 +18,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   deletingKeys,
   onDelete
 }) => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
@@ -31,11 +31,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   const [renameError, setRenameError] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const quickSlotOptions = useMemo(
-    () =>
-      Array.from(
-        { length: 9 },
-        (_, index) => (index + 1).toString()
-      ),
+    () => Array.from({ length: 9 }, (_, index) => (index + 1).toString()),
     []
   );
 
@@ -117,14 +113,14 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
 
     try {
       setIsSaving(true);
-      await actions.saveGroup(normalized);
+      messagingService.createGroup(normalized);
       cancelCreate();
     } catch (error) {
       console.error('Failed to create group', error);
       setLocalError('Unable to save group');
       setIsSaving(false);
     }
-  }, [actions, newGroupName, cancelCreate]);
+  }, [messagingService, newGroupName, cancelCreate]);
 
   const submitRename = useCallback(async () => {
     if (!editingGroupId) {
@@ -158,7 +154,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
 
     try {
       setIsRenaming(true);
-      await actions.renameGroup(editingGroupId, normalized);
+      messagingService.renameGroup(editingGroupId, normalized);
       cancelRename();
     } catch (error) {
       console.error('Failed to rename group', error);
@@ -166,7 +162,13 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       setIsRenaming(false);
       renameInputRef.current?.focus();
     }
-  }, [actions, editingGroupId, renameValue, cancelRename, state.groups]);
+  }, [
+    messagingService,
+    editingGroupId,
+    renameValue,
+    cancelRename,
+    state.groups
+  ]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -215,9 +217,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
 
       if (!value) {
         if (currentSlot) {
-          void actions.clearQuickSlot(groupId).catch((error) => {
-            console.error('Failed to clear quick slot', error);
-          });
+          messagingService.assignQuickSlot(null, groupId);
         }
         return;
       }
@@ -238,11 +238,9 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
         return;
       }
 
-      void actions.assignQuickSlot(nextSlot, groupId).catch((error) => {
-        console.error('Failed to assign quick slot', error);
-      });
+      messagingService.assignQuickSlot(nextSlot, groupId);
     },
-    [actions, slotByGroup]
+    [messagingService, slotByGroup]
   );
 
   return (
@@ -255,7 +253,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
               <button
                 type="button"
                 className="section-action secondary"
-                onClick={() => void actions.clearSelection()}
+                onClick={() => messagingService.switchToGroup(null)}
                 aria-label="Clear selection"
               >
                 <i className="codicon codicon-close" aria-hidden="true" />
@@ -362,9 +360,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                     return;
                   }
                   const nextId = isSelected ? null : groupId;
-                  void actions.switchGroup(nextId).catch((error) => {
-                    console.error('Failed to switch group', error);
-                  });
+                  messagingService.switchToGroup(nextId);
                 }}
                 onKeyDown={(event) => {
                   if (isDeleting) {
@@ -373,9 +369,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
                     const nextId = isSelected ? null : groupId;
-                    void actions.switchGroup(nextId).catch((error) => {
-                      console.error('Failed to switch group', error);
-                    });
+                    messagingService.switchToGroup(nextId);
                   }
                 }}
                 title={

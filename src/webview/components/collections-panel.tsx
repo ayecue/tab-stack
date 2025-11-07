@@ -6,7 +6,7 @@ import { GroupsCollection } from './groups-collection';
 import { HistoryCollection } from './history-collection';
 
 export const CollectionsPanel: React.FC = () => {
-  const { actions } = useTabContext();
+  const { messagingService } = useTabContext();
   const [deletingKeys, setDeletingKeys] = useState<Set<string>>(
     () => new Set()
   );
@@ -35,14 +35,14 @@ export const CollectionsPanel: React.FC = () => {
       const key = `group:${groupId}`;
       markDeleting(key);
       try {
-        await actions.deleteGroup(groupId);
+        messagingService.deleteGroup(groupId);
       } catch (error) {
         console.error('Failed to delete group', error);
       } finally {
         clearDeleting(key);
       }
     },
-    [actions, markDeleting, clearDeleting]
+    [messagingService, markDeleting, clearDeleting]
   );
 
   const handleDeleteHistory = useCallback(
@@ -50,14 +50,14 @@ export const CollectionsPanel: React.FC = () => {
       const key = `history:${historyId}`;
       markDeleting(key);
       try {
-        await actions.deleteHistory(historyId);
+        messagingService.deleteHistory(historyId);
       } catch (error) {
         console.error('Failed to delete snapshot', error);
       } finally {
         clearDeleting(key);
       }
     },
-    [actions, markDeleting, clearDeleting]
+    [messagingService, markDeleting, clearDeleting]
   );
 
   const handleDeleteAddon = useCallback(
@@ -65,14 +65,14 @@ export const CollectionsPanel: React.FC = () => {
       const key = `addon:${addonId}`;
       markDeleting(key);
       try {
-        await actions.deleteAddon(addonId);
+        messagingService.deleteAddon(addonId);
       } catch (error) {
         console.error('Failed to delete add-on', error);
       } finally {
         clearDeleting(key);
       }
     },
-    [actions, markDeleting, clearDeleting]
+    [messagingService, markDeleting, clearDeleting]
   );
 
   const tabs = useMemo(
