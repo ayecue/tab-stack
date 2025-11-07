@@ -196,7 +196,7 @@ export const SettingsPanel: React.FC = () => {
             <p className="settings-description">
               Import or export the full tab manager state as a JSON file.
             </p>
-            <div className="form-row">
+            <div className="form-row button-row">
               <button
                 className="button"
                 type="button"

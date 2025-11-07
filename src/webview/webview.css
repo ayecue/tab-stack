@@ -1264,6 +1264,11 @@ body {
   gap: 4px;
 }
 
+.form-row.button-row {
+  flex-direction: row;
+  gap: 6px;
+}
+
 .form-row label.inline {
   display: inline-flex;
   align-items: center;
