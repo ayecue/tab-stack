@@ -30,23 +30,23 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   const [renameValue, setRenameValue] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
-  const quickSlotOptions = useMemo<QuickSlotIndex[]>(
+  const quickSlotOptions = useMemo(
     () =>
       Array.from(
         { length: 9 },
-        (_, index) => (index + 1).toString() as QuickSlotIndex
+        (_, index) => (index + 1).toString()
       ),
     []
   );
 
   const slotByGroup = useMemo(() => {
-    const mapping: Record<string, QuickSlotIndex> = {};
+    const mapping: Record<string, string> = {};
     Object.entries(state.quickSlots ?? {}).forEach(([slot, groupId]) => {
       const slotIndex = Number(slot);
       if (!groupId || !Number.isInteger(slotIndex)) {
         return;
       }
-      mapping[groupId] = slotIndex.toString() as QuickSlotIndex;
+      mapping[groupId] = slotIndex.toString();
     });
     return mapping;
   }, [state.quickSlots]);

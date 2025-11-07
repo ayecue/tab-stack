@@ -141,6 +141,9 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             <i className="codicon codicon-close-all" aria-hidden="true" />
           </button>
         </div>
+      </div>
+
+      <div className="tab-toolbar-filters">
         <div className="filter-group" role="group" aria-label="Tab filters">
           <button
             type="button"

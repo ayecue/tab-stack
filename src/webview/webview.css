@@ -319,6 +319,40 @@ body {
   gap: 3px;
 }
 
+.tab-toolbar-filters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.tab-toolbar-filters .filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tab-toolbar-filters .filter-group .type-select {
+  height: 22px;
+  border-radius: 3px;
+  border: 1px solid var(--vscode-input-border, transparent);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  font-size: 11px;
+  padding: 0 6px;
+  min-width: 90px;
+  cursor: pointer;
+}
+
+.tab-toolbar-filters .filter-group .type-select:hover {
+  border-color: var(--vscode-focusBorder);
+}
+
+.tab-toolbar-filters .filter-group .type-select:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 0;
+}
+
 .toolbar-stats {
   display: flex;
   align-items: center;
