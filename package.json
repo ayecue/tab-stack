@@ -37,7 +37,8 @@
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "ovsx": "^0.10.1",
     "source-map-support": "^0.5.12",
-    "typescript": "^4.5.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "vsce": "^2.15.0"
   },
   "scripts": {
@@ -330,7 +331,9 @@
   "dependencies": {
     "@vscode/debugadapter": "^1.68.0",
     "@vscode/debugprotocol": "^1.68.0",
+    "@xstate/store": "^3.11.2",
     "debounce": "^2.2.0",
+    "filter-obj": "^6.1.0",
     "nanoid": "^5.1.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

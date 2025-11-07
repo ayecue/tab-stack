@@ -13,3 +13,4 @@ node_modules
 *.vsix
 .vscode-test-web
 system.pem
+.vscode/tmstate.json

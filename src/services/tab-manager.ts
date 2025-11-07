@@ -118,8 +118,12 @@ export class TabManagerService implements ITabManagerService {
     const newStateHandler = new TabStateHandler(this._configService);
     await newStateHandler.initialize();
     this._stateHandler = newStateHandler;
-    await this.applyState();
-    await this.triggerSync();
+    this.applyState();
+    this.triggerSync();
+
+    this._disposables.push(
+      this._stateHandler.onDidChangeState(() => void this.triggerSync())
+    );
   }
 
   private initializeEvents() {
@@ -152,7 +156,7 @@ export class TabManagerService implements ITabManagerService {
     );
   }
 
-  private async _handleBranchChange(
+  private _handleBranchChange(
     event: GitBranchChangeEvent | GitRepositoryOpenEvent
   ) {
     const gitConfig = this._configService.getGitIntegrationConfig();
@@ -164,7 +168,7 @@ export class TabManagerService implements ITabManagerService {
     }
 
     const groupName = `${gitConfig.groupPrefix}${event.currentBranch}`;
-    const groups = await this._stateHandler.getGroups();
+    const groups = this._stateHandler.getGroups();
     const correlatingGroupId = Object.values(groups).find(
       (g) => g.name === groupName
     )?.id;
@@ -173,23 +177,23 @@ export class TabManagerService implements ITabManagerService {
       case GitIntegrationMode.AutoSwitch:
         // Only switch if group exists
         if (correlatingGroupId) {
-          await this.switchToGroup(correlatingGroupId);
+          this.switchToGroup(correlatingGroupId);
         }
         break;
 
       case GitIntegrationMode.AutoCreate:
         // Create group if it doesn't exist
         if (!correlatingGroupId) {
-          await this.createGroup(groupName);
+          this.createGroup(groupName);
         }
         break;
 
       case GitIntegrationMode.FullAuto:
         // Create if doesn't exist, then switch
         if (!correlatingGroupId) {
-          await this.createGroup(groupName);
+          this.createGroup(groupName);
         } else {
-          await this.switchToGroup(correlatingGroupId);
+          this.switchToGroup(correlatingGroupId);
         }
         break;
     }
@@ -220,11 +224,10 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    await this._stateHandler.refreshState();
-    await this.triggerSync();
+    await this._stateHandler.syncStateWithVSCode();
   }
 
-  async applyState() {
+  applyState() {
     if (!this._stateHandler) return;
 
     this._nextRenderingItem = {
@@ -239,7 +242,6 @@ export class TabManagerService implements ITabManagerService {
 
   private async next() {
     this._rendering = true;
-    await this.triggerSync().catch(console.error);
 
     while (this._nextRenderingItem !== null) {
       try {
@@ -267,7 +269,7 @@ export class TabManagerService implements ITabManagerService {
     }
 
     this._rendering = false;
-    await this.triggerSync().catch(console.error);
+    this.triggerSync();
   }
 
   private async render() {
@@ -351,7 +353,7 @@ export class TabManagerService implements ITabManagerService {
   async exportStateFile(exportUri: string): Promise<void> {
     if (!this._stateHandler) return;
 
-    const fileContent = await this._stateHandler.exportStateFile();
+    const fileContent = this._stateHandler.exportStateFile();
     const data = await workspace.encode(JSON.stringify(fileContent, null, 2));
     await workspace.fs.writeFile(Uri.parse(exportUri), data);
     this.notify(
@@ -378,30 +380,20 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const result = await this._stateHandler.importStateFile(fileContent);
-
-    if (!result) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        'No workspace to make paths absolute. Set Tab Stack master workspace first.'
-      );
-      return;
-    }
-
-    await this.triggerSync();
+    this._stateHandler.importStateFile(fileContent);
   }
 
-  async triggerSync() {
+  triggerSync() {
     if (!this._stateHandler) {
       return;
     }
 
-    const [groups, history, addons, quickSlots] = await Promise.all([
+    const [groups, history, addons, quickSlots] = [
       this._stateHandler.getGroups(),
       this._stateHandler.getHistory(),
       this._stateHandler.getAddons(),
       this._stateHandler.getQuickSlots()
-    ]);
+    ];
     const groupValues = Object.values(groups);
 
     groupValues.sort((a, b) => {
@@ -461,46 +453,25 @@ export class TabManagerService implements ITabManagerService {
     });
   }
 
-  async createAddon(name: string): Promise<void> {
+  createAddon(name: string): void {
     if (!this._stateHandler) return;
     const currentState = this._stateHandler.stateContainer.state;
-    const id = await this._stateHandler.addToAddons(currentState, name);
-    if (!id) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        `Add-on "${name}" already exists`
-      );
-      return;
-    }
-    await this.triggerSync();
+    this._stateHandler.addToAddons(currentState, name);
   }
 
-  async deleteAddon(addonId: string): Promise<void> {
+  deleteAddon(addonId: string): void {
     if (!this._stateHandler) return;
-    const deleted = await this._stateHandler.deleteAddon(addonId);
-    if (!deleted) {
-      this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
-      return;
-    }
-    await this.triggerSync();
+    this._stateHandler.deleteAddon(addonId);
   }
 
-  async renameAddon(addonId: string, newName: string): Promise<void> {
+  renameAddon(addonId: string, newName: string): void {
     if (!this._stateHandler) return;
-    const renamed = await this._stateHandler.renameAddon(addonId, newName);
-    if (!renamed) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        `Renaming "${addonId}" failed`
-      );
-      return;
-    }
-    await this.triggerSync();
+    this._stateHandler.renameAddon(addonId, newName);
   }
 
   async applyAddon(addonId: string): Promise<void> {
     if (!this._stateHandler) return;
-    const addons = await this._stateHandler.getAddons();
+    const addons = this._stateHandler.getAddons();
     const addon = addons[addonId];
     if (!addon) {
       this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
@@ -513,11 +484,10 @@ export class TabManagerService implements ITabManagerService {
       preserveTabFocus: false
     });
 
-    await this._stateHandler.refreshState();
-    await this.triggerSync();
+    await this._stateHandler.syncStateWithVSCode();
   }
 
-  async switchToGroup(groupId: string | null) {
+  switchToGroup(groupId: string | null) {
     if (!this._stateHandler) {
       return;
     }
@@ -527,12 +497,11 @@ export class TabManagerService implements ITabManagerService {
     }
 
     if (groupId == null) {
-      await this._stateHandler.forkState();
-      await this.triggerSync();
+      this._stateHandler.forkState();
       return;
     }
 
-    const loaded = await this._stateHandler.loadState(groupId);
+    const loaded = this._stateHandler.loadState(groupId);
 
     if (!loaded) {
       this.notify(
@@ -542,117 +511,73 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    await this.applyState();
+    this.applyState();
   }
 
-  async createGroup(groupId: string) {
+  createGroup(groupId: string) {
+    if (!this._stateHandler) {
+      return;
+    }
+    this._stateHandler.createGroup(groupId);
+  }
+
+  renameGroup(groupId: string, nextGroupId: string) {
     if (!this._stateHandler) {
       return;
     }
 
-    const createdGroup = await this._stateHandler.createGroup(groupId);
-
-    if (!createdGroup) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        `Group "${groupId}" already exists`
-      );
-      return;
-    }
-
-    await this.triggerSync();
+    this._stateHandler.renameGroup(groupId, nextGroupId);
   }
 
-  async renameGroup(groupId: string, nextGroupId: string) {
+  takeSnapshot() {
+    if (!this._stateHandler) {
+      return;
+    }
+    this._stateHandler.addCurrentStateToHistory();
+  }
+
+  recoverSnapshot(historyId: string) {
     if (!this._stateHandler) {
       return;
     }
 
-    const result = await this._stateHandler.renameGroup(groupId, nextGroupId);
-
-    if (!result) {
-      this.notify(
-        ExtensionNotificationKind.Error,
-        `Renaming "${groupId}" failed`
-      );
-      return;
-    }
-
-    await this.triggerSync();
-  }
-
-  async takeSnapshot() {
-    if (!this._stateHandler) {
-      return;
-    }
-
-    await this._stateHandler.addCurrentStateToHistory();
-    await this.triggerSync();
-  }
-
-  async recoverSnapshot(historyId: string) {
-    if (!this._stateHandler) {
-      return;
-    }
-
-    const loaded = await this._stateHandler.loadHistoryState(historyId);
+    const loaded = this._stateHandler.loadHistoryState(historyId);
 
     if (!loaded) {
       this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
       return;
     }
 
-    await this.applyState();
+    this.applyState();
   }
 
-  async deleteGroup(groupId: string) {
+  deleteGroup(groupId: string) {
+    if (!this._stateHandler) {
+      return;
+    }
+    this._stateHandler.deleteGroup(groupId);
+  }
+
+  deleteSnapshot(historyId: string) {
+    if (!this._stateHandler) {
+      return;
+    }
+    this._stateHandler.deleteHistoryEntry(historyId);
+  }
+
+  assignQuickSlot(slot: QuickSlotIndex, groupId: string | null) {
+    if (!this._stateHandler) {
+      return;
+    }
+    this._stateHandler.setQuickSlot(slot, groupId);
+  }
+
+  applyQuickSlot(slot: QuickSlotIndex) {
     if (!this._stateHandler) {
       return;
     }
 
-    const deleted = await this._stateHandler.deleteGroup(groupId);
-
-    if (!deleted) {
-      this.notify(
-        ExtensionNotificationKind.Warning,
-        `Group "${groupId}" not found`
-      );
-      return;
-    }
-
-    await this.triggerSync();
-  }
-
-  async deleteSnapshot(historyId: string) {
-    if (!this._stateHandler) {
-      return;
-    }
-
-    const deleted = await this._stateHandler.deleteHistoryEntry(historyId);
-
-    if (!deleted) {
-      this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
-      return;
-    }
-
-    await this.triggerSync();
-  }
-
-  async assignQuickSlot(slot: QuickSlotIndex, groupId: string | null) {
-    if (!this._stateHandler) {
-      return;
-    }
-
-    await this._stateHandler.setQuickSlot(slot, groupId);
-    await this.triggerSync();
-  }
-
-  async applyQuickSlot(slot: QuickSlotIndex) {
-    if (!this._stateHandler) {
-      return;
-    }
-
-    const groupId = await this._stateHandler.getQuickSlotAssignment(slot);
+    const groupId = this._stateHandler.getQuickSlotAssignment(slot);
 
     if (!groupId) {
       this.notify(
@@ -662,30 +587,27 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const loaded = await this._stateHandler.loadState(groupId);
+    const loaded = this._stateHandler.loadState(groupId);
 
     if (!loaded) {
-      await this._stateHandler.setQuickSlot(slot, null);
+      this._stateHandler.setQuickSlot(slot, null);
       this.notify(
         ExtensionNotificationKind.Warning,
         `Saved group "${groupId}" was not found. Quick slot ${slot} was cleared.`
       );
-      await this.triggerSync();
       return;
     }
 
-    await this.applyState();
-    await this.triggerSync();
+    this.applyState();
   }
 
-  async quickSwitch(): Promise<void> {
+  quickSwitch(): void {
     if (!this._stateHandler) {
       return;
     }
 
     this._stateHandler.setState(this._stateHandler.previousStateContainer);
-    await this.applyState();
-    await this.triggerSync();
+    this.applyState();
   }
 
   async selectWorkspaceFolder(folderPath: string | null): Promise<void> {

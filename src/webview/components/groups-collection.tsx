@@ -32,7 +32,10 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const quickSlotOptions = useMemo<QuickSlotIndex[]>(
     () =>
-      Array.from({ length: 9 }, (_, index) => (index + 1) as QuickSlotIndex),
+      Array.from(
+        { length: 9 },
+        (_, index) => (index + 1).toString() as QuickSlotIndex
+      ),
     []
   );
 
@@ -43,7 +46,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       if (!groupId || !Number.isInteger(slotIndex)) {
         return;
       }
-      mapping[groupId] = slotIndex as QuickSlotIndex;
+      mapping[groupId] = slotIndex.toString() as QuickSlotIndex;
     });
     return mapping;
   }, [state.quickSlots]);
@@ -229,7 +232,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
         return;
       }
 
-      const nextSlot = nextSlotNumber as QuickSlotIndex;
+      const nextSlot = nextSlotNumber.toString() as QuickSlotIndex;
 
       if (currentSlot === nextSlot) {
         return;

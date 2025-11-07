@@ -11,7 +11,7 @@ import {
 } from './messages';
 import { TabInfo, TabState } from './tabs';
 
-export type QuickSlotIndex = number;
+export type QuickSlotIndex = string;
 
 export type QuickSlotAssignments = Partial<Record<QuickSlotIndex, string>>;
 
@@ -87,29 +87,29 @@ export interface ITabManagerService extends Disposable {
   readonly config: ConfigService;
 
   refresh: DebouncedFunction<() => Promise<void>>;
-  applyState(oldStateContainer: StateContainer): Promise<void>;
+  applyState(oldStateContainer: StateContainer): void;
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
   openTab(viewColumn: number, index: number): Promise<void>;
   closeTab(viewColumn: number, index: number): Promise<void>;
   clearAllTabs(): Promise<void>;
-  createGroup(groupId: string): Promise<void>;
-  deleteGroup(groupId: string): Promise<void>;
-  renameGroup(groupId: string, newName: string): Promise<void>;
-  switchToGroup(groupId: string | null): Promise<void>;
-  takeSnapshot(): Promise<void>;
-  recoverSnapshot(historyId: string): Promise<void>;
-  deleteSnapshot(historyId: string): Promise<void>;
-  createAddon(name: string): Promise<void>;
-  renameAddon(addonId: string, newName: string): Promise<void>;
-  deleteAddon(addonId: string): Promise<void>;
+  createGroup(groupId: string): void;
+  deleteGroup(groupId: string): void;
+  renameGroup(groupId: string, newName: string): void;
+  switchToGroup(groupId: string | null): void;
+  takeSnapshot(): void;
+  recoverSnapshot(historyId: string): void;
+  deleteSnapshot(historyId: string): void;
+  createAddon(name: string): void;
+  renameAddon(addonId: string, newName: string): void;
+  deleteAddon(addonId: string): void;
   applyAddon(addonId: string): Promise<void>;
-  assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): Promise<void>;
-  applyQuickSlot(slot: QuickSlotIndex): Promise<void>;
-  quickSwitch(): Promise<void>;
+  assignQuickSlot(slot: QuickSlotIndex, groupId: string | null): void;
+  applyQuickSlot(slot: QuickSlotIndex): void;
+  quickSwitch(): void;
   selectWorkspaceFolder(folderPath: string | null): Promise<void>;
   clearWorkspaceFolder(): Promise<void>;
 
-  triggerSync(): Promise<void>;
+  triggerSync(): void;
 
   exportStateFile(exportUri: string): Promise<void>;
   importStateFile(importUri: string): Promise<void>;

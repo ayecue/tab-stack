@@ -1,16 +1,20 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
-import { Disposable, Uri, workspace } from 'vscode';
+import { Disposable, Event, EventEmitter, Tab, Uri } from 'vscode';
 
 import { ConfigService } from '../services/config';
-import { transform as migrate } from '../transformers/migration';
+import {
+  createFileStore,
+  load as loadFile,
+  StorageStore
+} from '../stores/file';
+import { createTabStateStore, TabStateStore } from '../stores/tab-state';
 import {
   toAbsoluteTabStateFile,
   toRelativeTabStateFile
 } from '../transformers/tab-uris';
-import { StorageFile } from '../types/storage';
+import { TabStateStoreContext } from '../types/store';
 import {
-  createDefaultTabStateFileContent,
   createEmptyStateContainer,
   CURRENT_STATE_FILE_VERSION,
   QuickSlotAssignments,
@@ -19,10 +23,7 @@ import {
   TabManagerState,
   TabStateFileContent
 } from '../types/tab-manager';
-import { TabState } from '../types/tabs';
 import { getEditorLayout } from '../utils/commands';
-import { InMemoryJsonFile } from '../utils/in-memory-json-file';
-import { PersistentJsonFile } from '../utils/persistent-json-file';
 import { getTabState } from '../utils/tab-utils';
 
 export class TabStateHandler implements Disposable {
@@ -30,72 +31,76 @@ export class TabStateHandler implements Disposable {
 
   save: DebouncedFunction<() => Promise<void>>;
 
-  private _pendingFile: Promise<StorageFile<TabStateFileContent>> | null;
-  private _file: StorageFile<TabStateFileContent> | null;
-
-  private _history: Record<string, StateContainer> | null;
-  private _groups: Record<string, StateContainer> | null;
-  private _addons: Record<string, StateContainer> | null;
-  // undefined = no selected group, null = not loaded
-  private _quickSlots: QuickSlotAssignments | null;
-  private _stateContainer: StateContainer | null;
-  private _previousStateContainer: StateContainer | null;
+  private _tabStore: TabStateStore;
+  private _fileStore: StorageStore;
   private _configService: ConfigService;
+  private _storeSubscription: { unsubscribe: () => void } | null;
+  private _stateUpdateEmitter: EventEmitter<TabStateStoreContext>;
 
   constructor(configService: ConfigService) {
     this.save = debounce(
       this._save.bind(this),
       TabStateHandler.SAVE_DEBOUNCE_DELAY
     );
+    this._stateUpdateEmitter = new EventEmitter<TabStateStoreContext>();
     this._configService = configService;
-    this._history = null;
-    this._groups = null;
-    this._addons = null;
-    this._quickSlots = null;
-    this._stateContainer = null;
-    this._pendingFile = null;
-    this._file = null;
+    this._tabStore = createTabStateStore();
+    this._fileStore = createFileStore();
+    this._storeSubscription = null;
   }
 
   async initialize() {
-    await Promise.all([
-      this.getGroups(),
-      this.getHistory(),
-      this.getAddons(),
-      this.getQuickSlots()
-    ]);
+    await loadFile(this._fileStore, this._configService);
 
-    if (this._stateContainer == null) {
-      await this.updateState();
+    const fileState = this._fileStore.getSnapshot().context.data;
+
+    if (!fileState) {
+      return;
     }
 
-    if (this._previousStateContainer == null) {
-      this._previousStateContainer = createEmptyStateContainer();
+    // Initialize the store with the loaded data
+    this._tabStore.send({
+      type: 'INITIALIZE',
+      data: fileState
+    });
+
+    // Update current state if needed
+    if (!(fileState.selectedGroup in fileState.groups)) {
+      await this.syncStateWithVSCode();
     }
+
+    // Subscribe to store changes to trigger saves
+    this._storeSubscription = this._tabStore.subscribe(() => {
+      void this.save();
+      this._stateUpdateEmitter.fire(this._tabStore.getSnapshot().context);
+    });
+  }
+
+  get onDidChangeState(): Event<TabStateStoreContext> {
+    return this._stateUpdateEmitter.event;
   }
 
   get groups() {
-    return this._groups ?? {};
+    return this._tabStore.getSnapshot().context.groups;
   }
 
   get history() {
-    return this._history ?? {};
+    return this._tabStore.getSnapshot().context.history;
   }
 
   get addons() {
-    return this._addons ?? {};
+    return this._tabStore.getSnapshot().context.addons;
   }
 
   get stateContainer() {
-    return this._stateContainer;
+    return this._tabStore.getSnapshot().context.currentStateContainer;
   }
 
   get previousStateContainer() {
-    return this._previousStateContainer;
+    return this._tabStore.getSnapshot().context.previousStateContainer;
   }
 
-  async addToHistory(state: TabManagerState): Promise<StateContainer | null> {
-    const history = await this.getHistory();
+  addToHistory(state: TabManagerState): StateContainer | null {
     const stateContainer: StateContainer = {
       id: nanoid(),
       name: new Date().toISOString(),
@@ -104,27 +109,18 @@ export class TabStateHandler implements Disposable {
       lastSelectedAt: Date.now()
     };
 
-    history[stateContainer.id] = stateContainer;
-
-    const keys = Object.keys(history);
+    this._tabStore.send({ type: 'ADD_TO_HISTORY', stateContainer });
 
     const maxEntries = this._configService.getHistoryMaxEntries();
-
-    if (keys.length > maxEntries) {
-      const keysToRemove = keys.slice(0, keys.length - maxEntries);
-      keysToRemove.forEach((key) => delete history[key]);
-    }
+    this._tabStore.send({ type: 'PRUNE_HISTORY', maxEntries });
 
     return stateContainer;
   }
 
-  async addToAddons(
-    state: TabManagerState,
-    name: string
-  ): Promise<StateContainer | null> {
-    const addons = await this.getAddons();
-    const isNameAlreadyExisting = Object.values(addons).some(
-      (a) => a.name === name
+  addToAddons(state: TabManagerState, name: string): StateContainer | null {
+    const snapshot = this._tabStore.getSnapshot();
+    const isNameAlreadyExisting = Object.values(snapshot.context.addons).some(
+      (it) => it.name == name
     );
 
     if (isNameAlreadyExisting) {
@@ -139,97 +135,79 @@ export class TabStateHandler implements Disposable {
       lastSelectedAt: 0
     };
 
-    addons[stateContainer.id] = stateContainer;
-    this.save();
+    this._tabStore.send({
+      type: 'CREATE_ADDON',
+      stateContainer
+    });
+
     return stateContainer;
   }
 
-  async refreshState(): Promise<StateContainer> {
-    const newStateContainer = await this.updateState();
-    this.save();
+  async syncStateWithVSCode(): Promise<StateContainer> {
+    const tabState = getTabState();
+    const layout = await getEditorLayout();
+    const snapshot = this._tabStore.getSnapshot();
+    const newStateContainer = {
+      ...(snapshot.context.currentStateContainer ??
+        createEmptyStateContainer()),
+      state: {
+        tabState,
+        layout
+      }
+    };
+
+    this._tabStore.send({
+      type: 'SET_STATE',
+      stateContainer: newStateContainer
+    });
+
     return newStateContainer;
   }
 
-  private initializeStateFromFileState(fileState: TabStateFileContent) {
-    if (fileState.selectedGroup in fileState.groups) {
-      this._stateContainer = fileState.groups[fileState.selectedGroup];
-    }
-
-    if (fileState.previousSelectedGroup in fileState.groups) {
-      this._previousStateContainer =
-        fileState.groups[fileState.previousSelectedGroup];
-    }
-  }
-
-  async updateState(): Promise<StateContainer> {
-    const tabState: TabState = getTabState();
-    const layout = await getEditorLayout();
-    const newState =
-      this._stateContainer == null
-        ? createEmptyStateContainer()
-        : this._stateContainer;
-
-    newState.state = {
-      tabState,
-      layout
-    };
-
-    this._stateContainer = newState;
-    return this._stateContainer;
-  }
-
-  private create;
-
-  async forkState(): Promise<void> {
-    this.setState(null);
-    await this.updateState();
-    this.save();
+  forkState() {
+    this._tabStore.send({ type: 'FORK_STATE' });
   }
 
   setState(stateContainer: StateContainer): void {
-    this._previousStateContainer = this._stateContainer;
-    this._stateContainer = stateContainer;
-    this.save();
+    this._tabStore.send({ type: 'SET_STATE', stateContainer });
   }
 
-  async loadState(groupId: string | null): Promise<boolean> {
+  loadState(groupId: string | null) {
     if (!groupId) {
       return false;
     }
 
-    const groups = await this.getGroups();
+    const snapshot = this._tabStore.getSnapshot();
 
-    if (groups && groups[groupId]) {
-      this.setState(groups[groupId]);
-      this._stateContainer.lastSelectedAt = Date.now();
-      return true;
+    if (!snapshot.context.groups[groupId]) {
+      return false;
     }
 
-    return false;
+    this._tabStore.send({ type: 'LOAD_GROUP', groupId, timestamp: Date.now() });
+    return true;
   }
 
-  async loadHistoryState(historyId: string): Promise<boolean> {
-    const history = await this.getHistory();
-
-    if (history && history[historyId]) {
-      this.setState(history[historyId]);
-      return true;
+  loadHistoryState(historyId: string) {
+    const snapshot = this._tabStore.getSnapshot();
+    if (!snapshot.context.history[historyId]) {
+      return false;
     }
-
-    return false;
+    this._tabStore.send({ type: 'LOAD_HISTORY_STATE', historyId });
+    return true;
   }
 
   async createGroup(name: string): Promise<StateContainer | null> {
-    const groups = await this.getGroups();
-    const isNameAlreadyExisting = Object.values(groups).some(
-      (g) => g.name === name
+    const snapshot = this._tabStore.getSnapshot();
+    const isNameAlreadyExisting = Object.values(snapshot.context.groups).some(
+      (it) => it.name == name
     );
 
     if (isNameAlreadyExisting) {
       return null;
     }
 
-    const newStateContainer = await this.refreshState();
+    const newStateContainer = await this.syncStateWithVSCode();
+
     const stateContainer: StateContainer = {
       id: nanoid(),
       name,
@@ -238,264 +216,143 @@ export class TabStateHandler implements Disposable {
       lastSelectedAt: Date.now()
     };
 
-    groups[stateContainer.id] = stateContainer;
-    this.setState(stateContainer);
+    this._tabStore.send({
+      type: 'CREATE_GROUP',
+      stateContainer
+    });
 
-    return stateContainer;
+    return this._tabStore.getSnapshot().context.currentStateContainer!;
   }
 
-  async renameGroup(groupId: string, newName: string): Promise<boolean> {
-    const groups = await this.getGroups();
-
-    if (groups[groupId] == null) {
+  renameGroup(groupId: string, newName: string): boolean {
+    const snapshot = this._tabStore.getSnapshot();
+    if (!snapshot.context.groups[groupId]) {
       return false;
     }
-
-    const metaData = groups[groupId];
-    metaData.name = newName;
-
-    this.save();
-
+    this._tabStore.send({ type: 'RENAME_GROUP', groupId, newName });
     return true;
   }
 
   async addCurrentStateToHistory(): Promise<StateContainer | null> {
-    const lastStateContainer = await this.refreshState();
-    const newStateContainer = await this.addToHistory(lastStateContainer.state);
-
-    this.save();
-
+    const lastStateContainer = await this.syncStateWithVSCode();
+    const newStateContainer = this.addToHistory(lastStateContainer.state);
     return newStateContainer;
   }
 
-  async deleteGroup(groupId: string): Promise<boolean> {
-    const groups = await this.getGroups();
-
-    if (!groups[groupId]) {
+  deleteGroup(groupId: string): boolean {
+    const snapshot = this._tabStore.getSnapshot();
+    if (!snapshot.context.groups[groupId]) {
       return false;
     }
-
-    delete groups[groupId];
-
-    const quickSlots = await this.getQuickSlots();
-    const currentQuickSlotIndex = Object.keys(quickSlots).find(
-      (index) => quickSlots[index] === groupId
-    );
-
-    if (currentQuickSlotIndex != null) {
-      delete quickSlots[currentQuickSlotIndex];
-    }
-
-    this._groups = groups;
-
-    if (this._stateContainer?.id === groupId) {
-      this._stateContainer = null;
-      await this.updateState();
-    }
-
-    this.save();
-
+    this._tabStore.send({ type: 'DELETE_GROUP', groupId });
     return true;
   }
 
-  async deleteHistoryEntry(historyId: string): Promise<boolean> {
-    const history = await this.getHistory();
-
-    if (!history[historyId]) {
+  deleteHistoryEntry(historyId: string): boolean {
+    const snapshot = this._tabStore.getSnapshot();
+    if (!snapshot.context.history[historyId]) {
       return false;
     }
-
-    delete history[historyId];
-    this._history = history;
-
-    this.save();
-
+    this._tabStore.send({ type: 'DELETE_HISTORY_ENTRY', historyId });
     return true;
   }
 
-  async deleteAddon(addonId: string): Promise<boolean> {
-    const addons = await this.getAddons();
-
-    if (!addons[addonId]) {
+  deleteAddon(addonId: string): boolean {
+    const snapshot = this._tabStore.getSnapshot();
+    if (!snapshot.context.addons[addonId]) {
       return false;
     }
-
-    delete addons[addonId];
-    this._addons = addons;
-
-    this.save();
-
+    this._tabStore.send({ type: 'DELETE_ADDON', addonId });
     return true;
   }
 
-  async renameAddon(addonId: string, newName: string): Promise<boolean> {
-    const addons = await this.getAddons();
-
-    if (addons[addonId] == null) {
+  renameAddon(addonId: string, newName: string): boolean {
+    const snapshot = this._tabStore.getSnapshot();
+    if (!snapshot.context.addons[addonId]) {
       return false;
     }
-
-    const metaData = addons[addonId];
-    metaData.name = newName;
-
-    this.save();
-
+    this._tabStore.send({ type: 'RENAME_ADDON', addonId, newName });
     return true;
   }
 
-  private async getStateFile(): Promise<StorageFile<TabStateFileContent> | null> {
-    if (this._file) {
-      return this._file;
-    }
+  private _save() {
+    const snapshot = this._tabStore.getSnapshot();
+    const context = snapshot.context;
 
-    this._pendingFile = this._pendingFile ?? this.fetchStateFile();
-    return this._pendingFile;
+    this._fileStore.send({
+      type: 'SAVE',
+      data: {
+        version: CURRENT_STATE_FILE_VERSION,
+        groups: context.groups,
+        history: context.history,
+        addons: context.addons,
+        selectedGroup: context.currentStateContainer?.id || null,
+        previousSelectedGroup: context.previousStateContainer?.id || null,
+        quickSlots: context.quickSlots
+      }
+    });
   }
 
-  private async fetchStateFile(): Promise<StorageFile<TabStateFileContent>> {
-    const masterFolderPath = this._configService.getMasterWorkspaceFolder();
-    const workspaceUri = Uri.parse(masterFolderPath);
-
-    if (!workspaceUri) {
-      this._file = new InMemoryJsonFile<TabStateFileContent>(
-        createDefaultTabStateFileContent
-      );
-      await this._file.load();
-      console.warn('No workspace folder found, cannot load or save state.');
-      return this._file;
-    }
-
-    const vscodeDir = Uri.joinPath(workspaceUri, '.vscode');
-    console.log('Loading state file from workspace:', vscodeDir?.fsPath);
-    await workspace.fs.createDirectory(vscodeDir);
-
-    const filePath = Uri.joinPath(vscodeDir, 'tmstate.json');
-
-    this._file = new PersistentJsonFile<TabStateFileContent>(
-      filePath,
-      createDefaultTabStateFileContent
-    );
-
-    await this._file.load();
-
-    const fileState = migrate(this._file.data);
-    this.initializeStateFromFileState(fileState);
-    this._file.data = fileState;
-
-    return this._file;
+  dispose() {
+    this._storeSubscription?.unsubscribe();
+    this._fileStore.send({ type: 'RESET' });
+    this._stateUpdateEmitter.dispose();
   }
 
-  async getGroups(): Promise<Record<string, StateContainer>> {
-    if (this._groups) {
-      return this._groups;
-    }
-
-    const stateFile = await this.getStateFile();
-    const storedGroups = stateFile?.data?.groups || {};
-
-    this._groups = storedGroups;
-
-    return this._groups;
+  getGroups(): Record<string, StateContainer> {
+    return this._tabStore.getSnapshot().context.groups;
   }
 
-  async getHistory(): Promise<Record<string, StateContainer>> {
-    if (this._history) {
-      return this._history;
-    }
-
-    const stateFile = await this.getStateFile();
-    const storedHistory = stateFile?.data?.history || {};
-
-    this._history = storedHistory;
-
-    return this._history;
+  getHistory(): Record<string, StateContainer> {
+    return this._tabStore.getSnapshot().context.history;
   }
 
-  async getAddons(): Promise<Record<string, StateContainer>> {
-    if (this._addons) {
-      return this._addons;
-    }
-
-    const stateFile = await this.getStateFile();
-    const storedAddons = stateFile?.data?.addons || {};
-
-    this._addons = storedAddons;
-
-    return this._addons;
+  getAddons(): Record<string, StateContainer> {
+    return this._tabStore.getSnapshot().context.addons;
   }
 
-  async getQuickSlots(): Promise<QuickSlotAssignments> {
-    if (this._quickSlots) {
-      return this._quickSlots;
-    }
-
-    const stateFile = await this.getStateFile();
-    const storedQuickSlots = stateFile?.data?.quickSlots || {};
-
-    this._quickSlots = storedQuickSlots;
-
-    return this._quickSlots;
+  getQuickSlots(): QuickSlotAssignments {
+    return this._tabStore.getSnapshot().context.quickSlots;
   }
 
-  async setQuickSlot(
-    slot: QuickSlotIndex,
-    groupId: string | null
-  ): Promise<void> {
-    const [quickSlots, groups] = await Promise.all([
-      this.getQuickSlots(),
-      this.getGroups()
-    ]);
+  setQuickSlot(slot: QuickSlotIndex, groupId: string | null): void {
+    const snapshot = this._tabStore.getSnapshot();
 
     if (groupId == null) {
-      quickSlots[slot] = null;
-      this.save();
+      this._tabStore.send({ type: 'CLEAR_QUICK_SLOT', slot });
       return;
     }
 
-    if (!groups[groupId]) {
+    if (!snapshot.context.groups[groupId]) {
       return;
     }
 
-    const existingSlot = Object.keys(quickSlots).find(
-      (index) => quickSlots[index] === groupId
-    );
-
-    quickSlots[slot] = groupId;
-
-    if (existingSlot != null) {
-      quickSlots[existingSlot] = null;
-    }
-
-    this.save();
+    this._tabStore.send({ type: 'SET_QUICK_SLOT', slot, groupId });
   }
 
-  async getQuickSlotAssignment(slot: QuickSlotIndex): Promise<string | null> {
-    const quickSlots = await this.getQuickSlots();
+  getQuickSlotAssignment(slot: QuickSlotIndex): string | null {
+    const quickSlots = this._tabStore.getSnapshot().context.quickSlots;
     return quickSlots[slot] ?? null;
   }
 
   async reloadStateFile(): Promise<void> {
-    this._groups = null;
-    this._history = null;
-    this._stateContainer = null;
-    this._previousStateContainer = null;
-    this._quickSlots = null;
-    this._file = null;
-    this._pendingFile = null;
+    this._fileStore.send({ type: 'RESET' });
+    this._tabStore.send({ type: 'RESET_STATE' });
     await this.initialize();
   }
 
-  async exportStateFile(): Promise<TabStateFileContent> {
-    const file = await this.getStateFile();
+  exportStateFile(): TabStateFileContent {
+    const storageSnapshot = this._fileStore.getSnapshot();
+    const fileData = storageSnapshot.context.data;
 
-    if (!file) {
-      return;
+    if (!fileData) {
+      return null;
     }
 
-    return toRelativeTabStateFile(file.data);
+    return toRelativeTabStateFile(fileData);
   }
 
-  async importStateFile(fileContent: TabStateFileContent): Promise<boolean> {
+  importStateFile(fileContent: any): boolean {
     const workspaceFolder = this._configService.getMasterWorkspaceFolder();
 
     if (!workspaceFolder) {
@@ -506,43 +363,19 @@ export class TabStateHandler implements Disposable {
       fileContent,
       Uri.parse(workspaceFolder)
     );
-    this._file.data = newContent;
-    this.save();
-  }
 
-  private async _save() {
-    const stateFile = await this.getStateFile();
-
-    if (!stateFile) {
-      return;
-    }
-
-    const [groups, history, addons, quickSlots] = await Promise.all([
-      this.getGroups(),
-      this.getHistory(),
-      this.getAddons(),
-      this.getQuickSlots()
-    ]);
-
-    await stateFile.save({
-      version: CURRENT_STATE_FILE_VERSION,
-      groups,
-      history,
-      addons,
-      selectedGroup: this._stateContainer.id,
-      previousSelectedGroup: this._previousStateContainer.id,
-      quickSlots
+    this._tabStore.send({
+      type: 'IMPORT_STATE',
+      data: {
+        groups: newContent.groups,
+        history: newContent.history,
+        addons: newContent.addons || {},
+        quickSlots: newContent.quickSlots,
+        selectedGroup: newContent.selectedGroup,
+        previousSelectedGroup: newContent.previousSelectedGroup
+      }
     });
-  }
 
-  dispose() {
-    this._file = null;
-    this._pendingFile = null;
-    this._groups = null;
-    this._history = null;
-    this._addons = null;
-    this._stateContainer = null;
-    this._previousStateContainer = null;
-    this._quickSlots = null;
+    return true;
   }
 }
