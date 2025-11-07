@@ -1112,6 +1112,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 20px;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
 }
 
 .settings-label {
