@@ -71,11 +71,12 @@ export class TabStateHandler implements Disposable {
 
     // Subscribe to store changes to trigger saves
     this._storeSubscription = this._tabStore.subscribe(async () => {
-      void this.save();
-
       if (this._tabStore.getSnapshot().context.currentStateContainer == null) {
-        await this.syncStateWithVSCode();
+        void this.syncStateWithVSCode();
+        return;
       }
+
+      void this.save();
 
       this._stateUpdateEmitter.fire(this._tabStore.getSnapshot().context);
     });

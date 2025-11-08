@@ -476,8 +476,6 @@ export class TabManagerService implements ITabManagerService {
       preservePinnedTabs: true,
       preserveTabFocus: false
     });
-
-    await this._stateHandler.syncStateWithVSCode();
   }
 
   switchToGroup(groupId: string | null) {
