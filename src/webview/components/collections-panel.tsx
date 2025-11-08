@@ -8,6 +8,7 @@ export const CollectionsPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'groups' | 'history' | 'addons'>(
     'groups'
   );
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const tabs = useMemo(
     () => [
@@ -19,27 +20,46 @@ export const CollectionsPanel: React.FC = () => {
   );
 
   return (
-    <section className="collections-panel" aria-label="Saved layouts">
-      <header className="collections-panel-header">
-        <nav className="collections-tabs" aria-label="Collections">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={activeTab === tab.id ? 'active' : ''}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </header>
+    <section
+      className={`collections-panel ${isCollapsed ? 'collapsed' : ''}`}
+      aria-label="Saved layouts"
+    >
+      <button
+        className="collections-panel-toggle"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        aria-expanded={!isCollapsed}
+        type="button"
+      >
+        <i
+          className={`codicon codicon-chevron-${isCollapsed ? 'right' : 'down'}`}
+          aria-hidden="true"
+        />
+        <i className="codicon codicon-layers" aria-hidden="true" />
+        <span>Collections</span>
+      </button>
 
-      <div className="collections-panel-body">
-        {activeTab === 'groups' && <GroupsCollection />}
-        {activeTab === 'history' && <HistoryCollection />}
-        {activeTab === 'addons' && <AddonsCollection />}
-      </div>
+      {!isCollapsed && (
+        <>
+          <nav className="collections-tabs" aria-label="Collections">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={activeTab === tab.id ? 'active' : ''}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="collections-panel-body">
+            {activeTab === 'groups' && <GroupsCollection />}
+            {activeTab === 'history' && <HistoryCollection />}
+            {activeTab === 'addons' && <AddonsCollection />}
+          </div>
+        </>
+      )}
     </section>
   );
 };
