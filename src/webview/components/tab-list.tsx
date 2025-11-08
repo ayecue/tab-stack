@@ -33,6 +33,14 @@ export const TabList: React.FC<TabListProps> = ({
 }) => {
   const { state, messagingService } = useTabContext();
   const tabGroups = state.payload?.tabGroups ?? {};
+  const [draggedTab, setDraggedTab] = React.useState<{
+    index: number;
+    viewColumn: number;
+  } | null>(null);
+  const [dragOverTab, setDragOverTab] = React.useState<{
+    index: number;
+    viewColumn: number;
+  } | null>(null);
   const getColumnLabel = (viewColumn: number) => {
     return `Column ${viewColumn}`;
   };
@@ -142,6 +150,65 @@ export const TabList: React.FC<TabListProps> = ({
 
   const totalVisibleTabs = flatList.length;
 
+  const handleDragStart =
+    (index: number, viewColumn: number) =>
+    (e: React.DragEvent<HTMLLIElement>) => {
+      setDraggedTab({ index, viewColumn });
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', `${index}:${viewColumn}`);
+    };
+
+  const handleDragEnd = () => {
+    setDraggedTab(null);
+    setDragOverTab(null);
+  };
+
+  const handleDragOver =
+    (index: number, viewColumn: number) =>
+    (e: React.DragEvent<HTMLLIElement>) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      if (
+        !draggedTab ||
+        (draggedTab.index === index && draggedTab.viewColumn === viewColumn)
+      ) {
+        return;
+      }
+
+      setDragOverTab({ index, viewColumn });
+    };
+
+  const handleDrop =
+    (toIndex: number, toViewColumn: number) =>
+    (e: React.DragEvent<HTMLLIElement>) => {
+      e.preventDefault();
+
+      if (!draggedTab) {
+        return;
+      }
+
+      const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
+
+      // Don't do anything if dropping on itself
+      if (fromIndex === toIndex && fromViewColumn === toViewColumn) {
+        setDraggedTab(null);
+        setDragOverTab(null);
+        return;
+      }
+
+      // Send the move command
+      messagingService.moveTab(
+        fromIndex,
+        fromViewColumn,
+        toIndex,
+        toViewColumn
+      );
+
+      setDraggedTab(null);
+      setDragOverTab(null);
+    };
+
   if (state.loading || state.rendering) {
     return (
       <div className="tab-empty-state">
@@ -171,7 +238,7 @@ export const TabList: React.FC<TabListProps> = ({
   if (viewMode === 'flat') {
     return (
       <ul className="tab-list-flat" role="list">
-        {flatList.map(({ tab, label, isActive, tabGroupIndex }) => (
+        {flatList.map(({ tab, label, isActive, tabGroupIndex, viewColumn }) => (
           <TabItem
             key={`${tab.viewColumn}:${tab.label}`}
             tab={tab}
@@ -184,8 +251,20 @@ export const TabList: React.FC<TabListProps> = ({
             onTogglePin={() =>
               messagingService.toggleTabPin(tabGroupIndex, tab.viewColumn)
             }
+            onDragStart={handleDragStart(tabGroupIndex, viewColumn)}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver(tabGroupIndex, viewColumn)}
+            onDrop={handleDrop(tabGroupIndex, viewColumn)}
             viewColumnLabel={label}
             isColumnActive={isActive}
+            isDragging={
+              draggedTab?.index === tabGroupIndex &&
+              draggedTab?.viewColumn === viewColumn
+            }
+            isDraggedOver={
+              dragOverTab?.index === tabGroupIndex &&
+              dragOverTab?.viewColumn === viewColumn
+            }
           />
         ))}
       </ul>
@@ -220,8 +299,20 @@ export const TabList: React.FC<TabListProps> = ({
                   onTogglePin={() =>
                     messagingService.toggleTabPin(originalIndex, tab.viewColumn)
                   }
+                  onDragStart={handleDragStart(originalIndex, viewColumn)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver(originalIndex, viewColumn)}
+                  onDrop={handleDrop(originalIndex, viewColumn)}
                   viewColumnLabel={columnLabel}
                   isColumnActive={isActive}
+                  isDragging={
+                    draggedTab?.index === originalIndex &&
+                    draggedTab?.viewColumn === viewColumn
+                  }
+                  isDraggedOver={
+                    dragOverTab?.index === originalIndex &&
+                    dragOverTab?.viewColumn === viewColumn
+                  }
                 />
               ))}
               {tabs.length === 0 && (

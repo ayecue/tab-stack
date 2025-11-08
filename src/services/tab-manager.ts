@@ -18,6 +18,7 @@ import {
   closeAllEditors,
   focusTabInGroup,
   getEditorLayout,
+  moveTab,
   pinEditor,
   setEditorLayout,
   unpinEditor
@@ -338,6 +339,27 @@ export class TabManagerService implements ITabManagerService {
     }
 
     await closeTab(targetTab);
+  }
+
+  async moveTab(
+    fromViewColumn: number,
+    fromIndex: number,
+    toViewColumn: number,
+    toIndex: number
+  ): Promise<void> {
+    const targetTab = findTabByViewColumnAndIndex(fromViewColumn, fromIndex);
+
+    if (!targetTab) {
+      this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
+      return;
+    }
+
+    try {
+      await moveTab(fromViewColumn, fromIndex, toViewColumn, toIndex);
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to move tab');
+      console.error('Error moving tab:', error);
+    }
   }
 
   async clearAllTabs(): Promise<void> {

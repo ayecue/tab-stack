@@ -19,6 +19,7 @@ import {
   WebviewSwitchGroupMessage,
   WebviewSyncMessage,
   WebviewTabCloseMessage,
+  WebviewTabMoveMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage
 } from '../../types/messages';
@@ -69,6 +70,22 @@ export class TabMessagingService {
       type: WebviewMessageType.TabTogglePin,
       index,
       columnView
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  moveTab(
+    fromIndex: number,
+    fromColumnView: number,
+    toIndex: number,
+    toColumnView: number
+  ): void {
+    const message: WebviewTabMoveMessage = {
+      type: WebviewMessageType.TabMove,
+      fromIndex,
+      toIndex,
+      fromColumnView,
+      toColumnView
     };
     this.messenger.sendMessage(message);
   }

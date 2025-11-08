@@ -16,6 +16,7 @@ import {
   WebviewSelectWorkspaceFolderMessage,
   WebviewSwitchGroupMessage,
   WebviewTabCloseMessage,
+  WebviewTabMoveMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
   WebviewUpdateGitIntegrationMessage
@@ -50,6 +51,17 @@ export class MessageHandler implements Disposable {
       case WebviewMessageType.TabTogglePin: {
         const { columnView, index } = data as WebviewTabTogglePinMessage;
         await tabManager.toggleTabPin(columnView, index);
+        break;
+      }
+      case WebviewMessageType.TabMove: {
+        const { fromIndex, toIndex, fromColumnView, toColumnView } =
+          data as WebviewTabMoveMessage;
+        await tabManager.moveTab(
+          fromColumnView,
+          fromIndex,
+          toColumnView,
+          toIndex
+        );
         break;
       }
       case WebviewMessageType.SwitchGroup: {

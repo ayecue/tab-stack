@@ -42,6 +42,7 @@ export enum WebviewMessageType {
   TabClose = 'tab-close',
   ClearAllTabs = 'clear-all-tabs',
   TabTogglePin = 'tab-toggle-pin',
+  TabMove = 'tab-move',
   SwitchGroup = 'switch-group',
   NewGroup = 'new-group',
   RenameGroup = 'rename-group',
@@ -86,6 +87,14 @@ export interface WebviewTabTogglePinMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabTogglePin;
   index: number;
   columnView: number;
+}
+
+export interface WebviewTabMoveMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.TabMove;
+  fromIndex: number;
+  toIndex: number;
+  fromColumnView: number;
+  toColumnView: number;
 }
 
 export interface WebviewSwitchGroupMessage extends BaseWebviewMessage {

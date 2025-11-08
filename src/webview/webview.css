@@ -504,7 +504,38 @@ body {
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid transparent;
-  cursor: pointer;
+  cursor: grab;
+  transition: opacity 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.tab-item:active {
+  cursor: grabbing;
+}
+
+.tab-item.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.tab-item.drag-over {
+  background: rgba(100, 150, 255, 0.2);
+  box-shadow: 
+    0 0 0 2px var(--vscode-focusBorder),
+    0 4px 12px rgba(100, 150, 255, 0.3);
+  transform: scale(1.02);
+}
+
+.tab-item.drag-over::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--vscode-focusBorder);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--vscode-focusBorder);
 }
 
 .tab-item.unknown-kind:not(.active) {
