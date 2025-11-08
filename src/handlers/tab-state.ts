@@ -65,13 +65,18 @@ export class TabStateHandler implements Disposable {
     });
 
     // Update current state if needed
-    if (!(fileState.selectedGroup in fileState.groups)) {
+    if (this._tabStore.getSnapshot().context.currentStateContainer == null) {
       await this.syncStateWithVSCode();
     }
 
     // Subscribe to store changes to trigger saves
-    this._storeSubscription = this._tabStore.subscribe(() => {
+    this._storeSubscription = this._tabStore.subscribe(async () => {
       void this.save();
+
+      if (this._tabStore.getSnapshot().context.currentStateContainer == null) {
+        await this.syncStateWithVSCode();
+      }
+
       this._stateUpdateEmitter.fire(this._tabStore.getSnapshot().context);
     });
   }
@@ -369,7 +374,7 @@ export class TabStateHandler implements Disposable {
       data: {
         groups: newContent.groups,
         history: newContent.history,
-        addons: newContent.addons || {},
+        addons: newContent.addons,
         quickSlots: newContent.quickSlots,
         selectedGroup: newContent.selectedGroup,
         previousSelectedGroup: newContent.previousSelectedGroup

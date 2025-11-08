@@ -25,39 +25,35 @@ export function createFileStore(): Store<
     context: {
       data: createDefaultTabStateFileContent(),
       isLoading: false,
-      isPending: false,
       location: null,
       storageType: null
     } as FileStoreContext,
     emits: {
-      persist: (payload: { location: string; data: TabStateFileContent }) => {
-        void save(payload.location, payload.data);
+      persist: async (payload: {
+        location: string;
+        data: TabStateFileContent;
+      }) => {
+        try {
+          await saveFile(payload.location, payload.data);
+        } catch (error) {
+          console.error('Failed to save storage file:', error);
+        }
       }
     },
     on: {
-      LOAD_START: (context: FileStoreContext) => ({
+      LOAD: (context: FileStoreContext) => ({
         ...context,
-        isLoading: true,
-        isPending: true
+        isLoading: true
       }),
-      LOAD_SUCCESS: (
-        context: FileStoreContext,
-        event: FileStoreLoadSuccessEvent
-      ) => {
+      DONE: (context: FileStoreContext, event: FileStoreLoadSuccessEvent) => {
         return {
           ...context,
           data: event.data,
           location: event.location,
           storageType: event.storageType,
-          isLoading: false,
-          isPending: false
+          isLoading: false
         };
       },
-      LOAD_ERROR: (context) => ({
-        ...context,
-        isLoading: false,
-        isPending: false
-      }),
       SAVE: (context: FileStoreContext, event: FileStoreSaveEvent, enqueue) => {
         enqueue.emit.persist({ location: context.location!, data: event.data });
         return {
@@ -76,7 +72,6 @@ export function createFileStore(): Store<
         data: createDefaultTabStateFileContent(),
         location: null,
         isLoading: false,
-        isPending: false,
         storageType: null
       })
     }
@@ -90,10 +85,10 @@ export async function load(
 ): Promise<void> {
   const snapshot = store.getSnapshot();
 
-  if (snapshot.context.isPending) {
+  if (snapshot.context.isLoading) {
     return new Promise((resolve) => {
       const unsubscribe = store.subscribe((state) => {
-        if (!state.context.isPending) {
+        if (!state.context.isLoading) {
           unsubscribe.unsubscribe();
           resolve();
         }
@@ -101,53 +96,61 @@ export async function load(
     });
   }
 
-  store.send({ type: 'LOAD_START' });
+  store.send({ type: 'LOAD' });
 
-  try {
-    const masterFolderPath = configService.getMasterWorkspaceFolder();
-    const workspaceUri = Uri.parse(masterFolderPath);
+  const masterFolderPath = configService.getMasterWorkspaceFolder();
+  const workspaceUri = Uri.parse(masterFolderPath);
 
-    if (!workspaceUri) {
-      console.warn('No workspace folder found, cannot load or save state.');
-
-      store.send({
-        type: 'LOAD_SUCCESS',
-        data: createDefaultTabStateFileContent(),
-        location: null,
-        storageType: 'in-memory'
-      });
-
-      return;
-    }
-
-    const vscodeDir = Uri.joinPath(workspaceUri, '.vscode');
-    console.log('Loading state file from workspace:', vscodeDir?.fsPath);
-    await workspace.fs.createDirectory(vscodeDir);
-
-    const filePath = Uri.joinPath(vscodeDir, 'tmstate.json');
-    const fileContent = await workspace.fs.readFile(filePath);
-    const data = migrate(JSON.parse(await workspace.decode(fileContent)));
+  if (!workspaceUri) {
+    console.warn('No workspace folder found, cannot load or save state.');
 
     store.send({
-      type: 'LOAD_SUCCESS',
+      type: 'DONE',
+      data: createDefaultTabStateFileContent(),
+      location: null,
+      storageType: 'in-memory',
+      success: true
+    });
+
+    return;
+  }
+
+  const vscodeDir = Uri.joinPath(workspaceUri, '.vscode');
+  const filePath = Uri.joinPath(vscodeDir, 'tmstate.json');
+
+  try {
+    await workspace.fs.createDirectory(vscodeDir);
+    const data = await loadFile(filePath.fsPath);
+
+    store.send({
+      type: 'DONE',
       data,
       location: filePath.fsPath,
-      storageType: 'persistent'
+      storageType: 'persistent',
+      success: true
     });
   } catch (error) {
     console.error('Failed to load storage file:', error);
-    store.send({ type: 'LOAD_ERROR' });
+    store.send({
+      type: 'DONE',
+      data: createDefaultTabStateFileContent(),
+      location: filePath.fsPath,
+      storageType: 'persistent',
+      success: false
+    });
   }
 }
 
-export async function save(
+async function loadFile(location: string): Promise<TabStateFileContent | null> {
+  const fileContent = await workspace.fs.readFile(Uri.file(location));
+  const data = migrate(JSON.parse(await workspace.decode(fileContent)));
+  return data;
+}
+
+async function saveFile(
   location: string,
   data: TabStateFileContent
 ): Promise<void> {
-  try {
-    const fileContent = await workspace.encode(JSON.stringify(data));
-    await workspace.fs.writeFile(Uri.file(location), fileContent);
-  } catch (error) {
-    console.error('Failed to save storage file:', error);
-  }
+  const fileContent = await workspace.encode(JSON.stringify(data));
+  await workspace.fs.writeFile(Uri.file(location), fileContent);
 }

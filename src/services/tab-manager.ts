@@ -222,6 +222,7 @@ export class TabManagerService implements ITabManagerService {
 
   applyState() {
     if (!this._stateHandler) return;
+    if (this._stateHandler.stateContainer == null) return;
 
     this._nextRenderingItem = {
       stateContainer: this._stateHandler.stateContainer,
@@ -377,9 +378,8 @@ export class TabManagerService implements ITabManagerService {
   }
 
   triggerSync() {
-    if (!this._stateHandler) {
-      return;
-    }
+    if (!this._stateHandler) return;
+    if (this._stateHandler.stateContainer == null) return;
 
     const [groups, history, addons, quickSlots] = [
       this._stateHandler.getGroups(),

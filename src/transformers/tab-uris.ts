@@ -1,14 +1,7 @@
 import { Uri, workspace } from 'vscode';
 
 import { StateContainer, TabStateFileContent } from '../types/tab-manager';
-import {
-  TabGroupInfo,
-  TabInfo,
-  TabInfoText,
-  TabInfoTextDiff,
-  TabKind,
-  TabState
-} from '../types/tabs';
+import { TabGroupInfo, TabInfo, TabState } from '../types/tabs';
 
 export type TabUriTransformer = (uri: string) => string;
 
@@ -39,7 +32,7 @@ function transformTabUris(
       modifiedUri: transformer(tab.modifiedUri)
     };
   }
-  
+
   return { ...tab };
 }
 
@@ -101,7 +94,7 @@ function transformTabStateFileContentUris(
   }
 
   for (const [key, addons] of Object.entries(file.addons)) {
-    result.history[key] = transformStateContainerUris(addons, mapper);
+    result.addons[key] = transformStateContainerUris(addons, mapper);
   }
 
   return result;

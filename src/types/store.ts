@@ -21,7 +21,6 @@ export interface TabStateStoreContext {
 export interface FileStoreContext {
   data: TabStateFileContent | null;
   isLoading: boolean;
-  isPending: boolean;
   location: string | null;
   storageType: 'in-memory' | 'persistent' | null;
 }
@@ -142,18 +141,15 @@ export type TabStateStoreEvents =
 
 // File Store Event Types
 export type FileStoreLoadStartEvent = {
-  type: 'LOAD_START';
+  type: 'LOAD';
 };
 
 export type FileStoreLoadSuccessEvent = {
-  type: 'LOAD_SUCCESS';
+  type: 'DONE';
   data: TabStateFileContent;
   location: string;
   storageType: 'in-memory' | 'persistent';
-};
-
-export type FileStoreLoadErrorEvent = {
-  type: 'LOAD_ERROR';
+  success: boolean;
 };
 
 export type FileStoreSaveEvent = {
@@ -173,7 +169,6 @@ export type FileStoreResetEvent = {
 export type FileStoreEvents =
   | FileStoreLoadStartEvent
   | FileStoreLoadSuccessEvent
-  | FileStoreLoadErrorEvent
   | FileStoreSaveEvent
   | FileStoreClearEvent
   | FileStoreResetEvent;
