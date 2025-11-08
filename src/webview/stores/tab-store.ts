@@ -17,20 +17,35 @@ enum ConnectionStatus {
   Connecting = 'connecting'
 }
 
-interface TabStoreContext {
+export interface TabStoreContext {
   payload: TabStatePayload | null;
   loading: boolean;
   rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groups: Array<{ groupId: string; name: string }>;
-  histories: Array<{ historyId: string; name: string }>;
-  addons: Array<{ addonId: string; name: string }>;
+  groups: Array<{
+    groupId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  histories: Array<{
+    historyId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  addons: Array<{
+    addonId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
-  gitIntegration?: GitIntegrationConfig;
+  gitIntegration: GitIntegrationConfig | undefined;
 }
 
 type SyncEvent = { type: 'sync'; data: ExtensionTabsSyncMessage };

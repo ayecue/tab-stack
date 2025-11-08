@@ -33,9 +33,24 @@ interface TabState {
   rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groups: Array<{ groupId: string; name: string }>;
-  histories: Array<{ historyId: string; name: string }>;
-  addons: Array<{ addonId: string; name: string }>;
+  groups: Array<{
+    groupId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  histories: Array<{
+    historyId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  addons: Array<{
+    addonId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;

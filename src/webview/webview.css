@@ -1428,6 +1428,111 @@ body {
 .icon-php { color: #777bb4; }
 .icon-ruby { color: #cc342d; }
 .icon-go { color: #00add8; }
+
+/* Custom Tooltip */
+.custom-tooltip {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -95%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
+.custom-tooltip-content {
+  background: var(--vscode-editorHoverWidget-background);
+  border: 1px solid var(--vscode-editorHoverWidget-border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--vscode-editorHoverWidget-foreground);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
+  white-space: pre-line;
+  max-width: 350px;
+  min-width: 200px;
+}
+
+.custom-tooltip-content strong {
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.custom-tooltip-content .tooltip-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-foreground);
+}
+
+.custom-tooltip-content .tooltip-section {
+  margin: 6px 0;
+}
+
+.custom-tooltip-content .tooltip-label {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.custom-tooltip-content .tooltip-value {
+  color: var(--vscode-foreground);
+}
+
+.custom-tooltip-content .tooltip-list {
+  margin: 4px 0 0 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.custom-tooltip-content .tooltip-list li {
+  position: relative;
+  padding: 2px 0;
+  color: var(--vscode-descriptionForeground);
+}
+
+.custom-tooltip-content .tooltip-list li::before {
+  content: '•';
+  position: absolute;
+  left: -12px;
+  color: var(--vscode-focusBorder);
+}
+
+.custom-tooltip-content .tooltip-sublist {
+  margin: 4px 0 0 8px;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.custom-tooltip-content .tooltip-sublist li {
+  position: relative;
+  padding: 2px 0;
+  color: var(--vscode-foreground);
+  font-size: 0.95em;
+}
+
+.custom-tooltip-content .tooltip-sublist li::before {
+  content: '▸';
+  position: absolute;
+  left: -12px;
+  color: var(--vscode-descriptionForeground);
+}
 .icon-rust { color: #ce422b; }
 .icon-cpp { color: #00599c; }
 .icon-c { color: #a8b9cc; }

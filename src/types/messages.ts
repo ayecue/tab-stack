@@ -26,9 +26,24 @@ export interface ExtensionNotificationMessage extends BaseExtensionMessage {
 export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   type: ExtensionMessageType.Sync;
   tabState: TabState;
-  histories: Array<{ historyId: string; name: string }>;
-  groups: Array<{ groupId: string; name: string }>;
-  addons: Array<{ addonId: string; name: string }>;
+  histories: Array<{
+    historyId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  groups: Array<{
+    groupId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  addons: Array<{
+    addonId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;

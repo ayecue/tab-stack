@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { CollectionTooltipContent } from './common/collection-tooltip-content';
+import { Tooltip } from './common/tooltip';
 
 interface AddonItemProps {
   addonId: string;
@@ -8,6 +10,8 @@ interface AddonItemProps {
   isEditing: boolean;
   onStartRename: (addonId: string, currentName: string) => void;
   onCancelRename: () => void;
+  tabCount: number;
+  columnCount: number;
 }
 
 export const AddonItem: React.FC<AddonItemProps> = ({
@@ -15,7 +19,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   name,
   isEditing,
   onStartRename,
-  onCancelRename
+  onCancelRename,
+  tabCount,
+  columnCount
 }) => {
   const { state, messagingService } = useTabContext();
   const renameInputRef = useRef<HTMLInputElement | null>(null);
@@ -125,106 +131,114 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   );
 
   return (
-    <li
-      className={`section-item${isEditing ? ' editing' : ''}`}
-      tabIndex={0}
-      onClick={handleItemClick}
-      onKeyDown={handleItemKeyDown}
-      title="Apply this add-on (adds tabs without replacing)"
+    <Tooltip
+      content={
+        <CollectionTooltipContent
+          tabCount={tabCount}
+          columnCount={columnCount}
+        />
+      }
     >
-      <div className="item-row">
-        <div className="item-primary">
-          {isEditing ? (
-            <>
-              <input
-                ref={renameInputRef}
-                type="text"
-                value={renameValue}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) => {
-                  setRenameValue(event.target.value);
-                  if (renameError) {
-                    setRenameError(null);
-                  }
-                }}
-                onKeyDown={handleRenameKeyDown}
-                aria-label="Rename add-on"
-                disabled={isRenaming}
-              />
-              <div className="inline-form-actions">
-                <button
-                  type="button"
-                  className="action-save"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    void submitRename();
+      <li
+        className={`section-item${isEditing ? ' editing' : ''}`}
+        tabIndex={0}
+        onClick={handleItemClick}
+        onKeyDown={handleItemKeyDown}
+      >
+        <div className="item-row">
+          <div className="item-primary">
+            {isEditing ? (
+              <>
+                <input
+                  ref={renameInputRef}
+                  type="text"
+                  value={renameValue}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => {
+                    setRenameValue(event.target.value);
+                    if (renameError) {
+                      setRenameError(null);
+                    }
                   }}
+                  onKeyDown={handleRenameKeyDown}
+                  aria-label="Rename add-on"
                   disabled={isRenaming}
-                  aria-label="Save add-on name"
-                >
-                  <i className="codicon codicon-check" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="action-cancel"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onCancelRename();
-                  }}
-                  disabled={isRenaming}
-                  aria-label="Cancel rename"
-                >
-                  <i className="codicon codicon-close" aria-hidden="true" />
-                </button>
-              </div>
-            </>
-          ) : (
-            <span className="item-name">{name}</span>
+                />
+                <div className="inline-form-actions">
+                  <button
+                    type="button"
+                    className="action-save"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void submitRename();
+                    }}
+                    disabled={isRenaming}
+                    aria-label="Save add-on name"
+                  >
+                    <i className="codicon codicon-check" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="action-cancel"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onCancelRename();
+                    }}
+                    disabled={isRenaming}
+                    aria-label="Cancel rename"
+                  >
+                    <i className="codicon codicon-close" aria-hidden="true" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <span className="item-name">{name}</span>
+            )}
+          </div>
+          {isEditing && renameError && (
+            <span className="form-error" role="alert">
+              {renameError}
+            </span>
           )}
-        </div>
-        {isEditing && renameError && (
-          <span className="form-error" role="alert">
-            {renameError}
-          </span>
-        )}
-        <div
-          className="item-actions"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          {!isEditing && (
+          <div
+            className="item-actions"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            {!isEditing && (
+              <button
+                type="button"
+                className="neutral"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onStartRename(addonId, name);
+                }}
+                title="Rename add-on"
+              >
+                <i className="codicon codicon-edit" aria-hidden="true" />
+              </button>
+            )}
             <button
               type="button"
               className="neutral"
-              onClick={(event) => {
-                event.stopPropagation();
-                onStartRename(addonId, name);
-              }}
-              title="Rename add-on"
+              onClick={handleApply}
+              disabled={isEditing}
+              title="Apply add-on"
             >
-              <i className="codicon codicon-edit" aria-hidden="true" />
+              <i className="codicon codicon-arrow-right" aria-hidden="true" />
             </button>
-          )}
-          <button
-            type="button"
-            className="neutral"
-            onClick={handleApply}
-            disabled={isEditing}
-            title="Apply add-on"
-          >
-            <i className="codicon codicon-arrow-right" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="danger"
-            onClick={handleDelete}
-            disabled={isEditing}
-            title="Delete add-on"
-          >
-            <i className="codicon codicon-trash" aria-hidden="true" />
-          </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={handleDelete}
+              disabled={isEditing}
+              title="Delete add-on"
+            >
+              <i className="codicon codicon-trash" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-      </div>
-    </li>
+      </li>
+    </Tooltip>
   );
 };

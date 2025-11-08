@@ -444,18 +444,45 @@ export class TabManagerService implements ITabManagerService {
 
     this._syncViewEmitter.fire({
       tabState: this._stateHandler.stateContainer.state.tabState,
-      histories: historyValues.map((entry) => ({
-        historyId: entry.id,
-        name: entry.name
-      })),
-      groups: groupValues.map((group) => ({
-        groupId: group.id,
-        name: group.name
-      })),
-      addons: addonValues.map((addon) => ({
-        addonId: addon.id,
-        name: addon.name
-      })),
+      histories: historyValues.map((entry) => {
+        const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
+        const tabCount = tabGroupsArray.reduce(
+          (sum, group) => sum + group.tabs.length,
+          0
+        );
+        return {
+          historyId: entry.id,
+          name: entry.name,
+          tabCount,
+          columnCount: tabGroupsArray.length
+        };
+      }),
+      groups: groupValues.map((group) => {
+        const tabGroupsArray = Object.values(group.state.tabState.tabGroups);
+        const tabCount = tabGroupsArray.reduce(
+          (sum, tabGroup) => sum + tabGroup.tabs.length,
+          0
+        );
+        return {
+          groupId: group.id,
+          name: group.name,
+          tabCount,
+          columnCount: tabGroupsArray.length
+        };
+      }),
+      addons: addonValues.map((addon) => {
+        const tabGroupsArray = Object.values(addon.state.tabState.tabGroups);
+        const tabCount = tabGroupsArray.reduce(
+          (sum, group) => sum + group.tabs.length,
+          0
+        );
+        return {
+          addonId: addon.id,
+          name: addon.name,
+          tabCount,
+          columnCount: tabGroupsArray.length
+        };
+      }),
       selectedGroup:
         this._stateHandler.stateContainer.id in groups
           ? this._stateHandler.stateContainer.id

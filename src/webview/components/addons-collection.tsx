@@ -183,7 +183,7 @@ export const AddonsCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredAddons.map((addon) => {
-            const { addonId, name } = addon;
+            const { addonId, name, tabCount, columnCount } = addon;
             const isEditing = editingAddonId === addonId;
             return (
               <AddonItem
@@ -193,6 +193,8 @@ export const AddonsCollection: React.FC = () => {
                 isEditing={isEditing}
                 onStartRename={startRename}
                 onCancelRename={cancelRename}
+                tabCount={tabCount}
+                columnCount={columnCount}
               />
             );
           })}

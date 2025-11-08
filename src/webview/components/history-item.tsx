@@ -1,10 +1,14 @@
 import React, { useCallback, useState } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { CollectionTooltipContent } from './common/collection-tooltip-content';
+import { Tooltip } from './common/tooltip';
 
 interface HistoryItemProps {
   historyId: string;
   name: string;
+  tabCount: number;
+  columnCount: number;
 }
 
 const formatTimestamp = (value: string): string => {
@@ -17,7 +21,9 @@ const formatTimestamp = (value: string): string => {
 
 export const HistoryItem: React.FC<HistoryItemProps> = ({
   historyId,
-  name
+  name,
+  tabCount,
+  columnCount
 }) => {
   const { messagingService } = useTabContext();
 
@@ -44,33 +50,41 @@ export const HistoryItem: React.FC<HistoryItemProps> = ({
   );
 
   return (
-    <li
-      className="section-item"
-      tabIndex={0}
-      onClick={handleRestore}
-      onKeyDown={handleKeyDown}
-      title="Restore this snapshot"
+    <Tooltip
+      content={
+        <CollectionTooltipContent
+          tabCount={tabCount}
+          columnCount={columnCount}
+        />
+      }
     >
-      <div className="item-row">
-        <div className="item-primary">
-          <span className="item-name">{name}</span>
-        </div>
+      <li
+        className="section-item"
+        tabIndex={0}
+        onClick={handleRestore}
+        onKeyDown={handleKeyDown}
+      >
+        <div className="item-row">
+          <div className="item-primary">
+            <span className="item-name">{name}</span>
+          </div>
 
-        <div
-          className="item-actions"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="danger"
-            onClick={handleDelete}
-            title="Delete snapshot"
+          <div
+            className="item-actions"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
-            <i className="codicon codicon-trash" aria-hidden="true" />
-          </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={handleDelete}
+              title="Delete snapshot"
+            >
+              <i className="codicon codicon-trash" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-      </div>
-    </li>
+      </li>
+    </Tooltip>
   );
 };

@@ -218,7 +218,7 @@ export const GroupsCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredGroups.map((group, index) => {
-            const { groupId, name } = group;
+            const { groupId, name, tabCount, columnCount } = group;
             const assignedSlot = slotByGroup[groupId];
             const isSelected = state.selectedGroup === groupId;
             const isEditing = editingGroupId === groupId;
@@ -235,6 +235,8 @@ export const GroupsCollection: React.FC = () => {
                 onStartRename={startRename}
                 isEditing={isEditing}
                 onCancelRename={cancelRename}
+                tabCount={tabCount}
+                columnCount={columnCount}
               />
             );
           })}

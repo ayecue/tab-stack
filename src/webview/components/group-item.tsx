@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
+import { CollectionTooltipContent } from './common/collection-tooltip-content';
+import { Tooltip } from './common/tooltip';
 
 interface GroupItemProps {
   groupId: string;
@@ -13,6 +15,8 @@ interface GroupItemProps {
   onStartRename: (groupId: string, currentName: string) => void;
   isEditing: boolean;
   onCancelRename: () => void;
+  tabCount: number;
+  columnCount: number;
 }
 
 export const GroupItem: React.FC<GroupItemProps> = ({
@@ -24,7 +28,9 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   quickSlotOptions,
   onStartRename,
   isEditing,
-  onCancelRename
+  onCancelRename,
+  tabCount,
+  columnCount
 }) => {
   const { state, messagingService } = useTabContext();
   const renameInputRef = useRef<HTMLInputElement | null>(null);
@@ -154,120 +160,128 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   );
 
   return (
-    <li
-      className={`section-item${isSelected ? ' active' : ''}${isEditing ? ' editing' : ''}`}
-      tabIndex={0}
-      onClick={handleItemClick}
-      onKeyDown={handleItemKeyDown}
-      title={isSelected ? 'Deselect this group' : 'Apply this group'}
+    <Tooltip
+      content={
+        <CollectionTooltipContent
+          tabCount={tabCount}
+          columnCount={columnCount}
+        />
+      }
     >
-      <div className="item-row">
-        <div className="item-primary">
-          {isEditing ? (
-            <>
-              <input
-                ref={renameInputRef}
-                type="text"
-                value={renameValue}
+      <li
+        className={`section-item${isSelected ? ' active' : ''}${isEditing ? ' editing' : ''}`}
+        tabIndex={0}
+        onClick={handleItemClick}
+        onKeyDown={handleItemKeyDown}
+      >
+        <div className="item-row">
+          <div className="item-primary">
+            {isEditing ? (
+              <>
+                <input
+                  ref={renameInputRef}
+                  type="text"
+                  value={renameValue}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => {
+                    setRenameValue(event.target.value);
+                    if (renameError) {
+                      setRenameError(null);
+                    }
+                  }}
+                  onKeyDown={handleRenameKeyDown}
+                  aria-label="Rename group"
+                  disabled={isRenaming}
+                />
+                <div className="inline-form-actions">
+                  <button
+                    type="button"
+                    className="action-save"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void submitRename();
+                    }}
+                    disabled={isRenaming}
+                    aria-label="Save group name"
+                  >
+                    <i className="codicon codicon-check" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="action-cancel"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onCancelRename();
+                    }}
+                    disabled={isRenaming}
+                    aria-label="Cancel rename"
+                  >
+                    <i className="codicon codicon-close" aria-hidden="true" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <span className="item-name">{name}</span>
+            )}
+          </div>
+          {isEditing && renameError && (
+            <span className="form-error" role="alert">
+              {renameError}
+            </span>
+          )}
+
+          <div
+            className="item-actions"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <div className="slot-selector">
+              <select
+                id={slotControlId}
+                value={assignedSlot ? assignedSlot.toString() : ''}
                 onClick={(event) => event.stopPropagation()}
                 onChange={(event) => {
-                  setRenameValue(event.target.value);
-                  if (renameError) {
-                    setRenameError(null);
-                  }
+                  event.stopPropagation();
+                  handleSlotChange(event.target.value);
                 }}
-                onKeyDown={handleRenameKeyDown}
-                aria-label="Rename group"
-                disabled={isRenaming}
-              />
-              <div className="inline-form-actions">
-                <button
-                  type="button"
-                  className="action-save"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    void submitRename();
-                  }}
-                  disabled={isRenaming}
-                  aria-label="Save group name"
-                >
-                  <i className="codicon codicon-check" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="action-cancel"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onCancelRename();
-                  }}
-                  disabled={isRenaming}
-                  aria-label="Cancel rename"
-                >
-                  <i className="codicon codicon-close" aria-hidden="true" />
-                </button>
-              </div>
-            </>
-          ) : (
-            <span className="item-name">{name}</span>
-          )}
-        </div>
-        {isEditing && renameError && (
-          <span className="form-error" role="alert">
-            {renameError}
-          </span>
-        )}
-
-        <div
-          className="item-actions"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          <div className="slot-selector">
-            <select
-              id={slotControlId}
-              value={assignedSlot ? assignedSlot.toString() : ''}
-              onClick={(event) => event.stopPropagation()}
-              onChange={(event) => {
-                event.stopPropagation();
-                handleSlotChange(event.target.value);
-              }}
-              disabled={isEditing}
-            >
-              <option value="">No slot</option>
-              {quickSlotOptions.map((slot) => (
-                <option key={slot} value={slot}>
-                  Slot {slot}
-                </option>
-              ))}
-            </select>
-          </div>
-          {!isEditing && (
+                disabled={isEditing}
+              >
+                <option value="">No slot</option>
+                {quickSlotOptions.map((slot) => (
+                  <option key={slot} value={slot}>
+                    Slot {slot}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {!isEditing && (
+              <button
+                type="button"
+                className="neutral"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onStartRename(groupId, name);
+                }}
+                title="Rename group"
+              >
+                <i className="codicon codicon-edit" aria-hidden="true" />
+              </button>
+            )}
             <button
               type="button"
-              className="neutral"
+              className="danger"
               onClick={(event) => {
                 event.stopPropagation();
-                onStartRename(groupId, name);
+                messagingService.deleteGroup(groupId);
               }}
-              title="Rename group"
+              disabled={isEditing}
+              title="Delete group"
             >
-              <i className="codicon codicon-edit" aria-hidden="true" />
+              <i className="codicon codicon-trash" aria-hidden="true" />
             </button>
-          )}
-          <button
-            type="button"
-            className="danger"
-            onClick={(event) => {
-              event.stopPropagation();
-              messagingService.deleteGroup(groupId);
-            }}
-            disabled={isEditing}
-            title="Delete group"
-          >
-            <i className="codicon codicon-trash" aria-hidden="true" />
-          </button>
+          </div>
         </div>
-      </div>
-    </li>
+      </li>
+    </Tooltip>
   );
 };
