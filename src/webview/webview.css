@@ -1168,6 +1168,7 @@ body {
 .settings-content {
   border-top: 1px solid var(--vscode-panel-border);
   padding: 10px;
+  max-width: 400px;
   animation: slideDown 0.15s ease;
 }
 
@@ -1369,6 +1370,7 @@ body {
   outline: none;
   cursor: pointer;
   transition: border-color 0.1s ease;
+  box-sizing: border-box;
 }
 
 .git-mode-select:focus {
@@ -1400,6 +1402,7 @@ body {
   border: 1px solid var(--vscode-input-border, transparent);
   border-radius: 3px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .git-group-prefix::placeholder {
@@ -1413,6 +1416,23 @@ body {
 .git-group-prefix:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.history-max-entries {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.history-max-entries:focus {
+  border-color: var(--vscode-focusBorder);
 }
 
 /* File icon colours */

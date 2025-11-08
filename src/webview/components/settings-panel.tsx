@@ -202,6 +202,7 @@ export const SettingsPanel: React.FC = () => {
                 <label htmlFor="history-max-entries">Max entries</label>
                 <input
                   id="history-max-entries"
+                  className="history-max-entries"
                   type="number"
                   min="1"
                   max="100"
