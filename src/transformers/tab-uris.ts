@@ -13,7 +13,7 @@ import {
 export type TabUriTransformer = (uri: string) => string;
 
 function toRelativeUriString(absolutePath: string): string {
-  return workspace.asRelativePath(absolutePath, false);
+  return workspace.asRelativePath(Uri.parse(absolutePath), false);
 }
 
 function toAbsoluteUriString(
@@ -27,31 +27,20 @@ function transformTabUris(
   tab: TabInfo,
   transformer: TabUriTransformer
 ): TabInfo {
-  switch (tab.kind) {
-    case TabKind.TabInputText:
-    case TabKind.TabInputCustom:
-    case TabKind.TabInputNotebook: {
-      const tabEntity = tab as TabInfoText;
-      return {
-        ...tabEntity,
-        uri: transformer(tabEntity.uri)
-      };
-    }
-    case TabKind.TabInputTextDiff:
-    case TabKind.TabInputNotebookDiff: {
-      const tabEntity = tab as TabInfoTextDiff;
-      return {
-        ...tabEntity,
-        originalUri: transformer(tabEntity.originalUri),
-        modifiedUri: transformer(tabEntity.modifiedUri)
-      };
-    }
-    case TabKind.TabInputWebview:
-    case TabKind.TabInputTerminal:
-    default: {
-      return { ...tab };
-    }
+  if ('uri' in tab && typeof tab.uri === 'string') {
+    return {
+      ...tab,
+      uri: transformer(tab.uri)
+    };
+  } else if ('originalUri' in tab && 'modifiedUri' in tab) {
+    return {
+      ...tab,
+      originalUri: transformer(tab.originalUri),
+      modifiedUri: transformer(tab.modifiedUri)
+    };
   }
+  
+  return { ...tab };
 }
 
 function mapTabStateUris(
