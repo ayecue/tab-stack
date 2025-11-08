@@ -307,6 +307,18 @@ body {
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
+.tab-toolbar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tab-toolbar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .tab-toolbar-controls {
   display: flex;
   align-items: center;

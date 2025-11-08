@@ -63,61 +63,63 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
   return (
     <div className="tab-toolbar">
       <div className="tab-toolbar-top">
-        <div className="action-group" role="group" aria-label="Tab actions">
-          <button
-            type="button"
-            className="icon-button"
-            onClick={actions.onRefresh}
-            title="Refresh open tabs"
-            disabled={isLoading}
-          >
-            <i className="codicon codicon-refresh" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={actions.onSaveGroup}
-            title="Save current tabs as group"
-            disabled={isLoading || disabled?.saveGroup}
-          >
-            <i className="codicon codicon-archive" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={actions.onCreateAddon}
-            title="Save current tabs as add-on"
-            disabled={isLoading || disabled?.createAddon}
-          >
-            <i className="codicon codicon-extensions" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={actions.onSnapshot}
-            title="Snapshot current tabs"
-            disabled={isLoading || disabled?.snapshot}
-          >
-            <i className="codicon codicon-device-camera" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={actions.onRestoreSnapshot}
-            title="Restore last snapshot"
-            disabled={isLoading || disabled?.restoreSnapshot}
-          >
-            <i className="codicon codicon-history" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="icon-button danger"
-            onClick={actions.onCloseAll}
-            title="Close all tabs"
-            disabled={isLoading || disabled?.closeAll}
-          >
-            <i className="codicon codicon-close-all" aria-hidden="true" />
-          </button>
+        <div className="tab-toolbar-controls">
+          <div className="action-group" role="group" aria-label="Tab actions">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={actions.onRefresh}
+              title="Refresh open tabs"
+              disabled={isLoading}
+            >
+              <i className="codicon codicon-refresh" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={actions.onSaveGroup}
+              title="Save current tabs as group"
+              disabled={isLoading || disabled?.saveGroup}
+            >
+              <i className="codicon codicon-archive" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={actions.onCreateAddon}
+              title="Save current tabs as add-on"
+              disabled={isLoading || disabled?.createAddon}
+            >
+              <i className="codicon codicon-extensions" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={actions.onSnapshot}
+              title="Snapshot current tabs"
+              disabled={isLoading || disabled?.snapshot}
+            >
+              <i className="codicon codicon-device-camera" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={actions.onRestoreSnapshot}
+              title="Restore last snapshot"
+              disabled={isLoading || disabled?.restoreSnapshot}
+            >
+              <i className="codicon codicon-history" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-button danger"
+              onClick={actions.onCloseAll}
+              title="Close all tabs"
+              disabled={isLoading || disabled?.closeAll}
+            >
+              <i className="codicon codicon-close-all" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <div className="toolbar-stats" aria-label="Tab counts">
@@ -125,7 +127,10 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             <i className="codicon codicon-files" aria-hidden="true" />
             <strong>{totals.openTabs}</strong>
           </span>
-          <span className="toolbar-stat" title={`${totals.pinnedTabs} pinned tabs`}>
+          <span
+            className="toolbar-stat"
+            title={`${totals.pinnedTabs} pinned tabs`}
+          >
             <i className="codicon codicon-pin" aria-hidden="true" />
             <strong>{totals.pinnedTabs}</strong>
           </span>
@@ -208,7 +213,9 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
               className="type-select"
               aria-label="Filter by tab type"
               value={filters?.type ?? 'all'}
-              onChange={(e) => onFiltersChange?.({ type: e.target.value as any })}
+              onChange={(e) =>
+                onFiltersChange?.({ type: e.target.value as any })
+              }
             >
               <option value="all">All types</option>
               <option value="text">Text</option>
