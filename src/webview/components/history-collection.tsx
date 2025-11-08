@@ -1,11 +1,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
-
-interface HistoryCollectionProps {
-  deletingKeys: ReadonlySet<string>;
-  onDelete: (historyId: string) => Promise<void> | void;
-}
+import { HistoryItem } from './history-item';
 
 const formatTimestamp = (value: string): string => {
   const date = new Date(value);
@@ -15,10 +11,7 @@ const formatTimestamp = (value: string): string => {
   return date.toLocaleString();
 };
 
-export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
-  deletingKeys,
-  onDelete
-}) => {
+export const HistoryCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -86,57 +79,8 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
         <ul className="section-list" role="list">
           {filteredHistory.map((history) => {
             const { historyId, name } = history;
-            const isDeleting = deletingKeys.has(`history:${historyId}`);
-
-            const handleRestore = () => {
-              if (isDeleting) {
-                return;
-              }
-              messagingService.recoverState(historyId);
-            };
-
             return (
-              <li
-                key={historyId}
-                className="section-item"
-                tabIndex={0}
-                onClick={handleRestore}
-                onKeyDown={(event) => {
-                  if (isDeleting) {
-                    return;
-                  }
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    handleRestore();
-                  }
-                }}
-                title={isDeleting ? undefined : 'Restore this snapshot'}
-              >
-                <div className="item-row">
-                  <div className="item-primary">
-                    <span className="item-name">{name}</span>
-                  </div>
-
-                  <div
-                    className="item-actions"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onDelete(historyId);
-                      }}
-                      disabled={isDeleting}
-                      title="Delete snapshot"
-                    >
-                      <i className="codicon codicon-trash" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </li>
+              <HistoryItem key={historyId} historyId={historyId} name={name} />
             );
           })}
         </ul>

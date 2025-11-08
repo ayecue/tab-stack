@@ -7,16 +7,9 @@ import React, {
 } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { AddonItem } from './addon-item';
 
-interface AddonsCollectionProps {
-  deletingKeys: ReadonlySet<string>;
-  onDelete: (addonId: string) => Promise<void> | void;
-}
-
-export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
-  deletingKeys,
-  onDelete
-}) => {
+export const AddonsCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
   const [isCreating, setIsCreating] = useState(false);
   const [newAddonName, setNewAddonName] = useState('');
@@ -25,10 +18,6 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [editingAddonId, setEditingAddonId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const renameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) {
@@ -37,14 +26,8 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
     }
   }, [isCreating]);
 
-  useEffect(() => {
-    if (editingAddonId && renameInputRef.current) {
-      renameInputRef.current.focus();
-      renameInputRef.current.select();
-    }
-  }, [editingAddonId]);
-
   const startCreate = useCallback(() => {
+    setEditingAddonId(null);
     setIsCreating(true);
     setNewAddonName('');
     setLocalError(null);
@@ -59,9 +42,6 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
 
   const cancelRename = useCallback(() => {
     setEditingAddonId(null);
-    setRenameValue('');
-    setRenameError(null);
-    setIsRenaming(false);
   }, []);
 
   const submitCreate = useCallback(async () => {
@@ -84,59 +64,12 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
   }, [messagingService, newAddonName, cancelCreate]);
 
   const startRename = useCallback(
-    (addonId: string, currentName: string) => {
+    (addonId: string, _currentName: string) => {
       cancelCreate();
       setEditingAddonId(addonId);
-      setRenameValue(currentName);
-      setRenameError(null);
-      setIsRenaming(false);
     },
     [cancelCreate]
   );
-
-  const submitRename = useCallback(async () => {
-    if (!editingAddonId) return;
-    const normalized = renameValue.trim();
-    if (!normalized) {
-      setRenameError('Add-on name is required');
-      renameInputRef.current?.focus();
-      return;
-    }
-
-    const currentAddon = state.addons.find((a) => a.addonId === editingAddonId);
-    if (normalized === currentAddon?.name) {
-      cancelRename();
-      return;
-    }
-
-    if (
-      state.addons.some(
-        (a) => a.name === normalized && a.addonId !== editingAddonId
-      )
-    ) {
-      setRenameError('An add-on with this name already exists');
-      renameInputRef.current?.focus();
-      renameInputRef.current?.select();
-      return;
-    }
-
-    try {
-      setIsRenaming(true);
-      messagingService.renameAddon(editingAddonId, normalized);
-      cancelRename();
-    } catch (error) {
-      console.error('Failed to rename add-on', error);
-      setRenameError('Unable to rename add-on');
-      setIsRenaming(false);
-      renameInputRef.current?.focus();
-    }
-  }, [
-    messagingService,
-    editingAddonId,
-    renameValue,
-    cancelRename,
-    state.addons
-  ]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -251,152 +184,16 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
         <ul className="section-list" role="list">
           {filteredAddons.map((addon) => {
             const { addonId, name } = addon;
-            const isDeleting = deletingKeys.has(`addon:${addonId}`);
             const isEditing = editingAddonId === addonId;
             return (
-              <li
+              <AddonItem
                 key={addonId}
-                className={`section-item${isEditing ? ' editing' : ''}`}
-                tabIndex={0}
-                onClick={() => {
-                  if (isDeleting) return;
-                  if (isEditing) return;
-                  messagingService.applyAddon(addonId);
-                }}
-                onKeyDown={(event) => {
-                  if (isDeleting) return;
-                  if (isEditing) return;
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    messagingService.applyAddon(addonId);
-                  }
-                }}
-                title="Apply this add-on (adds tabs without replacing)"
-              >
-                <div className="item-row">
-                  <div className="item-primary">
-                    {isEditing ? (
-                      <>
-                        <input
-                          ref={renameInputRef}
-                          type="text"
-                          value={renameValue}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={(event) => {
-                            setRenameValue(event.target.value);
-                            if (renameError) {
-                              setRenameError(null);
-                            }
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              void submitRename();
-                            }
-                            if (event.key === 'Escape') {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              cancelRename();
-                            }
-                          }}
-                          aria-label="Rename add-on"
-                          disabled={isRenaming}
-                        />
-                        <div className="inline-form-actions">
-                          <button
-                            type="button"
-                            className="action-save"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void submitRename();
-                            }}
-                            disabled={isRenaming}
-                            aria-label="Save add-on name"
-                          >
-                            <i
-                              className="codicon codicon-check"
-                              aria-hidden="true"
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            className="action-cancel"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              cancelRename();
-                            }}
-                            disabled={isRenaming}
-                            aria-label="Cancel rename"
-                          >
-                            <i
-                              className="codicon codicon-close"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <span className="item-name">{name}</span>
-                    )}
-                  </div>
-                  {isEditing && renameError && (
-                    <span className="form-error" role="alert">
-                      {renameError}
-                    </span>
-                  )}
-                  <div
-                    className="item-actions"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    {!isEditing && (
-                      <button
-                        type="button"
-                        className="neutral"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          startRename(addonId, name);
-                        }}
-                        disabled={isDeleting}
-                        title="Rename add-on"
-                      >
-                        <i
-                          className="codicon codicon-edit"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="neutral"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        messagingService.applyAddon(addonId);
-                      }}
-                      disabled={isDeleting || isEditing}
-                      title="Apply add-on"
-                    >
-                      <i
-                        className="codicon codicon-arrow-right"
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onDelete(addonId);
-                      }}
-                      disabled={isDeleting || isEditing}
-                      title="Delete add-on"
-                    >
-                      <i className="codicon codicon-trash" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </li>
+                addonId={addonId}
+                name={name}
+                isEditing={isEditing}
+                onStartRename={startRename}
+                onCancelRename={cancelRename}
+              />
             );
           })}
 

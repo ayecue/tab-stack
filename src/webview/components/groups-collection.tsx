@@ -6,18 +6,10 @@ import React, {
   useState
 } from 'react';
 
-import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
+import { GroupItem } from './group-item';
 
-interface GroupsCollectionProps {
-  deletingKeys: ReadonlySet<string>;
-  onDelete: (groupId: string) => Promise<void> | void;
-}
-
-export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
-  deletingKeys,
-  onDelete
-}) => {
+export const GroupsCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
   const [isCreating, setIsCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -25,11 +17,7 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const renameInputRef = useRef<HTMLInputElement | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
   const quickSlotOptions = useMemo(
     () => Array.from({ length: 9 }, (_, index) => (index + 1).toString()),
     []
@@ -54,18 +42,8 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     }
   }, [isCreating]);
 
-  useEffect(() => {
-    if (editingGroupId && renameInputRef.current) {
-      renameInputRef.current.focus();
-      renameInputRef.current.select();
-    }
-  }, [editingGroupId]);
-
   const cancelRename = useCallback(() => {
     setEditingGroupId(null);
-    setRenameValue('');
-    setRenameError(null);
-    setIsRenaming(false);
   }, []);
 
   const startCreate = useCallback(() => {
@@ -83,12 +61,9 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
   }, []);
 
   const startRename = useCallback(
-    (groupId: string, currentName: string) => {
+    (groupId: string, _currentName: string) => {
       cancelCreate();
       setEditingGroupId(groupId);
-      setRenameValue(currentName);
-      setRenameError(null);
-      setIsRenaming(false);
     },
     [cancelCreate]
   );
@@ -122,54 +97,6 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     }
   }, [messagingService, newGroupName, cancelCreate]);
 
-  const submitRename = useCallback(async () => {
-    if (!editingGroupId) {
-      return;
-    }
-
-    const normalized = renameValue.trim();
-
-    if (!normalized) {
-      setRenameError('Group name is required');
-      renameInputRef.current?.focus();
-      return;
-    }
-
-    const currentGroup = state.groups.find((g) => g.groupId === editingGroupId);
-    if (normalized === currentGroup?.name) {
-      cancelRename();
-      return;
-    }
-
-    if (
-      state.groups.some(
-        (g) => g.name === normalized && g.groupId !== editingGroupId
-      )
-    ) {
-      setRenameError('A group with this name already exists');
-      renameInputRef.current?.focus();
-      renameInputRef.current?.select();
-      return;
-    }
-
-    try {
-      setIsRenaming(true);
-      messagingService.renameGroup(editingGroupId, normalized);
-      cancelRename();
-    } catch (error) {
-      console.error('Failed to rename group', error);
-      setRenameError('Unable to rename group');
-      setIsRenaming(false);
-      renameInputRef.current?.focus();
-    }
-  }, [
-    messagingService,
-    editingGroupId,
-    renameValue,
-    cancelRename,
-    state.groups
-  ]);
-
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
@@ -184,22 +111,6 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
     [submitCreate, cancelCreate]
   );
 
-  const handleRenameKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        void submitRename();
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        cancelRename();
-      }
-    },
-    [submitRename, cancelRename]
-  );
-
   const filteredGroups = useMemo(() => {
     if (!searchTerm.trim()) {
       return state.groups;
@@ -209,39 +120,6 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
       group.name.toLowerCase().includes(term)
     );
   }, [state.groups, searchTerm]);
-
-  const handleSlotChange = useCallback(
-    (groupId: string, rawValue: string) => {
-      const currentSlot = slotByGroup[groupId];
-      const value = rawValue.trim();
-
-      if (!value) {
-        if (currentSlot) {
-          messagingService.assignQuickSlot(null, groupId);
-        }
-        return;
-      }
-
-      const nextSlotNumber = Number(value);
-
-      if (
-        !Number.isInteger(nextSlotNumber) ||
-        nextSlotNumber < 1 ||
-        nextSlotNumber > 9
-      ) {
-        return;
-      }
-
-      const nextSlot = nextSlotNumber.toString() as QuickSlotIndex;
-
-      if (currentSlot === nextSlot) {
-        return;
-      }
-
-      messagingService.assignQuickSlot(nextSlot, groupId);
-    },
-    [messagingService, slotByGroup]
-  );
 
   return (
     <div className="collections-section groups-collection">
@@ -342,162 +220,22 @@ export const GroupsCollection: React.FC<GroupsCollectionProps> = ({
           {filteredGroups.map((group, index) => {
             const { groupId, name } = group;
             const assignedSlot = slotByGroup[groupId];
-            const slotControlId = `slot-${index}`;
             const isSelected = state.selectedGroup === groupId;
-            const isDeleting = deletingKeys.has(`group:${groupId}`);
             const isEditing = editingGroupId === groupId;
 
             return (
-              <li
+              <GroupItem
                 key={groupId}
-                className={`section-item${isSelected ? ' active' : ''}${isEditing ? ' editing' : ''}`}
-                tabIndex={0}
-                onClick={() => {
-                  if (isDeleting) {
-                    return;
-                  }
-                  if (isEditing) {
-                    return;
-                  }
-                  const nextId = isSelected ? null : groupId;
-                  messagingService.switchToGroup(nextId);
-                }}
-                onKeyDown={(event) => {
-                  if (isDeleting) {
-                    return;
-                  }
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    const nextId = isSelected ? null : groupId;
-                    messagingService.switchToGroup(nextId);
-                  }
-                }}
-                title={
-                  isDeleting
-                    ? undefined
-                    : isSelected
-                      ? 'Deselect this group'
-                      : 'Apply this group'
-                }
-              >
-                <div className="item-row">
-                  <div className="item-primary">
-                    {isEditing ? (
-                      <>
-                        <input
-                          ref={renameInputRef}
-                          type="text"
-                          value={renameValue}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={(event) => {
-                            setRenameValue(event.target.value);
-                            if (renameError) {
-                              setRenameError(null);
-                            }
-                          }}
-                          onKeyDown={handleRenameKeyDown}
-                          aria-label="Rename group"
-                          disabled={isRenaming}
-                        />
-                        <div className="inline-form-actions">
-                          <button
-                            type="button"
-                            className="action-save"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void submitRename();
-                            }}
-                            disabled={isRenaming}
-                            aria-label="Save group name"
-                          >
-                            <i
-                              className="codicon codicon-check"
-                              aria-hidden="true"
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            className="action-cancel"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              cancelRename();
-                            }}
-                            disabled={isRenaming}
-                            aria-label="Cancel rename"
-                          >
-                            <i
-                              className="codicon codicon-close"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <span className="item-name">{name}</span>
-                    )}
-                  </div>
-                  {isEditing && renameError && (
-                    <span className="form-error" role="alert">
-                      {renameError}
-                    </span>
-                  )}
-
-                  <div
-                    className="item-actions"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    <div className="slot-selector">
-                      <select
-                        id={slotControlId}
-                        value={assignedSlot ? assignedSlot.toString() : ''}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={(event) => {
-                          event.stopPropagation();
-                          handleSlotChange(groupId, event.target.value);
-                        }}
-                        disabled={isEditing}
-                      >
-                        <option value="">No slot</option>
-                        {quickSlotOptions.map((slot) => (
-                          <option key={slot} value={slot}>
-                            Slot {slot}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {!isEditing && (
-                      <button
-                        type="button"
-                        className="neutral"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          startRename(groupId, name);
-                        }}
-                        disabled={isDeleting}
-                        title="Rename group"
-                      >
-                        <i
-                          className="codicon codicon-edit"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onDelete(groupId);
-                      }}
-                      disabled={isDeleting || isEditing}
-                      title="Delete group"
-                    >
-                      <i className="codicon codicon-trash" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </li>
+                groupId={groupId}
+                name={name}
+                index={index}
+                isSelected={isSelected}
+                assignedSlot={assignedSlot}
+                quickSlotOptions={quickSlotOptions}
+                onStartRename={startRename}
+                isEditing={isEditing}
+                onCancelRename={cancelRename}
+              />
             );
           })}
 
