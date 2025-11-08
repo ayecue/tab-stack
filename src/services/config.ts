@@ -83,6 +83,12 @@ export class ConfigService implements Disposable {
     await config.update('groupPrefix', prefix, false);
   }
 
+  async setHistoryMaxEntries(maxEntries: number): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.history');
+    const clampedValue = Math.max(1, Math.min(100, Math.floor(maxEntries)));
+    await config.update('maxEntries', clampedValue, false);
+  }
+
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {
     return workspace.workspaceFolders || [];
   }

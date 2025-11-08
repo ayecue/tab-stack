@@ -19,7 +19,8 @@ import {
   WebviewTabMoveMessage,
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
-  WebviewUpdateGitIntegrationMessage
+  WebviewUpdateGitIntegrationMessage,
+  WebviewUpdateHistoryMaxEntriesMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
 
@@ -66,41 +67,41 @@ export class MessageHandler implements Disposable {
       }
       case WebviewMessageType.SwitchGroup: {
         const { groupId } = data as WebviewSwitchGroupMessage;
-        await tabManager.switchToGroup(groupId);
+        tabManager.switchToGroup(groupId);
         break;
       }
       case WebviewMessageType.NewGroup: {
         const { groupId } = data as WebviewNewGroupMessage;
-        await tabManager.createGroup(groupId);
+        tabManager.createGroup(groupId);
         break;
       }
       case WebviewMessageType.RenameGroup: {
         const { groupId, name } = data as WebviewRenameGroupMessage;
-        await tabManager.renameGroup(groupId, name);
+        tabManager.renameGroup(groupId, name);
         break;
       }
       case WebviewMessageType.DeleteGroup: {
         const { groupId } = data as WebviewDeleteGroupMessage;
-        await tabManager.deleteGroup(groupId);
+        tabManager.deleteGroup(groupId);
         break;
       }
       case WebviewMessageType.AddToHistory: {
-        await tabManager.takeSnapshot();
+        tabManager.takeSnapshot();
         break;
       }
       case WebviewMessageType.RecoverState: {
         const { historyId } = data as WebviewRecoverStateMessage;
-        await tabManager.recoverSnapshot(historyId);
+        tabManager.recoverSnapshot(historyId);
         break;
       }
       case WebviewMessageType.DeleteHistory: {
         const { historyId } = data as WebviewDeleteHistoryMessage;
-        await tabManager.deleteSnapshot(historyId);
+        tabManager.deleteSnapshot(historyId);
         break;
       }
       case WebviewMessageType.AssignQuickSlot: {
         const { slot, groupId } = data as WebviewAssignQuickSlotMessage;
-        await tabManager.assignQuickSlot(slot, groupId);
+        tabManager.assignQuickSlot(slot, groupId);
         break;
       }
       case WebviewMessageType.SelectWorkspaceFolder: {
@@ -120,22 +121,28 @@ export class MessageHandler implements Disposable {
         if (mode != null) await tabManager.config.setGitIntegrationMode(mode);
         if (groupPrefix != null)
           await tabManager.config.setGitIntegrationGroupPrefix(groupPrefix);
-        await tabManager.triggerSync();
+        tabManager.triggerSync();
+        break;
+      }
+      case WebviewMessageType.UpdateHistoryMaxEntries: {
+        const { maxEntries } = data as WebviewUpdateHistoryMaxEntriesMessage;
+        await tabManager.config.setHistoryMaxEntries(maxEntries);
+        tabManager.triggerSync();
         break;
       }
       case WebviewMessageType.NewAddon: {
         const { name } = data as WebviewCreateAddonMessage;
-        await tabManager.createAddon(name);
+        tabManager.createAddon(name);
         break;
       }
       case WebviewMessageType.DeleteAddon: {
         const { addonId } = data as WebviewDeleteAddonMessage;
-        await tabManager.deleteAddon(addonId);
+        tabManager.deleteAddon(addonId);
         break;
       }
       case WebviewMessageType.RenameAddon: {
         const { addonId, name } = data as WebviewRenameAddonMessage;
-        await tabManager.renameAddon(addonId, name);
+        tabManager.renameAddon(addonId, name);
         break;
       }
       case WebviewMessageType.ApplyAddon: {

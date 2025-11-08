@@ -49,6 +49,7 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
+  historyMaxEntries: number;
   rendering: boolean;
 }
 
@@ -70,6 +71,7 @@ export enum WebviewMessageType {
   SelectWorkspaceFolder = 'select-workspace-folder',
   ClearWorkspaceFolder = 'clear-workspace-folder',
   UpdateGitIntegration = 'update-git-integration',
+  UpdateHistoryMaxEntries = 'update-history-max-entries',
   NewAddon = 'new-addon',
   RenameAddon = 'rename-addon',
   DeleteAddon = 'delete-addon',
@@ -173,6 +175,12 @@ export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
   enabled?: boolean;
   mode?: GitIntegrationMode;
   groupPrefix?: string;
+}
+
+export interface WebviewUpdateHistoryMaxEntriesMessage
+  extends BaseWebviewMessage {
+  type: WebviewMessageType.UpdateHistoryMaxEntries;
+  maxEntries: number;
 }
 
 export interface WebviewCreateAddonMessage extends BaseWebviewMessage {

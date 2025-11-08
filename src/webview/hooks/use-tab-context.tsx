@@ -56,6 +56,7 @@ interface TabState {
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration?: GitIntegrationConfig;
+  historyMaxEntries?: number;
 }
 
 interface TabContextValue {

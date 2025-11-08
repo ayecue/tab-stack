@@ -491,6 +491,7 @@ export class TabManagerService implements ITabManagerService {
       masterWorkspaceFolder,
       availableWorkspaceFolders,
       gitIntegration,
+      historyMaxEntries: this._configService.getHistoryMaxEntries(),
       rendering: this._rendering
     });
   }

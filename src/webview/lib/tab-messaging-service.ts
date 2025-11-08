@@ -21,7 +21,8 @@ import {
   WebviewTabCloseMessage,
   WebviewTabMoveMessage,
   WebviewTabOpenMessage,
-  WebviewTabTogglePinMessage
+  WebviewTabTogglePinMessage,
+  WebviewUpdateHistoryMaxEntriesMessage
 } from '../../types/messages';
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { VSCodeMessenger } from './vscode-messenger';
@@ -180,6 +181,14 @@ export class TabMessagingService {
       type: WebviewMessageType.UpdateGitIntegration,
       ...config
     });
+  }
+
+  updateHistoryMaxEntries(maxEntries: number): void {
+    const message: WebviewUpdateHistoryMaxEntriesMessage = {
+      type: WebviewMessageType.UpdateHistoryMaxEntries,
+      maxEntries
+    };
+    this.messenger.sendMessage(message);
   }
 
   createAddon(name: string): void {

@@ -46,6 +46,7 @@ export interface TabStoreContext {
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig | undefined;
+  historyMaxEntries: number | undefined;
 }
 
 type SyncEvent = { type: 'sync'; data: ExtensionTabsSyncMessage };
@@ -77,7 +78,8 @@ export const createTabStore = () => {
       quickSlots: {},
       masterWorkspaceFolder: null,
       availableWorkspaceFolders: [],
-      gitIntegration: undefined
+      gitIntegration: undefined,
+      historyMaxEntries: undefined
     } as TabStoreContext,
     on: {
       sync: (context, event: SyncEvent) => ({
@@ -94,7 +96,8 @@ export const createTabStore = () => {
         quickSlots: event.data.quickSlots,
         masterWorkspaceFolder: event.data.masterWorkspaceFolder,
         availableWorkspaceFolders: event.data.availableWorkspaceFolders,
-        gitIntegration: event.data.gitIntegration
+        gitIntegration: event.data.gitIntegration,
+        historyMaxEntries: event.data.historyMaxEntries
       }),
 
       notification: (context, event: NotificationEvent) => {
