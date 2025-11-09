@@ -4,7 +4,7 @@ Save, switch, and recover complete VS Code tab layouts. Git‑aware, renameable,
 
 Create named groups and snapshots, assign quick slots for instant recall, and optionally auto‑switch groups when you change branches.
 
-![Preview](https://github.com/ayecue/tab-stack/blob/main/assets/preview.gif?raw=true)
+<img src="https://github.com/ayecue/tab-stack/blob/main/assets/preview.gif?raw=true" alt="Preview" width="600">
 
 ## Highlights
 
