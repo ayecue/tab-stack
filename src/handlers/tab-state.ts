@@ -163,7 +163,7 @@ export class TabStateHandler implements Disposable {
     };
 
     this._tabStore.send({
-      type: 'SET_STATE',
+      type: 'SYNC_STATE',
       stateContainer: newStateContainer
     });
 

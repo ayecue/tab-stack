@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
@@ -10,14 +10,6 @@ interface HistoryItemProps {
   tabCount: number;
   columnCount: number;
 }
-
-const formatTimestamp = (value: string): string => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString();
-};
 
 export const HistoryItem: React.FC<HistoryItemProps> = ({
   historyId,
