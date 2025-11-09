@@ -65,8 +65,6 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 | `tabStack.createAddon` | Save the current tabs as an add-on (applies without replacing). | — |
 | `tabStack.applyAddon` | Apply an add-on on top of your current layout. | — |
 | `tabStack.deleteAddon` | Delete a saved add-on. | — |
-| `tabStack.exportCollections` | Export your tab collections (groups, snapshots, add-ons) to a file. | — |
-| `tabStack.importCollections` | Import tab collections from a previously exported file. | — |
 | `tabStack.quickSlot1` – `tabStack.quickSlot9` | Apply the group assigned to quick slots 1–9. | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` … `9` |
 
 \*On macOS the shortcuts use `Cmd` instead of `Ctrl`.
