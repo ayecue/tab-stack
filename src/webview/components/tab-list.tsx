@@ -37,7 +37,7 @@ export const TabList: React.FC<TabListProps> = ({
     index: number;
     viewColumn: number;
   } | null>(null);
-  const [dragOverTab, setDragOverTab] = React.useState<{
+  const [dropTarget, setDropTarget] = React.useState<{
     index: number;
     viewColumn: number;
   } | null>(null);
@@ -160,7 +160,7 @@ export const TabList: React.FC<TabListProps> = ({
 
   const handleDragEnd = () => {
     setDraggedTab(null);
-    setDragOverTab(null);
+    setDropTarget(null);
   };
 
   const handleDragOver =
@@ -169,14 +169,16 @@ export const TabList: React.FC<TabListProps> = ({
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
 
-      if (
-        !draggedTab ||
-        (draggedTab.index === index && draggedTab.viewColumn === viewColumn)
-      ) {
+      if (!draggedTab) {
         return;
       }
 
-      setDragOverTab({ index, viewColumn });
+      // Simple 50/50 split - top half drops before, bottom half drops after
+      const rect = e.currentTarget.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top;
+      const dropIndex = relativeY < rect.height / 2 ? index : index + 1;
+
+      setDropTarget({ index: dropIndex, viewColumn });
     };
 
   const handleDrop =
@@ -184,16 +186,29 @@ export const TabList: React.FC<TabListProps> = ({
     (e: React.DragEvent<HTMLLIElement>) => {
       e.preventDefault();
 
-      if (!draggedTab) {
+      if (!draggedTab || !dropTarget) {
         return;
       }
 
       const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
+      let finalToIndex = dropTarget.index;
 
-      // Don't do anything if dropping on itself
-      if (fromIndex === toIndex && fromViewColumn === toViewColumn) {
+      // If moving within the same column and the source is before the target,
+      // we need to adjust because removing the source will shift indices
+      if (
+        fromViewColumn === dropTarget.viewColumn &&
+        fromIndex < finalToIndex
+      ) {
+        finalToIndex--;
+      }
+
+      // Don't do anything if dropping in the same position
+      if (
+        fromIndex === finalToIndex &&
+        fromViewColumn === dropTarget.viewColumn
+      ) {
         setDraggedTab(null);
-        setDragOverTab(null);
+        setDropTarget(null);
         return;
       }
 
@@ -201,12 +216,12 @@ export const TabList: React.FC<TabListProps> = ({
       messagingService.moveTab(
         fromIndex,
         fromViewColumn,
-        toIndex,
-        toViewColumn
+        finalToIndex,
+        dropTarget.viewColumn
       );
 
       setDraggedTab(null);
-      setDragOverTab(null);
+      setDropTarget(null);
     };
 
   if (state.loading || state.rendering) {
@@ -235,7 +250,53 @@ export const TabList: React.FC<TabListProps> = ({
     );
   }
 
+  const handleDropZoneOver =
+    (index: number, viewColumn: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (draggedTab) {
+        setDropTarget({ index, viewColumn });
+      }
+    };
+
+  const handleDropZoneDrop =
+    (index: number, viewColumn: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      if (!draggedTab || !dropTarget) {
+        return;
+      }
+
+      const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
+      let finalToIndex = index;
+
+      if (fromViewColumn === viewColumn && fromIndex < finalToIndex) {
+        finalToIndex--;
+      }
+
+      if (fromIndex === finalToIndex && fromViewColumn === viewColumn) {
+        setDraggedTab(null);
+        setDropTarget(null);
+        return;
+      }
+
+      messagingService.moveTab(
+        fromIndex,
+        fromViewColumn,
+        finalToIndex,
+        viewColumn
+      );
+      setDraggedTab(null);
+      setDropTarget(null);
+    };
+
   if (viewMode === 'flat') {
+    const maxIndex =
+      flatList.length > 0
+        ? Math.max(...flatList.map((item) => item.tabGroupIndex)) + 1
+        : 0;
+    const lastViewColumn =
+      flatList.length > 0 ? flatList[flatList.length - 1].viewColumn : 1;
+
     return (
       <ul className="tab-list-flat" role="list">
         {flatList.map(({ tab, label, isActive, tabGroupIndex, viewColumn }) => (
@@ -262,11 +323,29 @@ export const TabList: React.FC<TabListProps> = ({
               draggedTab?.viewColumn === viewColumn
             }
             isDraggedOver={
-              dragOverTab?.index === tabGroupIndex &&
-              dragOverTab?.viewColumn === viewColumn
+              dropTarget?.viewColumn === viewColumn &&
+              dropTarget?.index === tabGroupIndex
+            }
+            dropPosition={
+              dropTarget?.viewColumn === viewColumn &&
+              dropTarget?.index === tabGroupIndex
+                ? 'before'
+                : undefined
             }
           />
         ))}
+        {draggedTab && (
+          <li
+            className={`drop-zone-end ${
+              dropTarget?.index === maxIndex &&
+              dropTarget?.viewColumn === lastViewColumn
+                ? 'active'
+                : ''
+            }`}
+            onDragOver={handleDropZoneOver(maxIndex, lastViewColumn)}
+            onDrop={handleDropZoneDrop(maxIndex, lastViewColumn)}
+          />
+        )}
       </ul>
     );
   }
@@ -310,11 +389,29 @@ export const TabList: React.FC<TabListProps> = ({
                     draggedTab?.viewColumn === viewColumn
                   }
                   isDraggedOver={
-                    dragOverTab?.index === originalIndex &&
-                    dragOverTab?.viewColumn === viewColumn
+                    dropTarget?.viewColumn === viewColumn &&
+                    dropTarget?.index === originalIndex
+                  }
+                  dropPosition={
+                    dropTarget?.viewColumn === viewColumn &&
+                    dropTarget?.index === originalIndex
+                      ? 'before'
+                      : undefined
                   }
                 />
               ))}
+              {draggedTab && tabs.length > 0 && (
+                <li
+                  className={`drop-zone-end ${
+                    dropTarget?.index === tabs.length &&
+                    dropTarget?.viewColumn === viewColumn
+                      ? 'active'
+                      : ''
+                  }`}
+                  onDragOver={handleDropZoneOver(tabs.length, viewColumn)}
+                  onDrop={handleDropZoneDrop(tabs.length, viewColumn)}
+                />
+              )}
               {tabs.length === 0 && (
                 <li className="no-tabs">
                   {searchTerm.trim()

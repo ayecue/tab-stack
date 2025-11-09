@@ -16,6 +16,7 @@ interface TabItemProps {
   isColumnActive?: boolean;
   isDragging?: boolean;
   isDraggedOver?: boolean;
+  dropPosition?: 'before' | 'after';
 }
 
 export const TabItem: React.FC<TabItemProps> = ({
@@ -30,7 +31,8 @@ export const TabItem: React.FC<TabItemProps> = ({
   viewColumnLabel,
   isColumnActive,
   isDragging,
-  isDraggedOver
+  isDraggedOver,
+  dropPosition
 }) => {
   const handleClose = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -58,7 +60,9 @@ export const TabItem: React.FC<TabItemProps> = ({
     isColumnActive ? 'column-active' : '',
     isUnknownKind ? 'unknown-kind' : '',
     isDragging ? 'dragging' : '',
-    isDraggedOver ? 'drag-over' : ''
+    isDraggedOver ? 'drag-over' : '',
+    isDraggedOver && dropPosition === 'before' ? 'drop-before' : '',
+    isDraggedOver && dropPosition === 'after' ? 'drop-after' : ''
   ]
     .filter(Boolean)
     .join(' ');

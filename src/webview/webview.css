@@ -519,23 +519,43 @@ body {
 }
 
 .tab-item.drag-over {
-  background: rgba(100, 150, 255, 0.2);
-  box-shadow: 
-    0 0 0 2px var(--vscode-focusBorder),
-    0 4px 12px rgba(100, 150, 255, 0.3);
-  transform: scale(1.02);
+  position: relative;
 }
 
-.tab-item.drag-over::before {
+.tab-item.drop-before {
+  margin-top: 32px;
+  transition: margin-top 0.15s ease;
+}
+
+.tab-item.drop-before::before {
   content: '';
   position: absolute;
-  top: -4px;
+  top: -32px;
   left: 0;
   right: 0;
-  height: 3px;
-  background: var(--vscode-focusBorder);
-  border-radius: 2px;
-  box-shadow: 0 0 8px var(--vscode-focusBorder);
+  height: 28px;
+  background: var(--vscode-list-dropBackground, rgba(100, 150, 255, 0.18));
+  border: 2px dashed var(--vscode-focusBorder);
+  border-radius: 4px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-zone-end {
+  list-style: none;
+  height: 4px;
+  transition: height 0.15s ease, margin 0.15s ease;
+}
+
+.drop-zone-end.active {
+  height: 28px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  background: var(--vscode-list-dropBackground, rgba(100, 150, 255, 0.18));
+  border: 2px dashed var(--vscode-focusBorder);
+  border-radius: 4px;
 }
 
 .tab-item.unknown-kind:not(.active) {
