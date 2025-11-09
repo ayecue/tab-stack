@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 09-11-2025
+
+### Fix
+
+- Replace proposed API usage (`workspace.encode`/`workspace.decode`) with standard JavaScript `TextEncoder`/`TextDecoder` for better compatibility with VS Code forks like Cursor IDE - Thanks for reporting to [@Vadim-Kul](https://github.com/Vadim-Kul)
+
 ## [1.2.0] - 09-11-2025
 
 ### Added
