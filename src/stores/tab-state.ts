@@ -20,7 +20,8 @@ import {
   TabStateSetQuickSlotEvent,
   TabStateSetStateEvent,
   TabStateStoreContext,
-  TabStateStoreEvents
+  TabStateStoreEvents,
+  TabStateSyncEvent
 } from '../types/store';
 import { createEmptyStateContainer } from '../types/tab-manager';
 
@@ -71,13 +72,33 @@ export const createTabStateStore = (): Store<
         };
       },
 
+      SYNC_STATE: (context: TabStateStoreContext, event: TabStateSyncEvent) => {
+        const currentStateContainer = event.stateContainer;
+        const changes: Partial<TabStateStoreContext> = {
+          currentStateContainer
+        };
+
+        if (currentStateContainer.id in context.groups) {
+          changes.groups = {
+            ...context.groups,
+            [currentStateContainer.id]: currentStateContainer
+          };
+        }
+
+        return {
+          ...context,
+          ...changes
+        };
+      },
+
       SET_STATE: (
         context: TabStateStoreContext,
         event: TabStateSetStateEvent
       ) => {
         const currentStateContainer = event.stateContainer;
         const changes: Partial<TabStateStoreContext> = {
-          currentStateContainer
+          currentStateContainer,
+          previousStateContainer: context.currentStateContainer
         };
 
         if (currentStateContainer.id in context.groups) {

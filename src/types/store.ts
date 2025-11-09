@@ -31,6 +31,11 @@ export type TabStateInitializeEvent = {
   data: TabStateFileContent;
 };
 
+export type TabStateSyncEvent = {
+  type: 'SYNC_STATE';
+  stateContainer: StateContainer;
+};
+
 export type TabStateSetStateEvent = {
   type: 'SET_STATE';
   stateContainer: StateContainer;
@@ -121,6 +126,7 @@ export type TabStateImportStateEvent = {
 // Tab State Store Events Union
 export type TabStateStoreEvents =
   | TabStateInitializeEvent
+  | TabStateSyncEvent
   | TabStateSetStateEvent
   | TabStateForkStateEvent
   | TabStateCreateGroupEvent
