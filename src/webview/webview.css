@@ -222,6 +222,7 @@ body {
   background: var(--vscode-input-background);
   border: 1px solid var(--vscode-input-border, transparent);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .toggle-group button {
@@ -382,6 +383,7 @@ body {
   background: var(--vscode-input-background);
   border: 1px solid var(--vscode-input-border, transparent);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .toolbar-stat {
