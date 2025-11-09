@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - 10-11-2025
+
+### Fix
+
+- Fix quick slot selection when reassigning an index
+
 ## [1.2.3] - 09-11-2025
 
 ### Improved

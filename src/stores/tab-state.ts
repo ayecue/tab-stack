@@ -46,6 +46,9 @@ export const createTabStateStore = (): Store<
   return createStore({
     context: createInitialTabStateContext(),
     on: {
+      /**
+       * State Management Events
+       */
       INITIALIZE: (
         context: TabStateStoreContext,
         event: TabStateInitializeEvent
@@ -130,6 +133,35 @@ export const createTabStateStore = (): Store<
         };
       },
 
+      RESET_STATE: () => createInitialTabStateContext(),
+
+      IMPORT_STATE: (
+        context: TabStateStoreContext,
+        event: TabStateImportStateEvent
+      ) => {
+        const currentStateContainer =
+          event.data.selectedGroup in event.data.groups
+            ? event.data.groups[event.data.selectedGroup]
+            : null;
+        const previousStateContainer =
+          event.data.previousSelectedGroup in event.data.groups
+            ? event.data.groups[event.data.previousSelectedGroup]
+            : null;
+
+        return {
+          ...context,
+          groups: event.data.groups,
+          history: event.data.history,
+          addons: event.data.addons,
+          quickSlots: event.data.quickSlots,
+          currentStateContainer,
+          previousStateContainer
+        };
+      },
+
+      /**
+       * Group Events
+       */
       CREATE_GROUP: (
         context: TabStateStoreContext,
         event: TabStateCreateGroupEvent
@@ -188,21 +220,17 @@ export const createTabStateStore = (): Store<
           return context;
         }
 
+        const existingSlotIndexes = Object.keys(context.quickSlots).filter(
+          (index) => context.quickSlots[index] === event.groupId
+        );
         const changes: Partial<TabStateStoreContext> = {
           currentStateContainer:
             context.currentStateContainer?.id === event.groupId
-              ? createEmptyStateContainer()
+              ? null
               : context.currentStateContainer,
-          groups: excludeKeys(context.groups, [event.groupId])
+          groups: excludeKeys(context.groups, [event.groupId]),
+          quickSlots: excludeKeys(context.quickSlots, existingSlotIndexes)
         };
-
-        const slotIndex = Object.keys(context.quickSlots).find(
-          (index) => context.quickSlots[index] === event.groupId
-        );
-
-        if (slotIndex) {
-          changes.quickSlots = excludeKeys(context.quickSlots, [slotIndex]);
-        }
 
         return {
           ...context,
@@ -236,6 +264,9 @@ export const createTabStateStore = (): Store<
         };
       },
 
+      /**
+       * History Events
+       */
       ADD_TO_HISTORY: (
         context: TabStateStoreContext,
         event: TabStateAddToHistoryEvent
@@ -281,7 +312,6 @@ export const createTabStateStore = (): Store<
 
         return {
           ...context,
-          previousStateContainer: context.currentStateContainer,
           currentStateContainer: newStateContainer
         };
       },
@@ -296,13 +326,10 @@ export const createTabStateStore = (): Store<
           return context;
         }
 
-        entries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-
-        const keyToExclude = [];
-
-        for (let i = 0; i < entries.length - event.maxEntries; i++) {
-          keyToExclude.push(entries[i].id);
-        }
+        const keyToExclude = entries
+          .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+          .slice(entries.length)
+          .map((it) => it.id);
 
         return {
           ...context,
@@ -310,6 +337,9 @@ export const createTabStateStore = (): Store<
         };
       },
 
+      /**
+       * Addon Events
+       */
       CREATE_ADDON: (
         context: TabStateStoreContext,
         event: TabStateCreateAddonEvent
@@ -365,14 +395,22 @@ export const createTabStateStore = (): Store<
         };
       },
 
+      /**
+       * Quick Slot Events
+       */
       SET_QUICK_SLOT: (
         context: TabStateStoreContext,
         event: TabStateSetQuickSlotEvent
       ) => {
+        const existingIndexes = Object.keys(context.quickSlots).filter(
+          (index) => context.quickSlots[index] === event.groupId
+        );
+        const quickSlots = excludeKeys(context.quickSlots, existingIndexes);
+
         return {
           ...context,
           quickSlots: {
-            ...context.quickSlots,
+            ...quickSlots,
             [event.slot]: event.groupId
           }
         };
@@ -385,32 +423,6 @@ export const createTabStateStore = (): Store<
         return {
           ...context,
           quickSlots: excludeKeys(context.quickSlots, [event.slot])
-        };
-      },
-
-      RESET_STATE: () => createInitialTabStateContext(),
-
-      IMPORT_STATE: (
-        context: TabStateStoreContext,
-        event: TabStateImportStateEvent
-      ) => {
-        const currentStateContainer =
-          event.data.selectedGroup in event.data.groups
-            ? event.data.groups[event.data.selectedGroup]
-            : null;
-        const previousStateContainer =
-          event.data.previousSelectedGroup in event.data.groups
-            ? event.data.groups[event.data.previousSelectedGroup]
-            : null;
-
-        return {
-          ...context,
-          groups: event.data.groups,
-          history: event.data.history,
-          addons: event.data.addons,
-          quickSlots: event.data.quickSlots,
-          currentStateContainer,
-          previousStateContainer
         };
       }
     }
