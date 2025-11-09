@@ -4,53 +4,53 @@ import { GitIntegrationMode } from '../../types/config';
 import { useTabContext } from '../hooks/use-tab-context';
 
 export const SettingsPanel: React.FC = () => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleWorkspaceFolderChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
-      void actions.selectWorkspaceFolder(value || null).catch((error) => {
-        console.error('Failed to select workspace folder', error);
-      });
+      messagingService.selectWorkspaceFolder(value || null);
     },
-    [actions]
+    [messagingService]
   );
 
   const handleClearWorkspaceFolder = useCallback(() => {
-    void actions.clearWorkspaceFolder().catch((error) => {
-      console.error('Failed to clear workspace folder', error);
-    });
-  }, [actions]);
+    messagingService.clearWorkspaceFolder();
+  }, [messagingService]);
 
   const handleGitEnabledChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const enabled = event.target.checked;
-      void actions.updateGitIntegration({ enabled }).catch((error) => {
-        console.error('Failed to update git setting: enabled', error);
-      });
+      messagingService.updateGitIntegration({ enabled });
     },
-    [actions]
+    [messagingService]
   );
 
   const handleGitModeChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const mode = event.target.value as GitIntegrationMode;
-      void actions.updateGitIntegration({ mode }).catch((error) => {
-        console.error('Failed to update git setting: mode', error);
-      });
+      messagingService.updateGitIntegration({ mode });
     },
-    [actions]
+    [messagingService]
   );
 
   const handleGitGroupPrefixChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const groupPrefix = event.target.value;
-      void actions.updateGitIntegration({ groupPrefix }).catch((error) => {
-        console.error('Failed to update git setting: groupPrefix', error);
-      });
+      messagingService.updateGitIntegration({ groupPrefix });
     },
-    [actions]
+    [messagingService]
+  );
+
+  const handleHistoryMaxEntriesChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(event.target.value, 10);
+      if (!isNaN(value) && value >= 1 && value <= 100) {
+        messagingService.updateHistoryMaxEntries(value);
+      }
+    },
+    [messagingService]
   );
 
   return (
@@ -186,6 +186,64 @@ export const SettingsPanel: React.FC = () => {
             ) : (
               <p className="settings-description muted-text">Loading…</p>
             )}
+          </div>
+
+          <div className="settings-section">
+            <label className="settings-label" htmlFor="history-max-entries">
+              <i className="codicon codicon-history" aria-hidden="true" />
+              History
+            </label>
+            <p className="settings-description">
+              Maximum number of history entries to keep. Range: 1-100.
+            </p>
+
+            {state.historyMaxEntries != null ? (
+              <div className="form-row">
+                <label htmlFor="history-max-entries">Max entries</label>
+                <input
+                  id="history-max-entries"
+                  className="history-max-entries"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={state.historyMaxEntries}
+                  onChange={handleHistoryMaxEntriesChange}
+                />
+              </div>
+            ) : (
+              <p className="settings-description muted-text">Loading…</p>
+            )}
+          </div>
+
+          <div className="settings-section">
+            <label className="settings-label">
+              <i className="codicon codicon-save" aria-hidden="true" />
+              State file
+            </label>
+            <p className="settings-description">
+              Import or export the full tab manager state as a JSON file.
+            </p>
+            <div className="form-row button-row">
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => messagingService.exportStateFile()}
+                title="Export current state to a JSON file"
+              >
+                <i className="codicon codicon-export" aria-hidden="true" />
+                Export state file
+              </button>
+
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => messagingService.importStateFile()}
+                title="Import state from a JSON file"
+              >
+                <i className="codicon codicon-import" aria-hidden="true" />
+                Import state file
+              </button>
+            </div>
           </div>
         </div>
       )}

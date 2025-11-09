@@ -8,7 +8,6 @@ import {
   TabInfoNotebookDiff,
   TabInfoText,
   TabInfoTextDiff,
-  TabInfoWebview,
   TabKind
 } from '../types/tabs';
 
@@ -95,6 +94,56 @@ export async function focusGroup(index: number): Promise<void> {
 
 export async function focusTab(index: number): Promise<void> {
   await commands.executeCommand('workbench.action.openEditorAtIndex', index);
+}
+
+export async function moveTab(
+  fromViewColumn: number,
+  fromIndex: number,
+  toViewColumn: number,
+  toIndex: number
+): Promise<void> {
+  // Focus the tab we want to move
+  await focusTabInGroup(fromViewColumn, fromIndex);
+
+  // If moving to a different column, move to that column using previous/next commands
+  if (fromViewColumn !== toViewColumn) {
+    const columnDiff = toViewColumn - fromViewColumn;
+    const moveCommand =
+      columnDiff > 0
+        ? 'workbench.action.moveEditorToNextGroup'
+        : 'workbench.action.moveEditorToPreviousGroup';
+    const maxColumnMoves = Math.abs(columnDiff);
+
+    // Execute the move command the appropriate number of times
+    for (let i = 0; i < maxColumnMoves; i++) {
+      await commands.executeCommand(moveCommand);
+    }
+  }
+
+  // Get current position in the target group
+  const targetGroup = window.tabGroups.all.find(
+    (g) => g.viewColumn === toViewColumn
+  );
+
+  if (!targetGroup) {
+    return;
+  }
+
+  const currentIndex = targetGroup.tabs.findIndex((tab) => tab.isActive);
+
+  if (currentIndex !== toIndex) {
+    const indexDiff = toIndex - currentIndex;
+    const moveIndexCommand =
+      toIndex > currentIndex
+        ? 'workbench.action.moveEditorRightInGroup'
+        : 'workbench.action.moveEditorLeftInGroup';
+    const maxIndex = Math.abs(indexDiff);
+
+    // Execute the move index command the appropriate number of times
+    for (let i = 0; i < maxIndex; i++) {
+      await commands.executeCommand(moveIndexCommand);
+    }
+  }
 }
 
 export async function openTab(tab: TabInfo): Promise<boolean> {

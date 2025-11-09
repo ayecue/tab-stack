@@ -4,7 +4,7 @@ Save, switch, and recover complete VS Code tab layouts. Git‑aware, renameable,
 
 Create named groups and snapshots, assign quick slots for instant recall, and optionally auto‑switch groups when you change branches.
 
-![Preview](https://github.com/ayecue/tab-stack/blob/main/assets/preview.gif?raw=true)
+<img src="https://github.com/ayecue/tab-stack/blob/main/assets/preview.gif?raw=true" alt="Preview" width="600">
 
 ## Highlights
 
@@ -15,6 +15,9 @@ Create named groups and snapshots, assign quick slots for instant recall, and op
 - **Git‑aware workflows** — auto‑create or auto‑switch groups on branch change (configurable).
 - **Smart ordering** — groups are sorted by most recently used.
 - **Multi‑root friendly** — choose which workspace folder to track.
+- **Drag and drop** — reorder tabs between columns with intuitive drag and drop.
+- **Import/Export** — backup and share your tab collections across workspaces.
+- **Filter tabs** — quickly find and organize tabs with built-in filtering.
 
 ## Installation
 
@@ -29,6 +32,7 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 3. In **Groups**:
   - Click the edit icon to rename the group (names are fully editable).
   - Assign a quick slot (1–9) from the dropdown for instant recall.
+  - Drag and drop to reorder tabs between columns.
 4. In **Snapshots**:
   - Click the camera to capture a snapshot.
 5. (Optional) **Git Integration**:
@@ -38,7 +42,11 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
   - Quick Slots: Cmd/Ctrl + Alt + Shift + 1…9
 7. Add-ons (optional):
   - Switch to the Add-ons tab, click + to save the current tabs as an add-on.
+  - Click the edit icon to rename add-ons (just like groups).
   - Click an add-on to apply it — it adds tabs on top of your current layout without closing existing ones.
+8. Import/Export:
+  - Use the toolbar buttons to export your collections as a backup or to share with others.
+  - Import previously exported collections to restore or transfer them to another workspace.
 
 ## Commands & shortcuts
 
@@ -63,7 +71,12 @@ Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or fol
 
 ## Tips
 
-- **Rename groups anytime** — rename from the Groups list; saved tabs and quick slots stay intact.
+- **Rename groups and add-ons anytime** — rename from the Groups or Add-ons list; saved tabs and quick slots stay intact.
+- **Drag and drop** — reorder tabs between columns by dragging them in any group view.
+- **Filter tabs** — use the filter input to quickly find specific tabs in large collections.
+- **Collapsible panels** — collapse collection panels (Groups, Snapshots, Add-ons) to save space and focus on what matters.
+- **Collection tooltips** — hover over any collection item to see tab and column counts at a glance.
+- **Import/Export** — backup your collections regularly or share them with teammates for consistent setups.
 - **Git Integration modes** — choose auto‑switch, auto‑create, or full‑auto to match your workflow.
 - **Custom prefixes** — keep Git‑created groups tidy with a prefix like `git:` (e.g., `git:main`).
 - **MRU sorting** — your most recently used groups surface to the top automatically.

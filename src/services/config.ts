@@ -60,6 +60,14 @@ export class ConfigService implements Disposable {
     };
   }
 
+  getHistoryMaxEntries(): number {
+    const config = workspace.getConfiguration('tabStack.history');
+    const value = config.get<number>('maxEntries', 10);
+    // Guard against misconfiguration
+    if (typeof value !== 'number' || Number.isNaN(value)) return 10;
+    return Math.max(1, Math.min(100, Math.floor(value)));
+  }
+
   async setGitIntegrationEnabled(enabled: boolean): Promise<void> {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('enabled', enabled, false);
@@ -73,6 +81,12 @@ export class ConfigService implements Disposable {
   async setGitIntegrationGroupPrefix(prefix: string): Promise<void> {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('groupPrefix', prefix, false);
+  }
+
+  async setHistoryMaxEntries(maxEntries: number): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.history');
+    const clampedValue = Math.max(1, Math.min(100, Math.floor(maxEntries)));
+    await config.update('maxEntries', clampedValue, false);
   }
 
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {

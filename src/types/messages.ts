@@ -26,14 +26,30 @@ export interface ExtensionNotificationMessage extends BaseExtensionMessage {
 export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   type: ExtensionMessageType.Sync;
   tabState: TabState;
-  histories: Array<{ historyId: string; name: string }>;
-  groups: Array<{ groupId: string; name: string }>;
-  addons: Array<{ addonId: string; name: string }>;
+  histories: Array<{
+    historyId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  groups: Array<{
+    groupId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
+  addons: Array<{
+    addonId: string;
+    name: string;
+    tabCount: number;
+    columnCount: number;
+  }>;
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
+  historyMaxEntries: number;
   rendering: boolean;
 }
 
@@ -42,6 +58,7 @@ export enum WebviewMessageType {
   TabClose = 'tab-close',
   ClearAllTabs = 'clear-all-tabs',
   TabTogglePin = 'tab-toggle-pin',
+  TabMove = 'tab-move',
   SwitchGroup = 'switch-group',
   NewGroup = 'new-group',
   RenameGroup = 'rename-group',
@@ -54,9 +71,13 @@ export enum WebviewMessageType {
   SelectWorkspaceFolder = 'select-workspace-folder',
   ClearWorkspaceFolder = 'clear-workspace-folder',
   UpdateGitIntegration = 'update-git-integration',
+  UpdateHistoryMaxEntries = 'update-history-max-entries',
   NewAddon = 'new-addon',
+  RenameAddon = 'rename-addon',
   DeleteAddon = 'delete-addon',
-  ApplyAddon = 'apply-addon'
+  ApplyAddon = 'apply-addon',
+  ExportStateFile = 'export-state-file',
+  ImportStateFile = 'import-state-file'
 }
 
 export interface BaseWebviewMessage {
@@ -83,6 +104,14 @@ export interface WebviewTabTogglePinMessage extends BaseWebviewMessage {
   type: WebviewMessageType.TabTogglePin;
   index: number;
   columnView: number;
+}
+
+export interface WebviewTabMoveMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.TabMove;
+  fromIndex: number;
+  toIndex: number;
+  fromColumnView: number;
+  toColumnView: number;
 }
 
 export interface WebviewSwitchGroupMessage extends BaseWebviewMessage {
@@ -148,6 +177,12 @@ export interface WebviewUpdateGitIntegrationMessage extends BaseWebviewMessage {
   groupPrefix?: string;
 }
 
+export interface WebviewUpdateHistoryMaxEntriesMessage
+  extends BaseWebviewMessage {
+  type: WebviewMessageType.UpdateHistoryMaxEntries;
+  maxEntries: number;
+}
+
 export interface WebviewCreateAddonMessage extends BaseWebviewMessage {
   type: WebviewMessageType.NewAddon;
   name: string;
@@ -161,4 +196,18 @@ export interface WebviewDeleteAddonMessage extends BaseWebviewMessage {
 export interface WebviewApplyAddonMessage extends BaseWebviewMessage {
   type: WebviewMessageType.ApplyAddon;
   addonId: string;
+}
+
+export interface WebviewRenameAddonMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.RenameAddon;
+  addonId: string;
+  name: string;
+}
+
+export interface WebviewExportStateFileMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ExportStateFile;
+}
+
+export interface WebviewImportStateFileMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ImportStateFile;
 }

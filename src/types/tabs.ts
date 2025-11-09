@@ -14,6 +14,7 @@ export interface TabInfoBase {
   readonly kind: TabKind;
   readonly isActive: boolean;
   readonly isPinned: boolean;
+  readonly isDirty?: boolean;
   readonly viewColumn: number | undefined;
 }
 

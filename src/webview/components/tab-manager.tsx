@@ -5,12 +5,17 @@ import { CollectionsPanel } from './collections-panel';
 import { Header } from './header';
 import { SettingsPanel } from './settings-panel';
 import { TabList } from './tab-list';
-import { TabToolbar } from './tab-toolbar';
+import { FilterType, TabToolbar } from './tab-toolbar';
 
 const TabManagerContent: React.FC = () => {
-  const { state, actions } = useTabContext();
+  const { state, messagingService } = useTabContext();
   const [viewMode, setViewMode] = useState<'columns' | 'flat'>('columns');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filters, setFilters] = useState({
+    pinnedOnly: false,
+    dirtyOnly: false,
+    type: 'all' as FilterType
+  });
 
   const totals = useMemo(() => {
     const tabGroups = state.payload?.tabGroups ?? {};
@@ -44,34 +49,33 @@ const TabManagerContent: React.FC = () => {
     if (!tabGroups) {
       return;
     }
-    actions.clearAllTabs().catch((error) => {
-      console.error('Failed to close all tabs', error);
-    });
-  }, [actions, state.payload?.tabGroups]);
+    messagingService.clearAllTabs();
+  }, [messagingService, state.payload?.tabGroups]);
 
   const handleSaveGroup = useCallback(() => {
     const name = `Group ${new Date().toLocaleTimeString()}`;
     if (name) {
-      void actions
-        .saveGroup(name.trim())
-        .catch((error) => console.error('Failed to save group', error));
+      messagingService.createGroup(name.trim());
     }
-  }, [actions]);
+  }, [messagingService]);
 
   const handleSnapshot = useCallback(() => {
-    void actions
-      .captureHistory()
-      .catch((error) => console.error('Failed to snapshot tabs', error));
-  }, [actions]);
+    messagingService.addToHistory();
+  }, [messagingService]);
 
   const handleRestoreSnapshot = useCallback(() => {
     if (!lastSnapshotId) {
       return;
     }
-    void actions
-      .recoverHistory(lastSnapshotId)
-      .catch((error) => console.error('Failed to restore snapshot', error));
-  }, [actions, lastSnapshotId]);
+    messagingService.recoverState(lastSnapshotId);
+  }, [messagingService, lastSnapshotId]);
+
+  const handleCreateAddon = useCallback(() => {
+    const name = `Addon ${new Date().toLocaleTimeString()}`;
+    if (name) {
+      messagingService.createAddon(name.trim());
+    }
+  }, [messagingService]);
 
   const hasTabs = totals.openTabs > 0;
 
@@ -103,27 +107,34 @@ const TabManagerContent: React.FC = () => {
             isLoading={state.loading || state.rendering}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
+            filters={filters}
+            onFiltersChange={(next) =>
+              setFilters((prev) => ({ ...prev, ...next }))
+            }
             actions={{
-              onRefresh: () =>
-                void actions
-                  .requestRefresh()
-                  .catch((error) =>
-                    console.error('Failed to refresh tabs', error)
-                  ),
+              onRefresh: () => {
+                messagingService.refreshTabs();
+              },
               onSaveGroup: handleSaveGroup,
+              onCreateAddon: handleCreateAddon,
               onSnapshot: handleSnapshot,
               onRestoreSnapshot: handleRestoreSnapshot,
               onCloseAll: handleCloseAllTabs
             }}
             disabled={{
               saveGroup: !hasTabs || state.rendering,
+              createAddon: !hasTabs || state.rendering,
               snapshot: !hasTabs || state.rendering,
               restoreSnapshot: !lastSnapshotId || state.rendering,
               closeAll: !hasTabs || state.rendering
             }}
           />
 
-          <TabList viewMode={viewMode} searchTerm={searchTerm} />
+          <TabList
+            viewMode={viewMode}
+            searchTerm={searchTerm}
+            filters={filters}
+          />
         </section>
       </div>
     </div>

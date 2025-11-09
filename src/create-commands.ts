@@ -6,7 +6,7 @@ import { EXTENSION_NAME } from './types/extension';
 async function requestGroupId(
   tabManagerService: TabManagerService
 ): Promise<string | null> {
-  const groups = await tabManagerService.state.getGroups();
+  const groups = tabManagerService.state.getGroups();
   const groupNames = Object.values(groups).map((group) => group.name);
 
   if (groupNames.length === 0) {
@@ -40,7 +40,7 @@ async function requestNewGroupId(): Promise<string | null> {
 async function requestAddonId(
   tabManagerService: TabManagerService
 ): Promise<string | null> {
-  const addons = await tabManagerService.state.getAddons();
+  const addons = tabManagerService.state.getAddons();
   const addonNames = Object.values(addons).map((addon) => addon.name);
 
   if (addonNames.length === 0) {
@@ -74,7 +74,7 @@ async function requestNewAddonName(): Promise<string | null> {
 async function requestSnapshotId(
   tabManagerService: TabManagerService
 ): Promise<string | null> {
-  const snapshots = await tabManagerService.state.getHistory();
+  const snapshots = tabManagerService.state.getHistory();
   const snapshotNames = Object.values(snapshots).map(
     (snapshot) => snapshot.name
   );
@@ -130,26 +130,26 @@ export function createCommands(
   const quickSwitchCommand = commands.registerCommand(
     `${EXTENSION_NAME}.quickSwitch`,
     async () => {
-      await tabManagerService.quickSwitch();
+      tabManagerService.quickSwitch();
     }
   );
 
   const clearSelectionCommand = commands.registerCommand(
     `${EXTENSION_NAME}.clearSelection`,
     async () => {
-      await tabManagerService.switchToGroup(null);
+      tabManagerService.switchToGroup(null);
     }
   );
 
   const switchGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.switchGroup`,
     async (groupNameParam?: string) => {
-      const groups = await tabManagerService.state.getGroups();
+      const groups = tabManagerService.state.getGroups();
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
       )?.id;
       const groupId = groupIdParam || (await requestGroupId(tabManagerService));
-      await tabManagerService.switchToGroup(groupId);
+      tabManagerService.switchToGroup(groupId);
     }
   );
 
@@ -163,52 +163,52 @@ export function createCommands(
         return;
       }
 
-      await tabManagerService.createGroup(groupName);
+      tabManagerService.createGroup(groupName);
     }
   );
 
   const deleteGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteGroup`,
     async (groupNameParam?: string) => {
-      const groups = await tabManagerService.state.getGroups();
+      const groups = tabManagerService.state.getGroups();
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
       )?.id;
       const groupId = groupIdParam || (await requestGroupId(tabManagerService));
-      await tabManagerService.deleteGroup(groupId);
+      tabManagerService.deleteGroup(groupId);
     }
   );
 
   const snapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.snapshot`,
-    async () => {
-      await tabManagerService.takeSnapshot();
+    () => {
+      tabManagerService.takeSnapshot();
     }
   );
 
   const restoreSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.restoreSnapshot`,
     async (historyNameParam?: string) => {
-      const histories = await tabManagerService.state.getHistory();
+      const histories = tabManagerService.state.getHistory();
       const historyIdParam = Object.values(histories).find(
         (group) => group.name === historyNameParam
       )?.id;
       const historyId =
         historyIdParam || (await requestSnapshotId(tabManagerService));
-      await tabManagerService.recoverSnapshot(historyId);
+      tabManagerService.recoverSnapshot(historyId);
     }
   );
 
   const deleteSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteSnapshot`,
     async (historyNameParam?: string) => {
-      const histories = await tabManagerService.state.getHistory();
+      const histories = tabManagerService.state.getHistory();
       const historyIdParam = Object.values(histories).find(
         (group) => group.name === historyNameParam
       )?.id;
       const historyId =
         historyIdParam || (await requestSnapshotId(tabManagerService));
-      await tabManagerService.deleteSnapshot(historyId);
+      tabManagerService.deleteSnapshot(historyId);
     }
   );
 
@@ -222,14 +222,14 @@ export function createCommands(
         return;
       }
 
-      await tabManagerService.createAddon(addonName);
+      tabManagerService.createAddon(addonName);
     }
   );
 
   const applyAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.applyAddon`,
     async (addonNameParam?: string) => {
-      const addons = await tabManagerService.state.getAddons();
+      const addons = tabManagerService.state.getAddons();
       const addonIdParam = Object.values(addons).find(
         (addon) => addon.name === addonNameParam
       )?.id;
@@ -244,7 +244,7 @@ export function createCommands(
   const deleteAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteAddon`,
     async (addonNameParam?: string) => {
-      const addons = await tabManagerService.state.getAddons();
+      const addons = tabManagerService.state.getAddons();
       const addonIdParam = Object.values(addons).find(
         (addon) => addon.name === addonNameParam
       )?.id;
@@ -252,14 +252,14 @@ export function createCommands(
       if (!addonId) {
         return;
       }
-      await tabManagerService.deleteAddon(addonId);
+      tabManagerService.deleteAddon(addonId);
     }
   );
 
   const assignQuickSlotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.assignQuickSlot`,
     async (groupNameParam?: string, slotIndexParam?: string) => {
-      const groups = await tabManagerService.state.getGroups();
+      const groups = tabManagerService.state.getGroups();
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
       )?.id;
@@ -268,13 +268,40 @@ export function createCommands(
         return;
       }
       const slotIndex =
-        slotIndexParam == null
+        slotIndexParam != null
           ? Number(slotIndexParam)
           : await requestSlotIndex();
-      if (slotIndex === null && slotIndex > 0 && slotIndex < 10) {
+
+      // Validate slot index (must be 1-9)
+      if (slotIndex < 1 || slotIndex > 9) {
+        window.showWarningMessage('Invalid quick slot index. Choose 1-9.');
         return;
       }
-      await tabManagerService.assignQuickSlot(slotIndex, groupId);
+      tabManagerService.assignQuickSlot(slotIndex.toString(), groupId);
+    }
+  );
+
+  const clearQuickSlotCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.clearQuickSlot`,
+    async (slotIndexParam?: string) => {
+      const slotIndex =
+        slotIndexParam != null
+          ? Number(slotIndexParam)
+          : await requestSlotIndex();
+
+      if (slotIndex < 1 || slotIndex > 9) {
+        window.showWarningMessage('Invalid quick slot index. Choose 1-9.');
+        return;
+      }
+
+      tabManagerService.assignQuickSlot(slotIndex.toString(), null);
+    }
+  );
+
+  const clearAllTabsCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.clearAllTabs`,
+    async () => {
+      await tabManagerService.clearAllTabs();
     }
   );
 
@@ -284,7 +311,7 @@ export function createCommands(
     const quickSlotCommand = commands.registerCommand(
       `${EXTENSION_NAME}.quickSlot${slot}`,
       async () => {
-        await tabManagerService.applyQuickSlot(slot);
+        tabManagerService.applyQuickSlot(slot.toString());
       }
     );
 
@@ -305,6 +332,8 @@ export function createCommands(
     applyAddonCommand,
     deleteAddonCommand,
     assignQuickSlotCommand,
+    clearQuickSlotCommand,
+    clearAllTabsCommand,
     ...quickSlotCommands
   ];
 }

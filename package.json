@@ -8,7 +8,7 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
@@ -37,7 +37,8 @@
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "ovsx": "^0.10.1",
     "source-map-support": "^0.5.12",
-    "typescript": "^4.5.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "vsce": "^2.15.0"
   },
   "scripts": {
@@ -176,6 +177,16 @@
         "category": "Tab Stack"
       },
       {
+        "command": "tabStack.clearQuickSlot",
+        "title": "Clear Quick Slot Assignment",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.clearAllTabs",
+        "title": "Close All Tabs",
+        "category": "Tab Stack"
+      },
+      {
         "command": "tabStack.quickSlot1",
         "title": "Apply Quick Slot 1",
         "category": "Tab Stack"
@@ -306,6 +317,13 @@
           "type": "string",
           "default": "git:",
           "description": "Prefix for automatically created git-based groups (e.g., 'git:main', 'git:feature/login')."
+        },
+        "tabStack.history.maxEntries": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Maximum number of snapshots to retain in history. Older entries are pruned automatically."
         }
       }
     }
@@ -313,7 +331,9 @@
   "dependencies": {
     "@vscode/debugadapter": "^1.68.0",
     "@vscode/debugprotocol": "^1.68.0",
+    "@xstate/store": "^3.11.2",
     "debounce": "^2.2.0",
+    "filter-obj": "^6.1.0",
     "nanoid": "^5.1.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

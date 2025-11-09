@@ -1,12 +1,24 @@
 import React, { useMemo } from 'react';
 
-import { TabInfo } from '../../types/tabs';
+import { TabInfo, TabKind } from '../../types/tabs';
 import { useTabContext } from '../hooks/use-tab-context';
 import { TabItem } from './tab-item';
 
 interface TabListProps {
   viewMode: 'columns' | 'flat';
   searchTerm: string;
+  filters?: {
+    pinnedOnly: boolean;
+    dirtyOnly: boolean;
+    type:
+      | 'all'
+      | 'text'
+      | 'diff'
+      | 'notebook'
+      | 'webview'
+      | 'custom'
+      | 'terminal';
+  };
 }
 
 interface TabWithIndex {
@@ -14,9 +26,21 @@ interface TabWithIndex {
   originalIndex: number;
 }
 
-export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
-  const { state, actions } = useTabContext();
+export const TabList: React.FC<TabListProps> = ({
+  viewMode,
+  searchTerm,
+  filters
+}) => {
+  const { state, messagingService } = useTabContext();
   const tabGroups = state.payload?.tabGroups ?? {};
+  const [draggedTab, setDraggedTab] = React.useState<{
+    index: number;
+    viewColumn: number;
+  } | null>(null);
+  const [dropTarget, setDropTarget] = React.useState<{
+    index: number;
+    viewColumn: number;
+  } | null>(null);
   const getColumnLabel = (viewColumn: number) => {
     return `Column ${viewColumn}`;
   };
@@ -55,6 +79,37 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
     return false;
   };
 
+  const matchesType = (tab: TabInfo): boolean => {
+    const type = filters?.type ?? 'all';
+    if (type === 'all') return true;
+    switch (type) {
+      case 'text':
+        return tab.kind === TabKind.TabInputText;
+      case 'diff':
+        return (
+          tab.kind === TabKind.TabInputTextDiff ||
+          tab.kind === TabKind.TabInputNotebookDiff
+        );
+      case 'notebook':
+        return tab.kind === TabKind.TabInputNotebook;
+      case 'webview':
+        return tab.kind === TabKind.TabInputWebview;
+      case 'custom':
+        return tab.kind === TabKind.TabInputCustom;
+      case 'terminal':
+        return tab.kind === TabKind.TabInputTerminal;
+      default:
+        return true;
+    }
+  };
+
+  const passesFilters = (tab: TabInfo): boolean => {
+    if (filters?.pinnedOnly && !tab.isPinned) return false;
+    if (filters?.dirtyOnly && !(tab as any).isDirty) return false;
+    if (!matchesType(tab)) return false;
+    return true;
+  };
+
   const columns = useMemo(() => {
     return Object.values(tabGroups).map((group) => {
       const displayName = group.activeTab ? group.activeTab.label : null;
@@ -66,9 +121,11 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
       }));
 
       // Filter tabs based on search term while preserving original indices
-      const filteredTabs = searchTerm.trim()
-        ? tabsWithIndices.filter(({ tab }) => matchesSearch(tab, searchTerm))
-        : tabsWithIndices;
+      const filteredTabs = (
+        searchTerm.trim()
+          ? tabsWithIndices.filter(({ tab }) => matchesSearch(tab, searchTerm))
+          : tabsWithIndices
+      ).filter(({ tab }) => passesFilters(tab));
 
       return {
         viewColumn: group.viewColumn,
@@ -77,7 +134,7 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
         isActive: state.payload?.activeGroup === group.viewColumn
       };
     });
-  }, [tabGroups, searchTerm, state.payload?.activeGroup]);
+  }, [tabGroups, searchTerm, state.payload?.activeGroup, filters]);
 
   const flatList = useMemo(() => {
     return columns.flatMap((group) =>
@@ -92,6 +149,80 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
   }, [columns]);
 
   const totalVisibleTabs = flatList.length;
+
+  const handleDragStart =
+    (index: number, viewColumn: number) =>
+    (e: React.DragEvent<HTMLLIElement>) => {
+      setDraggedTab({ index, viewColumn });
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', `${index}:${viewColumn}`);
+    };
+
+  const handleDragEnd = () => {
+    setDraggedTab(null);
+    setDropTarget(null);
+  };
+
+  const handleDragOver =
+    (index: number, viewColumn: number) =>
+    (e: React.DragEvent<HTMLLIElement>) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      if (!draggedTab) {
+        return;
+      }
+
+      // Simple 50/50 split - top half drops before, bottom half drops after
+      const rect = e.currentTarget.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top;
+      const dropIndex = relativeY < rect.height / 2 ? index : index + 1;
+
+      setDropTarget({ index: dropIndex, viewColumn });
+    };
+
+  const handleDrop =
+    (toIndex: number, toViewColumn: number) =>
+    (e: React.DragEvent<HTMLLIElement>) => {
+      e.preventDefault();
+
+      if (!draggedTab || !dropTarget) {
+        return;
+      }
+
+      const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
+      let finalToIndex = dropTarget.index;
+
+      // If moving within the same column and the source is before the target,
+      // we need to adjust because removing the source will shift indices
+      if (
+        fromViewColumn === dropTarget.viewColumn &&
+        fromIndex < finalToIndex
+      ) {
+        finalToIndex--;
+      }
+
+      // Don't do anything if dropping in the same position
+      if (
+        fromIndex === finalToIndex &&
+        fromViewColumn === dropTarget.viewColumn
+      ) {
+        setDraggedTab(null);
+        setDropTarget(null);
+        return;
+      }
+
+      // Send the move command
+      messagingService.moveTab(
+        fromIndex,
+        fromViewColumn,
+        finalToIndex,
+        dropTarget.viewColumn
+      );
+
+      setDraggedTab(null);
+      setDropTarget(null);
+    };
 
   if (state.loading || state.rendering) {
     return (
@@ -119,20 +250,102 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
     );
   }
 
+  const handleDropZoneOver =
+    (index: number, viewColumn: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (draggedTab) {
+        setDropTarget({ index, viewColumn });
+      }
+    };
+
+  const handleDropZoneDrop =
+    (index: number, viewColumn: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      if (!draggedTab || !dropTarget) {
+        return;
+      }
+
+      const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
+      let finalToIndex = index;
+
+      if (fromViewColumn === viewColumn && fromIndex < finalToIndex) {
+        finalToIndex--;
+      }
+
+      if (fromIndex === finalToIndex && fromViewColumn === viewColumn) {
+        setDraggedTab(null);
+        setDropTarget(null);
+        return;
+      }
+
+      messagingService.moveTab(
+        fromIndex,
+        fromViewColumn,
+        finalToIndex,
+        viewColumn
+      );
+      setDraggedTab(null);
+      setDropTarget(null);
+    };
+
   if (viewMode === 'flat') {
+    const maxIndex =
+      flatList.length > 0
+        ? Math.max(...flatList.map((item) => item.tabGroupIndex)) + 1
+        : 0;
+    const lastViewColumn =
+      flatList.length > 0 ? flatList[flatList.length - 1].viewColumn : 1;
+
     return (
       <ul className="tab-list-flat" role="list">
-        {flatList.map(({ tab, label, isActive, tabGroupIndex }) => (
+        {flatList.map(({ tab, label, isActive, tabGroupIndex, viewColumn }) => (
           <TabItem
             key={`${tab.viewColumn}:${tab.label}`}
             tab={tab}
-            onOpen={() => void actions.openTab(tabGroupIndex, tab)}
-            onClose={() => void actions.closeTab(tabGroupIndex, tab)}
-            onTogglePin={() => void actions.togglePin(tabGroupIndex, tab)}
+            onOpen={() =>
+              messagingService.openTab(tabGroupIndex, tab.viewColumn)
+            }
+            onClose={() =>
+              messagingService.closeTab(tabGroupIndex, tab.viewColumn)
+            }
+            onTogglePin={() =>
+              messagingService.toggleTabPin(tabGroupIndex, tab.viewColumn)
+            }
+            onDragStart={handleDragStart(tabGroupIndex, viewColumn)}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver(tabGroupIndex, viewColumn)}
+            onDrop={handleDrop(tabGroupIndex, viewColumn)}
             viewColumnLabel={label}
             isColumnActive={isActive}
+            isDragging={
+              draggedTab?.index === tabGroupIndex &&
+              draggedTab?.viewColumn === viewColumn
+            }
+            isDraggedOver={
+              dropTarget?.viewColumn === viewColumn &&
+              dropTarget?.index === tabGroupIndex
+            }
+            dropPosition={
+              dropTarget?.viewColumn === viewColumn &&
+              dropTarget?.index === tabGroupIndex
+                ? 'before'
+                : undefined
+            }
           />
         ))}
+        {draggedTab && (
+          <li
+            className={`drop-zone-end ${
+              dropTarget?.index === maxIndex &&
+              dropTarget?.viewColumn === lastViewColumn
+                ? 'active'
+                : ''
+            }`}
+            onDragOver={handleDropZoneOver(maxIndex, lastViewColumn)}
+            onDrop={handleDropZoneDrop(maxIndex, lastViewColumn)}
+          />
+        )}
       </ul>
     );
   }
@@ -156,13 +369,49 @@ export const TabList: React.FC<TabListProps> = ({ viewMode, searchTerm }) => {
                 <TabItem
                   key={`${tab.viewColumn}:${originalIndex}:${tab.label}`}
                   tab={tab}
-                  onOpen={() => void actions.openTab(originalIndex, tab)}
-                  onClose={() => void actions.closeTab(originalIndex, tab)}
-                  onTogglePin={() => void actions.togglePin(originalIndex, tab)}
+                  onOpen={() =>
+                    messagingService.openTab(originalIndex, tab.viewColumn)
+                  }
+                  onClose={() =>
+                    messagingService.closeTab(originalIndex, tab.viewColumn)
+                  }
+                  onTogglePin={() =>
+                    messagingService.toggleTabPin(originalIndex, tab.viewColumn)
+                  }
+                  onDragStart={handleDragStart(originalIndex, viewColumn)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver(originalIndex, viewColumn)}
+                  onDrop={handleDrop(originalIndex, viewColumn)}
                   viewColumnLabel={columnLabel}
                   isColumnActive={isActive}
+                  isDragging={
+                    draggedTab?.index === originalIndex &&
+                    draggedTab?.viewColumn === viewColumn
+                  }
+                  isDraggedOver={
+                    dropTarget?.viewColumn === viewColumn &&
+                    dropTarget?.index === originalIndex
+                  }
+                  dropPosition={
+                    dropTarget?.viewColumn === viewColumn &&
+                    dropTarget?.index === originalIndex
+                      ? 'before'
+                      : undefined
+                  }
                 />
               ))}
+              {draggedTab && tabs.length > 0 && (
+                <li
+                  className={`drop-zone-end ${
+                    dropTarget?.index === tabs.length &&
+                    dropTarget?.viewColumn === viewColumn
+                      ? 'active'
+                      : ''
+                  }`}
+                  onDragOver={handleDropZoneOver(tabs.length, viewColumn)}
+                  onDrop={handleDropZoneDrop(tabs.length, viewColumn)}
+                />
+              )}
               {tabs.length === 0 && (
                 <li className="no-tabs">
                   {searchTerm.trim()

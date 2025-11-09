@@ -1,6 +1,6 @@
 import { window } from 'vscode';
 
-import { transform as v0ToV1 } from '../transformers/state-migration/v0';
+import { transform as v0ToV1 } from '../transformers/migration/v0';
 import {
   createDefaultTabStateFileContent,
   TabStateFileContent

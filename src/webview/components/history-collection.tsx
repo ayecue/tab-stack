@@ -1,11 +1,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
-
-interface HistoryCollectionProps {
-  deletingKeys: ReadonlySet<string>;
-  onDelete: (historyId: string) => Promise<void> | void;
-}
+import { HistoryItem } from './history-item';
 
 const formatTimestamp = (value: string): string => {
   const date = new Date(value);
@@ -15,11 +11,8 @@ const formatTimestamp = (value: string): string => {
   return date.toLocaleString();
 };
 
-export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
-  deletingKeys,
-  onDelete
-}) => {
-  const { state, actions } = useTabContext();
+export const HistoryCollection: React.FC = () => {
+  const { state, messagingService } = useTabContext();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredHistory = useMemo(() => {
@@ -47,9 +40,7 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
             type="button"
             className="section-action"
             onClick={() => {
-              void actions.captureHistory().catch((error) => {
-                console.error('Failed to capture history', error);
-              });
+              messagingService.addToHistory();
             }}
             aria-label="Capture new snapshot"
           >
@@ -87,60 +78,15 @@ export const HistoryCollection: React.FC<HistoryCollectionProps> = ({
       ) : (
         <ul className="section-list" role="list">
           {filteredHistory.map((history) => {
-            const { historyId, name } = history;
-            const isDeleting = deletingKeys.has(`history:${historyId}`);
-
-            const handleRestore = () => {
-              if (isDeleting) {
-                return;
-              }
-              void actions.recoverHistory(historyId).catch((error) => {
-                console.error('Failed to recover history', error);
-              });
-            };
-
+            const { historyId, name, tabCount, columnCount } = history;
             return (
-              <li
+              <HistoryItem
                 key={historyId}
-                className="section-item"
-                tabIndex={0}
-                onClick={handleRestore}
-                onKeyDown={(event) => {
-                  if (isDeleting) {
-                    return;
-                  }
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    handleRestore();
-                  }
-                }}
-                title={isDeleting ? undefined : 'Restore this snapshot'}
-              >
-                <div className="item-row">
-                  <div className="item-primary">
-                    <span className="item-name">{name}</span>
-                  </div>
-
-                  <div
-                    className="item-actions"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onDelete(historyId);
-                      }}
-                      disabled={isDeleting}
-                      title="Delete snapshot"
-                    >
-                      <i className="codicon codicon-trash" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </li>
+                historyId={historyId}
+                name={name}
+                tabCount={tabCount}
+                columnCount={columnCount}
+              />
             );
           })}
         </ul>

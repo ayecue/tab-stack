@@ -8,8 +8,15 @@ interface TabItemProps {
   onOpen: () => void;
   onClose: () => void;
   onTogglePin: () => void;
+  onDragStart?: (e: React.DragEvent<HTMLLIElement>) => void;
+  onDragEnd?: (e: React.DragEvent<HTMLLIElement>) => void;
+  onDragOver?: (e: React.DragEvent<HTMLLIElement>) => void;
+  onDrop?: (e: React.DragEvent<HTMLLIElement>) => void;
   viewColumnLabel?: string;
   isColumnActive?: boolean;
+  isDragging?: boolean;
+  isDraggedOver?: boolean;
+  dropPosition?: 'before' | 'after';
 }
 
 export const TabItem: React.FC<TabItemProps> = ({
@@ -17,8 +24,15 @@ export const TabItem: React.FC<TabItemProps> = ({
   onOpen,
   onClose,
   onTogglePin,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
   viewColumnLabel,
-  isColumnActive
+  isColumnActive,
+  isDragging,
+  isDraggedOver,
+  dropPosition
 }) => {
   const handleClose = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -44,7 +58,11 @@ export const TabItem: React.FC<TabItemProps> = ({
     tab.isActive ? 'active' : '',
     tab.isPinned ? 'pinned' : '',
     isColumnActive ? 'column-active' : '',
-    isUnknownKind ? 'unknown-kind' : ''
+    isUnknownKind ? 'unknown-kind' : '',
+    isDragging ? 'dragging' : '',
+    isDraggedOver ? 'drag-over' : '',
+    isDraggedOver && dropPosition === 'before' ? 'drop-before' : '',
+    isDraggedOver && dropPosition === 'after' ? 'drop-after' : ''
   ]
     .filter(Boolean)
     .join(' ');
@@ -73,6 +91,11 @@ export const TabItem: React.FC<TabItemProps> = ({
     <li
       className={`tab-item ${activeClass}`.trim()}
       onClick={onOpen}
+      draggable={true}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       role="listitem"
       aria-label={itemLabel}
     >

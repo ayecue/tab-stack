@@ -66,7 +66,7 @@ export class WebviewHandler implements Disposable {
     const jsWebviewUri = this._view.webview.asWebviewUri(jsUri);
 
     const htmlData = await workspace.fs.readFile(htmlUri);
-    let html = new TextDecoder().decode(htmlData);
+    let html = await workspace.decode(htmlData);
 
     html = html.replace('{{CSS_URI}}', cssWebviewUri.toString());
     html = html.replace('{{JS_URI}}', jsWebviewUri.toString());

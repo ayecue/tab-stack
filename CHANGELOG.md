@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 09-11-2025
+
+### Added
+
+- Drag and drop support for tabs between columns
+- Import/Export functionality for tab collections
+- Tab filters for better organization
+- Quick button for creating new addons
+- Rename functionality for addons
+- Collapsible collection panels for better space management
+- Collection item tooltips showing tab and column counts
+- Max history setting for webview
+
+### Improved
+
+- UI cleanup and component refactoring
+- Toolbar element repositioning for better UX
+- State synchronization improvements
+- Filter UI enhancements
+- Drag and drop UI improvements
+- Icon assets updated
+
 ## [1.1.0] - 26-10-2025
 
 ### Fix

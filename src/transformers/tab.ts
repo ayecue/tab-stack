@@ -15,6 +15,7 @@ export function transformTabToTabInfo(tab: Tab, viewColumn: number): TabInfo {
     label: tab.label,
     isActive: tab.isActive,
     isPinned: tab.isPinned,
+    isDirty: tab.isDirty,
     viewColumn,
     kind: TabKind.Unknown
   };

@@ -7,23 +7,17 @@ import React, {
 } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { AddonItem } from './addon-item';
 
-interface AddonsCollectionProps {
-  deletingKeys: ReadonlySet<string>;
-  onDelete: (addonId: string) => Promise<void> | void;
-}
-
-export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
-  deletingKeys,
-  onDelete
-}) => {
-  const { state, actions } = useTabContext();
+export const AddonsCollection: React.FC = () => {
+  const { state, messagingService } = useTabContext();
   const [isCreating, setIsCreating] = useState(false);
   const [newAddonName, setNewAddonName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [editingAddonId, setEditingAddonId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) {
@@ -33,6 +27,7 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
   }, [isCreating]);
 
   const startCreate = useCallback(() => {
+    setEditingAddonId(null);
     setIsCreating(true);
     setNewAddonName('');
     setLocalError(null);
@@ -45,6 +40,10 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
     setIsSaving(false);
   }, []);
 
+  const cancelRename = useCallback(() => {
+    setEditingAddonId(null);
+  }, []);
+
   const submitCreate = useCallback(async () => {
     const normalized = newAddonName.trim();
     if (!normalized) {
@@ -55,14 +54,22 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
 
     try {
       setIsSaving(true);
-      await actions.createAddon(normalized);
+      messagingService.createAddon(normalized);
       cancelCreate();
     } catch (error) {
       console.error('Failed to create add-on', error);
       setLocalError('Unable to save add-on');
       setIsSaving(false);
     }
-  }, [actions, newAddonName, cancelCreate]);
+  }, [messagingService, newAddonName, cancelCreate]);
+
+  const startRename = useCallback(
+    (addonId: string, _currentName: string) => {
+      cancelCreate();
+      setEditingAddonId(addonId);
+    },
+    [cancelCreate]
+  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -176,71 +183,19 @@ export const AddonsCollection: React.FC<AddonsCollectionProps> = ({
       ) : (
         <ul className="section-list" role="list">
           {filteredAddons.map((addon) => {
-            const { addonId, name } = addon;
-            const isDeleting = deletingKeys.has(`addon:${addonId}`);
+            const { addonId, name, tabCount, columnCount } = addon;
+            const isEditing = editingAddonId === addonId;
             return (
-              <li
+              <AddonItem
                 key={addonId}
-                className="section-item"
-                tabIndex={0}
-                onClick={() => {
-                  if (isDeleting) return;
-                  void actions.applyAddon(addonId).catch((error) => {
-                    console.error('Failed to apply add-on', error);
-                  });
-                }}
-                onKeyDown={(event) => {
-                  if (isDeleting) return;
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    void actions.applyAddon(addonId).catch((error) => {
-                      console.error('Failed to apply add-on', error);
-                    });
-                  }
-                }}
-                title="Apply this add-on (adds tabs without replacing)"
-              >
-                <div className="item-row">
-                  <div className="item-primary">
-                    <span className="item-name">{name}</span>
-                  </div>
-                  <div
-                    className="item-actions"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      className="neutral"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void actions.applyAddon(addonId).catch((error) => {
-                          console.error('Failed to apply add-on', error);
-                        });
-                      }}
-                      disabled={isDeleting}
-                      title="Apply add-on"
-                    >
-                      <i
-                        className="codicon codicon-arrow-right"
-                        aria-hidden="true"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void onDelete(addonId);
-                      }}
-                      disabled={isDeleting}
-                      title="Delete add-on"
-                    >
-                      <i className="codicon codicon-trash" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </li>
+                addonId={addonId}
+                name={name}
+                isEditing={isEditing}
+                onStartRename={startRename}
+                onCancelRename={cancelRename}
+                tabCount={tabCount}
+                columnCount={columnCount}
+              />
             );
           })}
 
