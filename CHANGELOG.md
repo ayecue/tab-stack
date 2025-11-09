@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.2] - 09-11-2025
+
+### Fix
+
+- Fix view mode toggle overflow issue by adding proper box-sizing to prevent it from extending beyond its container
+
 ## [1.2.1] - 09-11-2025
 
 ### Fix
