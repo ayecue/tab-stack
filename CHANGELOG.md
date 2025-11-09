@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 09-11-2025
+
+### Improved
+
+- Pass `retainContextWhenHidden` option to webview so it does not reload every time it's selected in the sidebar
+
 ## [1.2.2] - 09-11-2025
 
 ### Fix

@@ -41,7 +41,12 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(
     window.registerWebviewViewProvider(
       ViewManagerProvider.VIEW_TYPE,
-      viewManagerProvider
+      viewManagerProvider,
+      {
+        webviewOptions: {
+          retainContextWhenHidden: true
+        }
+      }
     )
   );
 
