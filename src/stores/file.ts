@@ -143,7 +143,7 @@ export async function load(
 
 async function loadFile(location: string): Promise<TabStateFileContent | null> {
   const fileContent = await workspace.fs.readFile(Uri.file(location));
-  const data = migrate(JSON.parse(await workspace.decode(fileContent)));
+  const data = migrate(JSON.parse(new TextDecoder().decode(fileContent)));
   return data;
 }
 
@@ -151,6 +151,6 @@ async function saveFile(
   location: string,
   data: TabStateFileContent
 ): Promise<void> {
-  const fileContent = await workspace.encode(JSON.stringify(data));
+  const fileContent = new TextEncoder().encode(JSON.stringify(data));
   await workspace.fs.writeFile(Uri.file(location), fileContent);
 }

@@ -370,7 +370,7 @@ export class TabManagerService implements ITabManagerService {
     if (!this._stateHandler) return;
 
     const fileContent = this._stateHandler.exportStateFile();
-    const data = await workspace.encode(JSON.stringify(fileContent, null, 2));
+    const data = new TextEncoder().encode(JSON.stringify(fileContent, null, 2));
     await workspace.fs.writeFile(Uri.parse(exportUri), data);
     this.notify(
       ExtensionNotificationKind.Info,
@@ -386,7 +386,7 @@ export class TabManagerService implements ITabManagerService {
 
     try {
       fileContent = JSON.parse(
-        await workspace.decode(data)
+        new TextDecoder().decode(data)
       ) as TabStateFileContent;
     } catch {
       this.notify(
