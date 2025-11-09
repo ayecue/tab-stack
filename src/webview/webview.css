@@ -919,6 +919,8 @@ body {
   border-radius: 4px;
   border: 1px solid var(--vscode-panel-border);
   background: rgba(255, 255, 255, 0.04);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .section-inline-form input {
@@ -929,12 +931,15 @@ body {
   background: var(--vscode-input-background);
   color: var(--vscode-input-foreground, var(--vscode-foreground));
   font-size: 12px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .inline-form-actions {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .inline-form-actions button {
@@ -988,6 +993,9 @@ body {
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
   transition: border-color 120ms ease;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .section-item.editing {
@@ -1014,6 +1022,8 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .item-primary {
@@ -1031,6 +1041,7 @@ body {
   flex: 1 1 auto;
   min-width: 0;
   border-radius: 4px;
+  max-width: 100%;
 }
 
 .section-item.editing .item-primary {
@@ -1038,6 +1049,8 @@ body {
   align-items: stretch;
   gap: 6px;
   cursor: default;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .item-primary input[type='text'] {
@@ -1048,6 +1061,8 @@ body {
   color: var(--vscode-input-foreground, var(--vscode-foreground));
   font-size: 12px;
   padding: 4px 6px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .item-primary input[type='text']:focus {
@@ -1058,6 +1073,7 @@ body {
 .section-item .inline-form-actions {
   display: inline-flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .section-item .inline-form-actions button {
@@ -1067,6 +1083,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .item-primary .item-name {
