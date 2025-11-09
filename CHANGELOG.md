@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0] - 08-11-2025
+## [1.2.0] - 09-11-2025
 
 ### Added
 
@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Rename functionality for addons
 - Collapsible collection panels for better space management
 - Collection item tooltips showing tab and column counts
+- Max history setting for webview
 
 ### Improved
 
@@ -20,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - Toolbar element repositioning for better UX
 - State synchronization improvements
 - Filter UI enhancements
+- Drag and drop UI improvements
+- Icon assets updated
 
 ## [1.1.0] - 26-10-2025
 
