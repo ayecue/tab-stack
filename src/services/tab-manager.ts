@@ -1,5 +1,12 @@
 import debounce, { DebouncedFunction } from 'debounce';
-import { Disposable, EventEmitter, Uri, window, workspace } from 'vscode';
+import {
+  Disposable,
+  EventEmitter,
+  ExtensionContext,
+  Uri,
+  window,
+  workspace
+} from 'vscode';
 
 import { TabStateHandler } from '../handlers/tab-state';
 import { GitIntegrationMode } from '../types/config';
@@ -49,6 +56,7 @@ export class TabManagerService implements ITabManagerService {
   private _rendering: boolean;
   private _nextRenderingItem: RenderingItem;
 
+  private _context: ExtensionContext;
   private _stateHandler: TabStateHandler;
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
@@ -67,6 +75,7 @@ export class TabManagerService implements ITabManagerService {
   refresh: DebouncedFunction<() => Promise<void>>;
 
   constructor(
+    context: ExtensionContext,
     layoutService: EditorLayoutService,
     configService: ConfigService,
     gitService: GitService | null = null
@@ -109,7 +118,10 @@ export class TabManagerService implements ITabManagerService {
 
   async attachStateHandler() {
     this._stateHandler = null;
-    const newStateHandler = new TabStateHandler(this._configService);
+    const newStateHandler = new TabStateHandler(
+      this._context,
+      this._configService
+    );
     await newStateHandler.initialize();
     this._stateHandler = newStateHandler;
     this.applyState();

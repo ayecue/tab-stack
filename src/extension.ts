@@ -26,6 +26,7 @@ export async function activate(context: ExtensionContext) {
   layoutService.start();
 
   const tabManagerService = new TabManagerService(
+    context,
     layoutService,
     configService,
     gitInitialized ? gitService : null

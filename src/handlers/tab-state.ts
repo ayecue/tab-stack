@@ -1,13 +1,8 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, ExtensionContext, Uri } from 'vscode';
 
 import { ConfigService } from '../services/config';
-import {
-  createFileStore,
-  load as loadFile,
-  StorageStore
-} from '../stores/file';
 import { createTabStateStore, TabStateStore } from '../stores/tab-state';
 import {
   toAbsoluteTabStateFile,
@@ -25,6 +20,7 @@ import {
 } from '../types/tab-manager';
 import { getEditorLayout } from '../utils/commands';
 import { getTabState } from '../utils/tab-utils';
+import { FileStorageHandler } from './file-storage';
 
 export class TabStateHandler implements Disposable {
   static readonly SAVE_DEBOUNCE_DELAY = 500 as const;
@@ -32,12 +28,12 @@ export class TabStateHandler implements Disposable {
   save: DebouncedFunction<() => Promise<void>>;
 
   private _tabStore: TabStateStore;
-  private _fileStore: StorageStore;
+  private _persistenceHandler: FileStorageHandler;
   private _configService: ConfigService;
   private _storeSubscription: { unsubscribe: () => void } | null;
   private _stateUpdateEmitter: EventEmitter<TabStateStoreContext>;
 
-  constructor(configService: ConfigService) {
+  constructor(context: ExtensionContext, configService: ConfigService) {
     this.save = debounce(
       this._save.bind(this),
       TabStateHandler.SAVE_DEBOUNCE_DELAY
@@ -45,14 +41,14 @@ export class TabStateHandler implements Disposable {
     this._stateUpdateEmitter = new EventEmitter<TabStateStoreContext>();
     this._configService = configService;
     this._tabStore = createTabStateStore();
-    this._fileStore = createFileStore();
+    this._persistenceHandler = new FileStorageHandler(configService);
     this._storeSubscription = null;
   }
 
   async initialize() {
-    await loadFile(this._fileStore, this._configService);
+    await this._persistenceHandler.load();
 
-    const fileState = this._fileStore.getSnapshot().context.data;
+    const fileState = this._persistenceHandler.get();
 
     if (!fileState) {
       return;
@@ -285,23 +281,20 @@ export class TabStateHandler implements Disposable {
     const snapshot = this._tabStore.getSnapshot();
     const context = snapshot.context;
 
-    this._fileStore.send({
-      type: 'SAVE',
-      data: {
-        version: CURRENT_STATE_FILE_VERSION,
-        groups: context.groups,
-        history: context.history,
-        addons: context.addons,
-        selectedGroup: context.currentStateContainer?.id || null,
-        previousSelectedGroup: context.previousStateContainer?.id || null,
-        quickSlots: context.quickSlots
-      }
+    this._persistenceHandler.save({
+      version: CURRENT_STATE_FILE_VERSION,
+      groups: context.groups,
+      history: context.history,
+      addons: context.addons,
+      selectedGroup: context.currentStateContainer?.id || null,
+      previousSelectedGroup: context.previousStateContainer?.id || null,
+      quickSlots: context.quickSlots
     });
   }
 
   dispose() {
     this._storeSubscription?.unsubscribe();
-    this._fileStore.send({ type: 'RESET' });
+    this._persistenceHandler.reset();
     this._stateUpdateEmitter.dispose();
   }
 
@@ -342,14 +335,13 @@ export class TabStateHandler implements Disposable {
   }
 
   async reloadStateFile(): Promise<void> {
-    this._fileStore.send({ type: 'RESET' });
+    this._persistenceHandler.reset();
     this._tabStore.send({ type: 'RESET_STATE' });
     await this.initialize();
   }
 
   exportStateFile(): TabStateFileContent {
-    const storageSnapshot = this._fileStore.getSnapshot();
-    const fileData = storageSnapshot.context.data;
+    const fileData = this._persistenceHandler.get();
 
     if (!fileData) {
       return null;
