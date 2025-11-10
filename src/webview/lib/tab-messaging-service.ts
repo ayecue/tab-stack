@@ -191,6 +191,13 @@ export class TabMessagingService {
     this.messenger.sendMessage(message);
   }
 
+  updateStorageType(storageType: string): void {
+    this.messenger.sendMessage({
+      type: WebviewMessageType.UpdateStorageType,
+      storageType
+    });
+  }
+
   createAddon(name: string): void {
     const message: WebviewCreateAddonMessage = {
       type: WebviewMessageType.NewAddon,

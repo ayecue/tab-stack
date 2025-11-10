@@ -1,6 +1,6 @@
 import { createStore } from '@xstate/store';
 
-import { GitIntegrationConfig } from '../../types/config';
+import { GitIntegrationConfig, StorageType } from '../../types/config';
 import {
   ExtensionMessageType,
   ExtensionNotificationKind,
@@ -47,6 +47,7 @@ export interface TabStoreContext {
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig | undefined;
   historyMaxEntries: number | undefined;
+  storageType: StorageType | undefined;
 }
 
 type SyncEvent = { type: 'sync'; data: ExtensionTabsSyncMessage };
@@ -79,7 +80,8 @@ export const createTabStore = () => {
       masterWorkspaceFolder: null,
       availableWorkspaceFolders: [],
       gitIntegration: undefined,
-      historyMaxEntries: undefined
+      historyMaxEntries: undefined,
+      storageType: undefined
     } as TabStoreContext,
     on: {
       sync: (context, event: SyncEvent) => ({
@@ -97,7 +99,8 @@ export const createTabStore = () => {
         masterWorkspaceFolder: event.data.masterWorkspaceFolder,
         availableWorkspaceFolders: event.data.availableWorkspaceFolders,
         gitIntegration: event.data.gitIntegration,
-        historyMaxEntries: event.data.historyMaxEntries
+        historyMaxEntries: event.data.historyMaxEntries,
+        storageType: event.data.storageType
       }),
 
       notification: (context, event: NotificationEvent) => {

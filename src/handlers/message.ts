@@ -20,7 +20,8 @@ import {
   WebviewTabOpenMessage,
   WebviewTabTogglePinMessage,
   WebviewUpdateGitIntegrationMessage,
-  WebviewUpdateHistoryMaxEntriesMessage
+  WebviewUpdateHistoryMaxEntriesMessage,
+  WebviewUpdateStorageTypeMessage
 } from '../types/messages';
 import { ITabManagerService } from '../types/tab-manager';
 
@@ -127,6 +128,12 @@ export class MessageHandler implements Disposable {
       case WebviewMessageType.UpdateHistoryMaxEntries: {
         const { maxEntries } = data as WebviewUpdateHistoryMaxEntriesMessage;
         await tabManager.config.setHistoryMaxEntries(maxEntries);
+        tabManager.triggerSync();
+        break;
+      }
+      case WebviewMessageType.UpdateStorageType: {
+        const { storageType } = data as WebviewUpdateStorageTypeMessage;
+        await tabManager.config.setStorageType(storageType);
         tabManager.triggerSync();
         break;
       }

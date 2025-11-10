@@ -7,7 +7,7 @@ import React, {
   useSyncExternalStore
 } from 'react';
 
-import { GitIntegrationConfig } from '../../types/config';
+import { GitIntegrationConfig, StorageType } from '../../types/config';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
 import {
@@ -57,6 +57,7 @@ interface TabState {
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration?: GitIntegrationConfig;
   historyMaxEntries?: number;
+  storageType?: StorageType;
 }
 
 interface TabContextValue {

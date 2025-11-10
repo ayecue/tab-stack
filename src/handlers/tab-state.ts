@@ -1,6 +1,6 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
-import { Disposable, Event, EventEmitter, ExtensionContext, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
 import { ConfigService } from '../services/config';
 import { createTabStateStore, TabStateStore } from '../stores/tab-state';

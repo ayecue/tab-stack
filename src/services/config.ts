@@ -78,6 +78,11 @@ export class ConfigService implements Disposable {
     return config.get<StorageType>('type', StorageType.File);
   }
 
+  async setStorageType(storageType: StorageType): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.storage');
+    await config.update('type', storageType, false);
+  }
+
   async setGitIntegrationEnabled(enabled: boolean): Promise<void> {
     const config = workspace.getConfiguration('tabStack.gitIntegration');
     await config.update('enabled', enabled, false);

@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import { GitIntegrationMode } from '../../types/config';
+import { GitIntegrationMode, StorageType } from '../../types/config';
 import { useTabContext } from '../hooks/use-tab-context';
 
 export const SettingsPanel: React.FC = () => {
@@ -49,6 +49,14 @@ export const SettingsPanel: React.FC = () => {
       if (!isNaN(value) && value >= 1 && value <= 100) {
         messagingService.updateHistoryMaxEntries(value);
       }
+    },
+    [messagingService]
+  );
+
+  const handleStorageTypeChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const storageType = event.target.value as StorageType;
+      messagingService.updateStorageType(storageType);
     },
     [messagingService]
   );
@@ -209,6 +217,39 @@ export const SettingsPanel: React.FC = () => {
                   value={state.historyMaxEntries}
                   onChange={handleHistoryMaxEntriesChange}
                 />
+              </div>
+            ) : (
+              <p className="settings-description muted-text">Loading…</p>
+            )}
+          </div>
+
+          <div className="settings-section">
+            <label className="settings-label" htmlFor="storage-type-select">
+              <i className="codicon codicon-database" aria-hidden="true" />
+              Storage Type
+            </label>
+            <p className="settings-description">
+              Choose where to store tab state. File storage saves to
+              .vscode/tmstate.json (visible, git-trackable). Workspace state
+              uses VS Code's internal storage (hidden, not in git).
+            </p>
+
+            {state.storageType != null ? (
+              <div className="form-row">
+                <label htmlFor="storage-type-select">Storage method</label>
+                <select
+                  id="storage-type-select"
+                  className="storage-type-select"
+                  value={state.storageType}
+                  onChange={handleStorageTypeChange}
+                >
+                  <option value={StorageType.File}>
+                    File (.vscode/tmstate.json)
+                  </option>
+                  <option value={StorageType.WorkspaceState}>
+                    Workspace State (hidden)
+                  </option>
+                </select>
               </div>
             ) : (
               <p className="settings-description muted-text">Loading…</p>
