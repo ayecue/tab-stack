@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 10-11-2025
+
+### Improved
+
+- Resync with VSCode tab groups after applying groups or snapshot
+- Change "Save current tabs as add-on" toolbar position to align with collections toggle
+- Optimize debounce delays
+
 ## [1.2.4] - 10-11-2025
 
 ### Fix

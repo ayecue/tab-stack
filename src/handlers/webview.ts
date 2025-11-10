@@ -15,7 +15,7 @@ import {
 } from '../types/messages';
 
 export class WebviewHandler implements Disposable {
-  static readonly DEBOUNCE_DELAY = 100 as const;
+  static readonly DEBOUNCE_DELAY = 10 as const;
 
   sendSync: (payload: Omit<ExtensionTabsSyncMessage, 'type'>) => Promise<void>;
 
