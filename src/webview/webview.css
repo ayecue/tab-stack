@@ -1208,6 +1208,9 @@ body {
   border-top: 1px solid var(--vscode-panel-border);
   padding: 10px;
   max-width: 400px;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
   animation: slideDown 0.15s ease;
 }
 
@@ -1472,6 +1475,35 @@ body {
 
 .history-max-entries:focus {
   border-color: var(--vscode-focusBorder);
+}
+
+/* Storage type select - same styling as git-mode-select and workspace-folder-select */
+.storage-type-select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.1s ease;
+  box-sizing: border-box;
+}
+
+.storage-type-select:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.storage-type-select:hover {
+  border-color: var(--vscode-input-border, rgba(255, 255, 255, 0.1));
+}
+
+.storage-type-select option {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
 }
 
 /* File icon colours */
