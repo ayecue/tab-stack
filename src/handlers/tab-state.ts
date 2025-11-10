@@ -8,6 +8,7 @@ import {
   toAbsoluteTabStateFile,
   toRelativeTabStateFile
 } from '../transformers/tab-uris';
+import { PersistenceHandler } from '../types/persistence';
 import { TabStateStoreContext } from '../types/store';
 import {
   createEmptyStateContainer,
@@ -20,7 +21,6 @@ import {
 } from '../types/tab-manager';
 import { getEditorLayout } from '../utils/commands';
 import { getTabState } from '../utils/tab-utils';
-import { FileStorageHandler } from './file-storage';
 
 export class TabStateHandler implements Disposable {
   static readonly SAVE_DEBOUNCE_DELAY = 500 as const;
@@ -28,12 +28,15 @@ export class TabStateHandler implements Disposable {
   save: DebouncedFunction<() => Promise<void>>;
 
   private _tabStore: TabStateStore;
-  private _persistenceHandler: FileStorageHandler;
+  private _persistenceHandler: PersistenceHandler;
   private _configService: ConfigService;
   private _storeSubscription: { unsubscribe: () => void } | null;
   private _stateUpdateEmitter: EventEmitter<TabStateStoreContext>;
 
-  constructor(context: ExtensionContext, configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    persistenceHandler: PersistenceHandler
+  ) {
     this.save = debounce(
       this._save.bind(this),
       TabStateHandler.SAVE_DEBOUNCE_DELAY
@@ -41,7 +44,7 @@ export class TabStateHandler implements Disposable {
     this._stateUpdateEmitter = new EventEmitter<TabStateStoreContext>();
     this._configService = configService;
     this._tabStore = createTabStateStore();
-    this._persistenceHandler = new FileStorageHandler(configService);
+    this._persistenceHandler = persistenceHandler;
     this._storeSubscription = null;
   }
 

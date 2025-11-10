@@ -9,6 +9,7 @@ import {
 } from 'vscode';
 
 import { TabStateHandler } from '../handlers/tab-state';
+import { PersistenceMediator } from '../mediators/persistence';
 import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
@@ -118,9 +119,14 @@ export class TabManagerService implements ITabManagerService {
 
   async attachStateHandler() {
     this._stateHandler = null;
-    const newStateHandler = new TabStateHandler(
+
+    const persistenceMediator = new PersistenceMediator(
       this._context,
       this._configService
+    );
+    const newStateHandler = new TabStateHandler(
+      this._configService,
+      persistenceMediator
     );
     await newStateHandler.initialize();
     this._stateHandler = newStateHandler;

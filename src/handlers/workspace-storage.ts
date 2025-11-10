@@ -1,9 +1,6 @@
 import { ExtensionContext } from 'vscode';
 
-import {
-  createPersistenceStore,
-  PersistenceStore
-} from '../stores/persistence';
+import { PersistenceStore } from '../stores/persistence';
 import { transform as migrate } from '../transformers/migration';
 import { PersistenceHandler } from '../types/persistence';
 import {
@@ -17,12 +14,27 @@ export class WorkspaceStorageHandler implements PersistenceHandler {
   private _context: ExtensionContext;
   private _store: PersistenceStore;
 
-  constructor(context: ExtensionContext) {
+  constructor(context: ExtensionContext, store: PersistenceStore) {
     this._context = context;
-    this._store = createPersistenceStore(this);
+    this._store = store;
   }
 
   async load(): Promise<void> {
+    const snapshot = this._store.getSnapshot();
+
+    if (snapshot.context.isLoading) {
+      return new Promise((resolve) => {
+        const unsubscribe = this._store.subscribe((state) => {
+          if (!state.context.isLoading) {
+            unsubscribe.unsubscribe();
+            resolve();
+          }
+        });
+      });
+    }
+
+    this._store.send({ type: 'LOAD' });
+
     try {
       const rawData =
         this._context.workspaceState.get<TabStateFileContent>(

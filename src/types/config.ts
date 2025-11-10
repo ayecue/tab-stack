@@ -4,6 +4,11 @@ export enum GitIntegrationMode {
   FullAuto = 'full-auto'
 }
 
+export enum StorageType {
+  File = 'file',
+  WorkspaceState = 'workspace-state'
+}
+
 export interface GitIntegrationConfig {
   enabled: boolean;
   mode: GitIntegrationMode;
@@ -13,4 +18,5 @@ export interface GitIntegrationConfig {
 export interface ConfigChangeEvent {
   masterWorkspaceFolder: string | null;
   gitIntegration?: GitIntegrationConfig;
+  storageType?: StorageType;
 }

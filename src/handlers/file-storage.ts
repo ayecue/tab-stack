@@ -1,10 +1,7 @@
 import { Uri, workspace } from 'vscode';
 
 import { ConfigService } from '../services/config';
-import {
-  createPersistenceStore,
-  PersistenceStore
-} from '../stores/persistence';
+import { PersistenceStore } from '../stores/persistence';
 import { transform as migrate } from '../transformers/migration';
 import { PersistenceHandler } from '../types/persistence';
 import {
@@ -33,11 +30,11 @@ export class FileStorageHandler implements PersistenceHandler {
   private _location: string | null;
   private _storageType: 'in-memory' | 'persistent' | null;
 
-  constructor(configService: ConfigService) {
+  constructor(configService: ConfigService, store: PersistenceStore) {
     this._location = null;
     this._storageType = null;
     this._configService = configService;
-    this._store = createPersistenceStore(this);
+    this._store = store;
   }
 
   async load(): Promise<void> {
