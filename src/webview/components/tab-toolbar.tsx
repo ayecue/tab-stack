@@ -86,20 +86,20 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             <button
               type="button"
               className="icon-button"
-              onClick={actions.onCreateAddon}
-              title="Save current tabs as add-on"
-              disabled={isLoading || disabled?.createAddon}
-            >
-              <i className="codicon codicon-extensions" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="icon-button"
               onClick={actions.onSnapshot}
               title="Snapshot current tabs"
               disabled={isLoading || disabled?.snapshot}
             >
               <i className="codicon codicon-device-camera" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={actions.onCreateAddon}
+              title="Save current tabs as add-on"
+              disabled={isLoading || disabled?.createAddon}
+            >
+              <i className="codicon codicon-extensions" aria-hidden="true" />
             </button>
             <button
               type="button"

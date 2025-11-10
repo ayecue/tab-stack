@@ -27,7 +27,7 @@ import { getEditorLayout } from '../utils/commands';
 import { getTabState } from '../utils/tab-utils';
 
 export class TabStateHandler implements Disposable {
-  static readonly SAVE_DEBOUNCE_DELAY = 200 as const;
+  static readonly SAVE_DEBOUNCE_DELAY = 500 as const;
 
   save: DebouncedFunction<() => Promise<void>>;
 

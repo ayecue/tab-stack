@@ -43,8 +43,8 @@ import {
 } from './git';
 
 export class TabManagerService implements ITabManagerService {
-  static readonly RENDER_COOLDOWN_MS = 100;
-  static readonly REFRESH_DEBOUNCE_DELAY = 100;
+  static readonly RENDER_COOLDOWN_MS = 100 as const;
+  static readonly REFRESH_DEBOUNCE_DELAY = 10 as const;
 
   private _rendering: boolean;
   private _nextRenderingItem: RenderingItem;
@@ -264,7 +264,7 @@ export class TabManagerService implements ITabManagerService {
     }
 
     this._rendering = false;
-    this.triggerSync();
+    void this.refresh();
   }
 
   private async render() {
