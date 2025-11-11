@@ -85,6 +85,7 @@ export class TabManagerService implements ITabManagerService {
       this._refresh.bind(this),
       TabManagerService.REFRESH_DEBOUNCE_DELAY
     );
+    this._context = context;
     this._nextRenderingItem = null;
     this._stateHandler = null;
     this._rendering = false;
