@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.6] - 11-11-2025
+
+### Added
+
+- **Storage type setting**: Users can now choose between file-based storage (`.vscode/tmstate.json`) and VS Code's workspace state storage (hidden, not in git)
+
 ## [1.2.5] - 10-11-2025
 
 ### Improved
