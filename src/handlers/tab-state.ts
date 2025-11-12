@@ -8,7 +8,9 @@ import {
   toAbsoluteTabStateFile,
   toRelativeTabStateFile
 } from '../transformers/tab-uris';
+import { aggregateTrackerKeysFromTabState } from '../transformers/tracker-key';
 import { PersistenceHandler } from '../types/persistence';
+import { EditorSelection, SelectionRange } from '../types/selection-tracker';
 import { TabStateStoreContext } from '../types/store';
 import {
   createEmptyStateContainer,
@@ -70,14 +72,16 @@ export class TabStateHandler implements Disposable {
 
     // Subscribe to store changes to trigger saves
     this._storeSubscription = this._tabStore.subscribe(async () => {
-      if (this._tabStore.getSnapshot().context.currentStateContainer == null) {
+      const snapshot = this._tabStore.getSnapshot();
+
+      if (snapshot.context.currentStateContainer == null) {
         void this.syncStateWithVSCode();
         return;
       }
 
       void this.save();
 
-      this._stateUpdateEmitter.fire(this._tabStore.getSnapshot().context);
+      this._stateUpdateEmitter.fire(snapshot.context);
     });
   }
 
@@ -152,14 +156,54 @@ export class TabStateHandler implements Disposable {
     const tabState = getTabState();
     const layout = await getEditorLayout();
     const snapshot = this._tabStore.getSnapshot();
+    const availableSelectionIds = aggregateTrackerKeysFromTabState(tabState);
+    const baseStateContainer =
+      snapshot.context.currentStateContainer ?? createEmptyStateContainer();
+    const selectionMap = baseStateContainer.state.selectionMap ?? {};
     const newStateContainer = {
-      ...(snapshot.context.currentStateContainer ??
-        createEmptyStateContainer()),
+      ...baseStateContainer,
       state: {
+        selectionMap: availableSelectionIds.reduce<
+          Record<string, SelectionRange>
+        >((result, id) => {
+          if (id in selectionMap) {
+            result[id] = selectionMap[id];
+          }
+          return result;
+        }, {}),
         tabState,
         layout
       }
     };
+
+    this._tabStore.send({
+      type: 'SYNC_STATE',
+      stateContainer: newStateContainer
+    });
+
+    return newStateContainer;
+  }
+
+  syncSelection(editorSelection: EditorSelection) {
+    const snapshot = this._tabStore.getSnapshot();
+    const baseStateContainer =
+      snapshot.context.currentStateContainer ?? createEmptyStateContainer();
+    const selectionMap = baseStateContainer.state.selectionMap ?? {};
+    const newStateContainer = {
+      ...baseStateContainer,
+      state: {
+        ...baseStateContainer.state,
+        selectionMap: {
+          ...selectionMap,
+          [editorSelection.id]: editorSelection.selection
+        }
+      }
+    };
+
+    console.log(
+      '>>',
+      JSON.stringify(newStateContainer.state.selectionMap, null, 2)
+    );
 
     this._tabStore.send({
       type: 'SYNC_STATE',

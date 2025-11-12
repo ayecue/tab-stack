@@ -1,9 +1,11 @@
-import { Tab, TabGroup, TabInputNotebookDiff, window } from 'vscode';
+import { Tab, TabGroup, window } from 'vscode';
 
 import { transformTabToTabInfo } from '../transformers/tab';
+import { SelectionRange } from '../types/selection-tracker';
 import {
   TabGroupInfo,
   TabInfo,
+  TabInfoNotebookDiff,
   TabInfoText,
   TabKind,
   TabState
@@ -60,17 +62,17 @@ export function isTabInfoEqual(tabA: TabInfo, tabB: TabInfo): boolean {
     case TabKind.TabInputNotebook:
     case TabKind.TabInputCustom:
     case TabKind.TabInputWebview: {
-      const tabAText = tabA as unknown as TabInfoText;
-      const tabBText = tabB as unknown as TabInfoText;
+      const tabAText = tabA as TabInfoText;
+      const tabBText = tabB as TabInfoText;
       return tabAText.uri === tabBText.uri;
     }
     case TabKind.TabInputTextDiff:
     case TabKind.TabInputNotebookDiff: {
-      const tabADiff = tabA as unknown as TabInputNotebookDiff;
-      const tabBDiff = tabB as unknown as TabInputNotebookDiff;
+      const tabADiff = tabA as TabInfoNotebookDiff;
+      const tabBDiff = tabB as TabInfoNotebookDiff;
       return (
-        tabADiff.original === tabBDiff.original &&
-        tabADiff.modified === tabBDiff.modified
+        tabADiff.originalUri === tabBDiff.originalUri &&
+        tabADiff.modifiedUri === tabBDiff.modifiedUri
       );
     }
     case TabKind.TabInputTerminal:
@@ -114,7 +116,40 @@ export function isTabStateEqual(stateA: TabState, stateB: TabState): boolean {
   return true;
 }
 
-export function getTabState() {
+export function isSelectionMapEqual(
+  mapA: Record<string, SelectionRange>,
+  mapB: Record<string, SelectionRange>
+): boolean {
+  if (mapA == null || mapB == null) return mapA == mapB;
+
+  const keysA = Object.keys(mapA);
+  const keysB = Object.keys(mapB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (let i = 0; i < keysA.length; i++) {
+    const key = keysA[i];
+    if (!(key in mapB)) {
+      return false;
+    }
+    const rangeA = mapA[key];
+    const rangeB = mapB[key];
+    if (
+      rangeA.start.line !== rangeB.start.line ||
+      rangeA.start.character !== rangeB.start.character ||
+      rangeA.end.line !== rangeB.end.line ||
+      rangeA.end.character !== rangeB.end.character
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function getTabState(): TabState {
   const tabState: TabState = {
     tabGroups: {},
     activeGroup: window.tabGroups.activeTabGroup.viewColumn ?? null
@@ -152,7 +187,8 @@ export interface ApplyTabStateOptions {
 
 export async function applyTabState(
   tabState: TabState,
-  options: ApplyTabStateOptions
+  options: ApplyTabStateOptions,
+  selectionMap?: Record<string, SelectionRange>
 ): Promise<void> {
   const tabGroupItems = Object.values(tabState.tabGroups);
   const pinnedTabs: { tab: TabInfo; index: number }[] = [];
@@ -164,13 +200,12 @@ export async function applyTabState(
 
   await Promise.all(
     tabGroupItems.map(async (group) => {
-      return await Promise.all(
-        group.tabs.map(async (tab, index) => {
-          if (tab.isActive) activeTabs.push({ tab, index });
-          await openTab(tab);
-          if (tab.isPinned) pinnedTabs.push({ tab, index });
-        })
-      );
+      for (let i = 0; i < group.tabs.length; i++) {
+        const tab = group.tabs[i];
+        if (tab.isPinned) pinnedTabs.push({ tab, index: i });
+        if (tab.isActive) activeTabs.push({ tab, index: i });
+        await openTab(tab, selectionMap);
+      }
     })
   );
 

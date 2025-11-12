@@ -43,7 +43,8 @@ export function transform(payload: any): TabStateFileContentV1 {
         name: groupName,
         state: {
           tabState: oldState.tabState,
-          layout: oldState.layout
+          layout: oldState.layout,
+          selectionMap: {}
         },
         lastSelectedAt: 0,
         createdAt: new Date().getTime()

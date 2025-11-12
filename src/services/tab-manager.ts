@@ -40,6 +40,7 @@ import {
   findTabByViewColumnAndIndex,
   findTabGroupByViewColumn,
   getTabState,
+  isSelectionMapEqual,
   isTabStateEqual
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
@@ -49,6 +50,7 @@ import {
   GitRepositoryOpenEvent,
   GitService
 } from './git';
+import { SelectionTrackerService } from './selection-tracker';
 
 export class TabManagerService implements ITabManagerService {
   static readonly RENDER_COOLDOWN_MS = 100 as const;
@@ -61,6 +63,7 @@ export class TabManagerService implements ITabManagerService {
   private _stateHandler: TabStateHandler;
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
+  private _selectionTrackerService: SelectionTrackerService;
   private _gitService: GitService | null;
 
   private _syncViewEmitter: EventEmitter<
@@ -79,6 +82,7 @@ export class TabManagerService implements ITabManagerService {
     context: ExtensionContext,
     layoutService: EditorLayoutService,
     configService: ConfigService,
+    selectionTrackerService: SelectionTrackerService,
     gitService: GitService | null = null
   ) {
     this.refresh = debounce(
@@ -91,6 +95,7 @@ export class TabManagerService implements ITabManagerService {
     this._rendering = false;
     this._layoutService = layoutService;
     this._configService = configService;
+    this._selectionTrackerService = selectionTrackerService;
     this._gitService = gitService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
@@ -148,6 +153,17 @@ export class TabManagerService implements ITabManagerService {
     );
     this._disposables.push(
       this._layoutService.onDidChangeLayout(() => void this.refresh())
+    );
+    this._disposables.push(
+      this._selectionTrackerService.onDidChangeSelection((editorSelection) => {
+        if (!this._stateHandler) {
+          return;
+        }
+        if (this._rendering) {
+          return;
+        }
+        this._stateHandler.syncSelection(editorSelection);
+      })
     );
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
@@ -268,6 +284,10 @@ export class TabManagerService implements ITabManagerService {
             await getEditorLayout(),
             this._nextRenderingItem.stateContainer.state.layout,
             true
+          ) &&
+          isSelectionMapEqual(
+            this._stateHandler.stateContainer?.state.selectionMap,
+            this._nextRenderingItem.stateContainer.state.selectionMap
           )
         ) {
           this._nextRenderingItem = null;
@@ -304,11 +324,15 @@ export class TabManagerService implements ITabManagerService {
 
     this._layoutService.setLayout(currentStateContainer.state.layout);
     await setEditorLayout(currentStateContainer.state.layout);
-    await applyTabState(currentStateContainer.state.tabState, {
-      preserveActiveTab: true,
-      preservePinnedTabs: true,
-      preserveTabFocus: true
-    });
+    await applyTabState(
+      currentStateContainer.state.tabState,
+      {
+        preserveActiveTab: true,
+        preservePinnedTabs: true,
+        preserveTabFocus: true
+      },
+      currentStateContainer.state.selectionMap
+    );
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
@@ -541,11 +565,15 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    await applyTabState(addon.state.tabState, {
-      preserveActiveTab: false,
-      preservePinnedTabs: true,
-      preserveTabFocus: false
-    });
+    await applyTabState(
+      addon.state.tabState,
+      {
+        preserveActiveTab: false,
+        preservePinnedTabs: true,
+        preserveTabFocus: false
+      },
+      addon.state.selectionMap
+    );
   }
 
   switchToGroup(groupId: string | null) {
