@@ -56,13 +56,13 @@ export function createEmptyStateContainer(): StateContainer {
   };
 }
 
-export const CURRENT_STATE_FILE_VERSION = 1;
+export const CURRENT_STATE_FILE_VERSION = 2;
 
 export interface TabStateFileContent {
   version?: number;
   groups: Record<string, StateContainer>;
   history: Record<string, StateContainer>;
-  addons?: Record<string, StateContainer>;
+  addons: Record<string, StateContainer>;
   selectedGroup: string;
   previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;
