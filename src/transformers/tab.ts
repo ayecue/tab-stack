@@ -9,7 +9,6 @@ import {
 } from 'vscode';
 
 import { TabInfo, TabInfoBase, TabKind } from '../types/tabs';
-import { normalizeUri } from '../utils/normalize-uri';
 
 export function transformTabToTabInfo(tab: Tab, viewColumn: number): TabInfo {
   const base: TabInfoBase = {
@@ -24,14 +23,14 @@ export function transformTabToTabInfo(tab: Tab, viewColumn: number): TabInfo {
   if (tab.input instanceof TabInputText) {
     return {
       ...base,
-      uri: normalizeUri(tab.input.uri.toString()),
+      uri: tab.input.uri.toString(),
       kind: TabKind.TabInputText
     };
   } else if (tab.input instanceof TabInputTextDiff) {
     return {
       ...base,
-      originalUri: normalizeUri(tab.input.original.toString()),
-      modifiedUri: normalizeUri(tab.input.modified.toString()),
+      originalUri: tab.input.original.toString(),
+      modifiedUri: tab.input.modified.toString(),
       kind: TabKind.TabInputTextDiff
     };
   } else if (tab.input instanceof TabInputCustom) {
@@ -44,15 +43,15 @@ export function transformTabToTabInfo(tab: Tab, viewColumn: number): TabInfo {
   } else if (tab.input instanceof TabInputNotebook) {
     return {
       ...base,
-      uri: normalizeUri(tab.input.uri.toString()),
+      uri: tab.input.uri.toString(),
       notebookType: tab.input.notebookType,
       kind: TabKind.TabInputNotebook
     };
   } else if (tab.input instanceof TabInputNotebookDiff) {
     return {
       ...base,
-      originalUri: normalizeUri(tab.input.original.toString()),
-      modifiedUri: normalizeUri(tab.input.modified.toString()),
+      originalUri: tab.input.original.toString(),
+      modifiedUri: tab.input.modified.toString(),
       notebookType: tab.input.notebookType,
       kind: TabKind.TabInputNotebookDiff
     };
