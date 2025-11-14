@@ -76,9 +76,11 @@ export class EditorLayoutService implements Disposable {
       this._timer = null;
     }
 
-    this._emitter.dispose();
+    if (this._emitter) {
+      this._emitter.dispose();
+      this._emitter = null;
+    }
 
-    this._emitter = null;
     this._lastLayout = null;
   }
 }

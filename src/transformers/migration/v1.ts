@@ -1,6 +1,9 @@
-import { QuickSlotAssignments, TabStateFileContent } from '../../types/tab-manager';
-import { TabState } from '../../types/tabs';
 import { Layout } from '../../types/commands';
+import {
+  QuickSlotAssignments,
+  TabStateFileContent
+} from '../../types/tab-manager';
+import { TabState } from '../../types/tabs';
 
 export interface TabManagerStateV1 {
   tabState: TabState;
@@ -63,9 +66,7 @@ export function transform(payload: any): TabStateFileContent {
     }
 
     if (content.addons) {
-      for (const [addonId, addonState] of Object.entries(
-        content.addons
-      )) {
+      for (const [addonId, addonState] of Object.entries(content.addons)) {
         migratedContent.groups[addonId] = {
           ...addonState,
           state: {

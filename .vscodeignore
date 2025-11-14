@@ -11,12 +11,17 @@ tsconfig.json
 .npmrc
 .circleci
 .env
+coverage
+tests
+docs
 package-lock.json
 assets
 node_modules
 copy-assets.cjs
 build-node.cjs
 build-webview.cjs
+build-browser.cjs
+vitest.config.ts
 !webview.js
 !webview.html
 !webview.css

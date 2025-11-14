@@ -1,8 +1,8 @@
 import { nanoid } from 'nanoid';
 
+import { Layout } from '../../types/commands';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabGroupInfo } from '../../types/tabs';
-import { Layout } from '../../types/commands';
 import { TabStateFileContentV1 } from './v1';
 
 export interface TabStateV0 {

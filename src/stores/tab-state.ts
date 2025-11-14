@@ -328,7 +328,7 @@ export const createTabStateStore = (): Store<
 
         const keyToExclude = entries
           .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
-          .slice(entries.length)
+          .slice(0, entries.length - event.maxEntries)
           .map((it) => it.id);
 
         return {
