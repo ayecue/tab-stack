@@ -1,4 +1,5 @@
 import debounce, { DebouncedFunction } from 'debounce';
+import { get } from 'http';
 import {
   Disposable,
   EventEmitter,
@@ -17,9 +18,11 @@ import {
   ExtensionTabsSyncMessage
 } from '../types/messages';
 import {
+  createEmptyStateContainer,
   ITabManagerService,
   QuickSlotIndex,
   RenderingItem,
+  StateContainer,
   TabStateFileContent
 } from '../types/tab-manager';
 import {
@@ -136,10 +139,10 @@ export class TabManagerService implements ITabManagerService {
     );
     await newStateHandler.initialize();
     this._stateHandler = newStateHandler;
-    this.applyState();
+    this.applyState(null);
     this.triggerSync();
     this._stateHandler.onDidChangeState(() => void this.triggerSync());
-    this._stateHandler.onDidImportState(() => void this.applyState());
+    this._stateHandler.onDidImportState(() => void this.applyState(null));
   }
 
   private initializeEvents() {
@@ -254,13 +257,13 @@ export class TabManagerService implements ITabManagerService {
     await this._stateHandler.syncStateWithVSCode();
   }
 
-  applyState() {
+  applyState(rollbackStateContainer: StateContainer) {
     if (!this._stateHandler) return;
     if (this._stateHandler.stateContainer == null) return;
 
     this._nextRenderingItem = {
       stateContainer: this._stateHandler.stateContainer,
-      previousStateContainer: this._stateHandler.previousStateContainer
+      rollbackStateContainer
     };
 
     if (this._rendering) return;
@@ -283,10 +286,11 @@ export class TabManagerService implements ITabManagerService {
             this._nextRenderingItem.stateContainer.state.layout,
             true
           ) &&
-          isSelectionMapEqual(
-            this._stateHandler.stateContainer?.state.selectionMap,
-            this._nextRenderingItem.stateContainer.state.selectionMap
-          )
+          (this._nextRenderingItem.rollbackStateContainer == null ||
+            isSelectionMapEqual(
+              this._stateHandler.stateContainer?.state.selectionMap,
+              this._nextRenderingItem.rollbackStateContainer?.state.selectionMap
+            ))
         ) {
           this._nextRenderingItem = null;
           continue;
@@ -307,7 +311,7 @@ export class TabManagerService implements ITabManagerService {
   private async render() {
     const currentStateContainer = this._nextRenderingItem.stateContainer;
     const previousStateContainer =
-      this._nextRenderingItem.previousStateContainer;
+      this._nextRenderingItem.rollbackStateContainer;
 
     this._nextRenderingItem = null;
 
@@ -315,7 +319,9 @@ export class TabManagerService implements ITabManagerService {
       await closeAllEditors();
 
       if (countTabs() > 0) {
-        this._stateHandler.setState(previousStateContainer);
+        this._stateHandler.setState(
+          previousStateContainer ?? createEmptyStateContainer()
+        );
         return;
       }
     }
@@ -588,6 +594,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     const loaded = this._stateHandler.loadState(groupId);
 
     if (!loaded) {
@@ -598,7 +605,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   createGroup(groupId: string) {
@@ -628,6 +635,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     const loaded = this._stateHandler.loadHistoryState(historyId);
 
     if (!loaded) {
@@ -635,7 +643,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   deleteGroup(groupId: string) {
@@ -674,6 +682,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     const loaded = this._stateHandler.loadState(groupId);
 
     if (!loaded) {
@@ -685,7 +694,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   quickSwitch(): void {
@@ -693,8 +702,9 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     this._stateHandler.setState(this._stateHandler.previousStateContainer);
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   async selectWorkspaceFolder(folderPath: string | null): Promise<void> {

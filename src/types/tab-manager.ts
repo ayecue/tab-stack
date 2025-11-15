@@ -82,7 +82,7 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
 
 export interface RenderingItem {
   stateContainer: StateContainer;
-  previousStateContainer: StateContainer;
+  rollbackStateContainer: StateContainer;
 }
 
 export interface ITabManagerService extends Disposable {
