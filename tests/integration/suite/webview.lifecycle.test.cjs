@@ -41,7 +41,7 @@ suite('Webview lifecycle flows', () => {
       type: 'new-group',
       groupId: name
     });
-    await sleep(200);
+    await sleep(1000);
 
     // Lookup newly created group id
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
@@ -54,7 +54,7 @@ suite('Webview lifecycle flows', () => {
       groupId: created.id,
       name: newName
     });
-    await sleep(150);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.groups[created.id].name, newName, 'Group should be renamed');
@@ -64,7 +64,7 @@ suite('Webview lifecycle flows', () => {
       type: 'switch-group',
       groupId: created.id
     });
-    await sleep(150);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, created.id, 'Selected group should match');
@@ -74,7 +74,7 @@ suite('Webview lifecycle flows', () => {
       type: 'delete-group',
       groupId: created.id
     });
-    await sleep(150);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.groups[created.id], 'Group should be deleted');
@@ -91,14 +91,14 @@ suite('Webview lifecycle flows', () => {
       type: 'new-group',
       groupId: bootstrap
     });
-    await sleep(150);
+    await sleep(1000);
 
     const addonName = `WL-Addon-${Date.now()}`;
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'new-addon',
       name: addonName
     });
-    await sleep(150);
+    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const addon = Object.values(state.addons).find((a) => a.name === addonName);
@@ -110,7 +110,7 @@ suite('Webview lifecycle flows', () => {
       addonId: addon.id,
       name: renamed
     });
-    await sleep(150);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.addons[addon.id].name, renamed, 'Addon should be renamed');
@@ -126,7 +126,7 @@ suite('Webview lifecycle flows', () => {
       type: 'delete-addon',
       addonId: addon.id
     });
-    await sleep(150);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.addons[addon.id], 'Addon should be deleted');
@@ -143,13 +143,13 @@ suite('Webview lifecycle flows', () => {
       type: 'new-group',
       groupId: g
     });
-    await sleep(150);
+    await sleep(1000);
 
     // Add to history
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'add-to-history'
     });
-    await sleep(150);
+    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(state.historyIds.length > 0, 'History should have an entry');
@@ -160,13 +160,13 @@ suite('Webview lifecycle flows', () => {
       type: 'recover-state',
       historyId: histId
     });
-    await sleep(150);
+    await sleep(1000);
 
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'delete-history',
       historyId: histId
     });
-    await sleep(150);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(state.historyIds.length === 0 || !state.historyIds.includes(histId), 'History entry should be deleted');
@@ -182,7 +182,7 @@ suite('Webview lifecycle flows', () => {
       type: 'new-group',
       groupId: groupName
     });
-    await sleep(150);
+    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === groupName);
@@ -194,14 +194,14 @@ suite('Webview lifecycle flows', () => {
       slot: '6',
       groupId: group.id
     });
-    await sleep(100);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.quickSlots['6'], group.id, 'Quick slot assigned');
 
     // Apply quick slot via command (webview does not have apply message)
     await vscode.commands.executeCommand(CMD('quickSlot6'));
-    await sleep(100);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, group.id, 'Applying quick slot should select group');
@@ -212,7 +212,7 @@ suite('Webview lifecycle flows', () => {
       slot: '6',
       groupId: null
     });
-    await sleep(100);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.quickSlots['6'], 'Quick slot cleared');

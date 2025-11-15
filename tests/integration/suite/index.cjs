@@ -6,6 +6,7 @@ exports.run = async function() {
   const mocha = new Mocha({
     ui: 'tdd',
     color: true,
+    parallel: false,
     timeout: 1000 * 20
   });
 

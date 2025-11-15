@@ -27,8 +27,8 @@ suite('Command smoke tests', () => {
 
     // Create group
     await vscode.commands.executeCommand(CMD('createGroup'), groupName);
-  // Give the extension a moment to persist the new group
-  await sleep(200);
+    // Give the extension a moment to persist the new group
+    await sleep(200);
 
     // Switch to that group by name (no quick pick)
     await vscode.commands.executeCommand(CMD('switchGroup'), groupName);
@@ -51,7 +51,7 @@ suite('Command smoke tests', () => {
     // Ensure state is initialized by creating a group first
     const bootstrapGroup = `IntTestBootstrap-${Date.now()}`;
     await vscode.commands.executeCommand(CMD('createGroup'), bootstrapGroup);
-  await sleep(200);
+    await sleep(200);
 
     const addonName = `IntTestAddon-${Date.now()}`;
 
@@ -98,11 +98,11 @@ suite('Command smoke tests', () => {
 
     const g1 = `IntTestQS1-${Date.now()}`;
     await vscode.commands.executeCommand(CMD('createGroup'), g1);
-  await sleep(200);
+    await sleep(200);
 
     const g2 = `IntTestQS2-${Date.now()}`;
     await vscode.commands.executeCommand(CMD('createGroup'), g2);
-  await sleep(200);
+    await sleep(200);
 
     // Now previous/current are defined; quickSwitch should be safe
     await vscode.commands.executeCommand(CMD('quickSwitch'));
@@ -121,7 +121,7 @@ suite('Command smoke tests', () => {
     await vscode.commands.executeCommand(CMD('createGroup'), gA);
     await vscode.commands.executeCommand(CMD('createGroup'), gB);
     await vscode.commands.executeCommand(CMD('createGroup'), gC);
-  await sleep(200);
+    await sleep(200);
 
     await vscode.commands.executeCommand(CMD('assignQuickSlot'), gA, '2');
     await vscode.commands.executeCommand(CMD('assignQuickSlot'), gB, '3');

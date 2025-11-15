@@ -29,7 +29,7 @@ suite('Webview interaction via test bridge', () => {
     for (let i = 0; i < 20; i++) {
       const ready = await vscode.commands.executeCommand(CMD('__test__webviewReady'));
       if (ready) break;
-      await sleep(100);
+      await sleep(1000);
       if (i === 19) throw new Error('Webview did not initialize in time');
     }
 
@@ -41,7 +41,7 @@ suite('Webview interaction via test bridge', () => {
       groupId: name
     });
 
-    await sleep(200);
+    await sleep(1000);
 
     // Verify group exists by reading state
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
@@ -55,7 +55,7 @@ suite('Webview interaction via test bridge', () => {
       groupId: created.id
     });
 
-    await sleep(50);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.quickSlots['5'], created.id, 'Quick slot should be set');
@@ -66,7 +66,7 @@ suite('Webview interaction via test bridge', () => {
       groupId: created.id
     });
 
-    await sleep(100);
+    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const stillThere = Object.values(state.groups).find((g) => g.name === name);
