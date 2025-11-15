@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import type { TabState } from '../../../src/types/tabs';
+import { tabStateFileContentFactory } from '../../factories';
 
 export class MockTabStateHandler {
   public createGroup = vi.fn();

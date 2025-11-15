@@ -6,53 +6,12 @@ import {
   toRelativeTabStateFile
 } from '../../../src/transformers/tab-uris';
 import {
-  StateContainer,
-  TabStateFileContent,
   createEmptyStateContainer
 } from '../../../src/types/tab-manager';
-import { TabKind, TabInfo, TabState } from '../../../src/types/tabs';
+import { TabKind } from '../../../src/types/tabs';
+import { tabFactory, tabStateFactory, stateContainerFactory, tabStateFileContentFactory } from '../../factories';
 
 describe('tab-uris transformer', () => {
-  const createTextTab = (uri: string): TabInfo => ({
-    label: 'test.ts',
-    isActive: false,
-    isDirty: false,
-    isPinned: false,
-    viewColumn: 1,
-    kind: TabKind.TabInputText,
-    uri
-  });
-
-  const createDiffTab = (originalUri: string, modifiedUri: string): TabInfo => ({
-    label: 'diff',
-    isActive: false,
-    isDirty: false,
-    isPinned: false,
-    viewColumn: 1,
-    kind: TabKind.TabInputTextDiff,
-    originalUri,
-    modifiedUri
-  });
-
-  const createTabState = (tabs: TabInfo[]): TabState => ({
-    activeGroup: 1,
-    tabGroups: {
-      '1': {
-        viewColumn: 1,
-        tabs,
-        activeTab: tabs[0]
-      }
-    }
-  });
-
-  const createStateContainer = (tabState: TabState): StateContainer => ({
-    ...createEmptyStateContainer(),
-    state: {
-      ...createEmptyStateContainer().state,
-      tabState
-    }
-  });
-
   describe('toRelativeTabStateFile', () => {
     it('converts absolute file URIs to relative paths', () => {
       vi.spyOn(workspace, 'asRelativePath').mockImplementation((uri: any) => {
@@ -61,19 +20,18 @@ describe('tab-uris transformer', () => {
         return uriString;
       });
 
-      const tab = createTextTab('file:///workspace/src/file.ts');
-      const tabState = createTabState([tab]);
-      const container = createStateContainer(tabState);
+      const tab = tabFactory.build({ uri: 'file:///workspace/src/file.ts' });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({ state: { ...createEmptyStateContainer().state, tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: { group1: container },
         history: {},
         addons: {},
         selectedGroup: 'group1',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       const result = toRelativeTabStateFile(fileContent);
 
@@ -89,19 +47,18 @@ describe('tab-uris transformer', () => {
         return uriString;
       });
 
-      const tab = createDiffTab('file:///workspace/old.ts', 'file:///workspace/new.ts');
-      const tabState = createTabState([tab]);
-      const container = createStateContainer(tabState);
+      const tab = tabFactory.build({}, { transient: { kind: TabKind.TabInputTextDiff, originalUri: 'file:///workspace/old.ts', modifiedUri: 'file:///workspace/new.ts' } });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: { group1: container },
         history: {},
         addons: {},
         selectedGroup: 'group1',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       const result = toRelativeTabStateFile(fileContent);
 
@@ -117,19 +74,18 @@ describe('tab-uris transformer', () => {
         return uriString;
       });
 
-      const tab = createTextTab('file:///workspace/history.ts');
-      const tabState = createTabState([tab]);
-      const container = createStateContainer(tabState);
+      const tab = tabFactory.build({ uri: 'file:///workspace/history.ts' });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: {},
         history: { hist1: container },
         addons: {},
         selectedGroup: null as unknown as string,
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       const result = toRelativeTabStateFile(fileContent);
 
@@ -144,19 +100,18 @@ describe('tab-uris transformer', () => {
         return uriString;
       });
 
-      const tab = createTextTab('file:///workspace/addon.ts');
-      const tabState = createTabState([tab]);
-      const container = createStateContainer(tabState);
+      const tab = tabFactory.build({ uri: 'file:///workspace/addon.ts' });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: {},
         history: {},
         addons: { addon1: container },
         selectedGroup: null as unknown as string,
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       const result = toRelativeTabStateFile(fileContent);
 
@@ -169,19 +124,15 @@ describe('tab-uris transformer', () => {
     it('converts relative paths to absolute file URIs', () => {
       const workspaceUri = Uri.parse('file:///workspace');
 
-      const tab = createTextTab('src/file.ts');
-      const tabState = createTabState([tab]);
-      const container = createStateContainer(tabState);
+      const tab = tabFactory.build({ uri: 'src/file.ts' });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: { group1: container },
-        history: {},
-        addons: {},
         selectedGroup: 'group1',
-        previousSelectedGroup: null as unknown as string,
-        quickSlots: {}
-      };
+        previousSelectedGroup: null as unknown as string
+      });
 
       const result = toAbsoluteTabStateFile(fileContent, workspaceUri);
 
@@ -192,19 +143,18 @@ describe('tab-uris transformer', () => {
     it('converts diff tab relative paths to absolute URIs', () => {
       const workspaceUri = Uri.parse('file:///workspace');
 
-      const tab = createDiffTab('old.ts', 'new.ts');
-      const tabState = createTabState([tab]);
-      const container = createStateContainer(tabState);
+      const tab = tabFactory.build({}, { transient: { kind: TabKind.TabInputTextDiff, originalUri: 'old.ts', modifiedUri: 'new.ts' } });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: { group1: container },
         history: {},
         addons: {},
         selectedGroup: 'group1',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       const result = toAbsoluteTabStateFile(fileContent, workspaceUri);
 
@@ -216,10 +166,10 @@ describe('tab-uris transformer', () => {
     it('transforms multiple tab groups', () => {
       const workspaceUri = Uri.parse('file:///workspace');
 
-      const tab1 = createTextTab('file1.ts');
-      const tab2 = createTextTab('file2.ts');
+      const tab1 = tabFactory.build({ uri: 'file1.ts' });
+      const tab2 = tabFactory.build({ uri: 'file2.ts' });
 
-      const tabState: TabState = {
+      const tabState = tabStateFactory.build({
         activeGroup: 1,
         tabGroups: {
           '1': {
@@ -233,19 +183,18 @@ describe('tab-uris transformer', () => {
             activeTab: tab2
           }
         }
-      };
+      });
 
-      const container = createStateContainer(tabState);
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: { group1: container },
         history: {},
         addons: {},
         selectedGroup: 'group1',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       const result = toAbsoluteTabStateFile(fileContent, workspaceUri);
 
@@ -259,15 +208,14 @@ describe('tab-uris transformer', () => {
     it('preserves quick slots and selected group information', () => {
       const workspaceUri = Uri.parse('file:///workspace');
 
-      const fileContent: TabStateFileContent = {
-        version: 2,
+      const fileContent = tabStateFileContentFactory.build({
         groups: {},
         history: {},
         addons: {},
         selectedGroup: 'selected',
         previousSelectedGroup: 'previous',
         quickSlots: { '1': 'group1', '2': 'group2' }
-      };
+      });
 
       const result = toAbsoluteTabStateFile(fileContent, workspaceUri);
 

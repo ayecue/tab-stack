@@ -7,22 +7,13 @@ import {
 } from '../../../src/utils/tab-utils';
 import { SelectionRange } from '../../../src/types/selection-tracker';
 import { TabInfo, TabKind, TabState } from '../../../src/types/tabs';
-
-const createTextTab = (overrides: Partial<TabInfo> = {}): TabInfo => ({
-  label: 'note.ts',
-  isActive: false,
-  isDirty: false,
-  isPinned: false,
-  viewColumn: 1,
-  kind: TabKind.TabInputText,
-  uri: 'file:///note.ts',
-  ...overrides
-});
+import { tabFactory, tabStateFactory } from '../../factories';
 
 describe('tab-utils equality helpers', () => {
   it('compares tab infos by kind-specific fields', () => {
-    const textA = createTextTab();
-    const textB = createTextTab();
+    const tabOverrides = { uri: 'file:///note.ts', label: 'note.ts' };
+    const textA = tabFactory.build(tabOverrides);
+    const textB = tabFactory.build(tabOverrides);
     const diff = {
       ...textA,
       kind: TabKind.TabInputTextDiff,
@@ -37,27 +28,10 @@ describe('tab-utils equality helpers', () => {
   });
 
   it('compares tab states deeply', () => {
-    const baseState: TabState = {
-      activeGroup: 1,
-      tabGroups: {
-        1: {
-          viewColumn: 1,
-          tabs: [createTextTab({ isActive: true })],
-          activeTab: createTextTab({ isActive: true })
-        }
-      }
-    };
+    const activeTab = tabFactory.build({ uri: 'file:///note.ts', label: 'note.ts', isActive: true });
+    const baseState = tabStateFactory.build({}, { transient: { tabs: [activeTab] } });
 
-    const sameState: TabState = {
-      activeGroup: 1,
-      tabGroups: {
-        1: {
-          viewColumn: 1,
-          tabs: [createTextTab({ isActive: true })],
-          activeTab: createTextTab({ isActive: true })
-        }
-      }
-    };
+    const sameState: TabState = tabStateFactory.build({}, { transient: { tabs: [activeTab] } });
 
     const differentOrder: TabState = {
       activeGroup: 1,

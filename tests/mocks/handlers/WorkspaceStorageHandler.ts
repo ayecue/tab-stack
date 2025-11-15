@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import type { TabStateFileContent } from '../../../src/types/tab-manager';
+import { tabStateFileContentFactory } from '../../factories';
 
 export class MockWorkspaceStorageHandler {
   public load = vi.fn();
@@ -9,24 +10,10 @@ export class MockWorkspaceStorageHandler {
   public reset = vi.fn();
   
   constructor(initialState?: TabStateFileContent) {
-    this.load.mockResolvedValue(initialState || {
-      version: 1,
-      groups: {},
-      addons: {},
-      history: [],
-      activeGroup: null,
-      quickSlots: {}
-    });
+    this.load.mockResolvedValue(initialState || tabStateFileContentFactory.build());
     this.save.mockResolvedValue(undefined);
     this.write.mockResolvedValue(undefined);
-    this.get.mockReturnValue(initialState || {
-      version: 1,
-      groups: {},
-      addons: {},
-      history: [],
-      activeGroup: null,
-      quickSlots: {}
-    });
+    this.get.mockReturnValue(initialState || tabStateFileContentFactory.build());
     this.reset.mockResolvedValue(undefined);
   }
   

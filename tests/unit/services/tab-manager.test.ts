@@ -10,6 +10,7 @@ import {
   MockSelectionTrackerService,
   createMockExtensionContext
 } from '../../mocks';
+import { tabStateFactory, tabStateFileContentFactory } from '../../factories';
 
 describe('TabManagerService', () => {
   let service: TabManagerService;
@@ -41,10 +42,7 @@ describe('TabManagerService', () => {
     gitService = new MockGitService();
 
     // Mock tab state
-    vi.spyOn(tabUtils, 'getTabState').mockReturnValue({
-      tabGroups: {},
-      activeGroup: null
-    });
+    vi.spyOn(tabUtils, 'getTabState').mockReturnValue(tabStateFactory.build());
 
     vi.spyOn(tabUtils, 'isTabStateEqual').mockReturnValue(false);
     vi.spyOn(tabUtils, 'isSelectionMapEqual').mockReturnValue(true);

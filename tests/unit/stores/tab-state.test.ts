@@ -1,45 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import { createTabStateStore } from '../../../src/stores/tab-state';
-import {
-  StateContainer,
-  TabStateFileContent,
-  createEmptyStateContainer
-} from '../../../src/types/tab-manager';
-
-const createStateContainer = (
-  overrides: Partial<StateContainer> = {}
-): StateContainer => ({
-  ...createEmptyStateContainer(),
-  ...overrides,
-  state: {
-    ...createEmptyStateContainer().state,
-    ...(overrides.state ?? {})
-  }
-});
-
-const createStateFile = (
-  overrides: Partial<TabStateFileContent> = {}
-): TabStateFileContent => ({
-  version: 2,
-  groups: {},
-  history: {},
-  addons: {},
-  selectedGroup: null as unknown as string,
-  previousSelectedGroup: null as unknown as string,
-  quickSlots: {},
-  ...overrides
-});
+import { stateContainerFactory, tabStateFileContentFactory } from '../../factories';
 
 describe('tab-state store', () => {
   it('initializes with provided state file data', () => {
     const store = createTabStateStore();
-    const groupA = createStateContainer({ id: 'group-a', name: 'Group A' });
-    const groupB = createStateContainer({ id: 'group-b', name: 'Group B' });
+    const groupA = stateContainerFactory.build({ id: 'group-a', name: 'Group A' });
+    const groupB = stateContainerFactory.build({ id: 'group-b', name: 'Group B' });
 
     store.send({
       type: 'INITIALIZE',
-      data: createStateFile({
+      data: tabStateFileContentFactory.build({
         groups: {
           [groupA.id]: groupA,
           [groupB.id]: groupB
@@ -62,7 +34,7 @@ describe('tab-state store', () => {
 
   it('creates, renames and deletes groups while keeping quick slots in sync', () => {
     const store = createTabStateStore();
-    const baseGroup = createStateContainer({ id: 'group-a', name: 'Original' });
+    const baseGroup = stateContainerFactory.build({ id: 'group-a', name: 'Original' });
 
     store.send({ type: 'CREATE_GROUP', stateContainer: baseGroup });
     store.send({
@@ -100,7 +72,7 @@ describe('tab-state store', () => {
   it('loads history entries and prunes overflow', () => {
     const store = createTabStateStore();
     const historyEntries = Array.from({ length: 3 }).map((_, index) =>
-      createStateContainer({ id: `hist-${index}` })
+      stateContainerFactory.build({ id: `hist-${index}` })
     );
 
     historyEntries.forEach((entry) =>

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { WorkspaceStorageHandler } from '../../../src/handlers/workspace-storage';
 import { createPersistenceStore, PersistenceStore } from '../../../src/stores/persistence';
-import { createDefaultTabStateFileContent } from '../../../src/types/tab-manager';
 import { createMockExtensionContext } from '../../mocks';
+import { tabStateFileContentFactory } from '../../factories';
 
 describe('WorkspaceStorageHandler', () => {
   let context: ReturnType<typeof createMockExtensionContext>;
@@ -25,11 +25,14 @@ describe('WorkspaceStorageHandler', () => {
 
   describe('load', () => {
     it('loads data from workspace state', async () => {
-      const mockData = {
-        version: 2,
-        groups: [],
-        selectionMap: {}
-      };
+      const mockData = tabStateFileContentFactory.build({
+        groups: {},
+        history: {},
+        addons: {},
+        selectedGroup: undefined,
+        previousSelectedGroup: undefined,
+        quickSlots: {}
+      });
       vi.mocked(context.workspaceState.get).mockReturnValue(mockData);
 
       await handler.load();
@@ -46,7 +49,7 @@ describe('WorkspaceStorageHandler', () => {
       await handler.load();
 
       const snapshot = store.getSnapshot();
-      expect(snapshot.context.data).toEqual(createDefaultTabStateFileContent());
+      expect(snapshot.context.data).toEqual(tabStateFileContentFactory.build());
     });
 
     it('creates default state when loading fails', async () => {
@@ -57,16 +60,19 @@ describe('WorkspaceStorageHandler', () => {
       await handler.load();
 
       const snapshot = store.getSnapshot();
-      expect(snapshot.context.data).toEqual(createDefaultTabStateFileContent());
+      expect(snapshot.context.data).toEqual(tabStateFileContentFactory.build());
       expect(snapshot.context.isLoading).toBe(false);
     });
 
     it('waits for existing load to complete', async () => {
-      vi.mocked(context.workspaceState.get).mockReturnValue({
-        version: 2,
-        groups: [],
-        selectionMap: {}
-      });
+      vi.mocked(context.workspaceState.get).mockReturnValue(tabStateFileContentFactory.build({
+        groups: {},
+        history: {},
+        addons: {},
+        selectedGroup: undefined,
+        previousSelectedGroup: undefined,
+        quickSlots: {}
+      }));
 
       // Start loading
       const loadPromise1 = handler.load();
@@ -84,7 +90,7 @@ describe('WorkspaceStorageHandler', () => {
 
   describe('save', () => {
     it('sends save event to store', () => {
-      const data = createDefaultTabStateFileContent();
+      const data = tabStateFileContentFactory.build();
       const sendSpy = vi.spyOn(store, 'send');
 
       handler.save(data);
@@ -98,7 +104,7 @@ describe('WorkspaceStorageHandler', () => {
 
   describe('write', () => {
     it('writes data to workspace state', async () => {
-      const data = createDefaultTabStateFileContent();
+      const data = tabStateFileContentFactory.build();
 
       await handler.write(data);
 
@@ -106,7 +112,7 @@ describe('WorkspaceStorageHandler', () => {
     });
 
     it('handles write errors gracefully', async () => {
-      const data = createDefaultTabStateFileContent();
+      const data = tabStateFileContentFactory.build();
       vi.mocked(context.workspaceState.update).mockRejectedValue(new Error('Write failed'));
 
       await expect(handler.write(data)).resolves.not.toThrow();
@@ -115,11 +121,14 @@ describe('WorkspaceStorageHandler', () => {
 
   describe('get', () => {
     it('returns current data from store', async () => {
-      const mockData = {
-        version: 2,
-        groups: [],
-        selectionMap: {}
-      };
+      const mockData = tabStateFileContentFactory.build({
+        groups: {},
+        history: {},
+        addons: {},
+        selectedGroup: undefined,
+        previousSelectedGroup: undefined,
+        quickSlots: {}
+      });
       vi.mocked(context.workspaceState.get).mockReturnValue(mockData);
 
       await handler.load();
@@ -130,7 +139,7 @@ describe('WorkspaceStorageHandler', () => {
 
     it('returns default data when no data is loaded', () => {
       const result = handler.get();
-      expect(result).toEqual(createDefaultTabStateFileContent());
+      expect(result).toEqual(tabStateFileContentFactory.build());
     });
   });
 

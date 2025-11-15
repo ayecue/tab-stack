@@ -1,8 +1,8 @@
 import { commands, Disposable, window } from 'vscode';
 
+import { ViewManagerProvider } from './providers/view-manager';
 import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
-import { ViewManagerProvider } from './providers/view-manager';
 import {
   ExtensionNotificationMessage,
   ExtensionTabsSyncMessage
@@ -354,7 +354,8 @@ export function createCommands(
       const addons = tabManagerService.state?.getAddons?.() ?? {};
       const history = tabManagerService.state?.getHistory?.() ?? {};
       const quickSlots = tabManagerService.state?.getQuickSlots?.() ?? {};
-      const selectedGroupId = tabManagerService.state?.stateContainer?.id ?? null;
+      const selectedGroupId =
+        tabManagerService.state?.stateContainer?.id ?? null;
       return {
         groups: Object.fromEntries(
           Object.values(groups).map((g) => [g.id, { id: g.id, name: g.name }])
@@ -436,13 +437,13 @@ export function createCommands(
     assignQuickSlotCommand,
     clearQuickSlotCommand,
     clearAllTabsCommand,
-    ...quickSlotCommands
-    ,testOpenView
-    ,testDispatch
-    ,testGetState
-    ,testWebviewReady
-    ,testStartCapture
-    ,testGetCaptured
-    ,testStopCapture
+    ...quickSlotCommands,
+    testOpenView,
+    testDispatch,
+    testGetState,
+    testWebviewReady,
+    testStartCapture,
+    testGetCaptured,
+    testStopCapture
   ];
 }

@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { commands } from 'vscode';
 import { TabStateHandler } from '../../../src/handlers/tab-state';
-import { createDefaultTabStateFileContent } from '../../../src/types/tab-manager';
 import * as tabUtils from '../../../src/utils/tab-utils';
 import { MockConfigService, MockWorkspaceStorageHandler } from '../../mocks';
+import { tabStateFactory, tabStateFileContentFactory } from '../../factories';
 
 describe('TabStateHandler', () => {
   let handler: TabStateHandler;
@@ -18,13 +18,10 @@ describe('TabStateHandler', () => {
       masterWorkspaceFolder: null
     });
 
-    persistenceHandler = new MockWorkspaceStorageHandler(createDefaultTabStateFileContent());
+    persistenceHandler = new MockWorkspaceStorageHandler(tabStateFileContentFactory.build());
 
     // Mock tab state and layout
-    vi.spyOn(tabUtils, 'getTabState').mockReturnValue({
-      tabGroups: {},
-      activeGroup: null
-    });
+    vi.spyOn(tabUtils, 'getTabState').mockReturnValue(tabStateFactory.build());
 
     vi.mocked(commands.executeCommand).mockImplementation((cmd: string) => {
       if (cmd === 'vscode.getEditorLayout') {
@@ -334,15 +331,7 @@ describe('TabStateHandler', () => {
     });
 
     it('imports state file', () => {
-      const fileContent = {
-        version: 2,
-        groups: {},
-        history: {},
-        addons: {},
-        quickSlots: {},
-        selectedGroup: null,
-        previousSelectedGroup: null
-      };
+      const fileContent = tabStateFileContentFactory.build();
 
       vi.mocked(configService.getMasterWorkspaceFolder).mockReturnValue('file:///workspace');
       

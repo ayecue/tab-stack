@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createPersistenceStore } from '../../../src/stores/persistence';
-import { TabStateFileContent } from '../../../src/types/tab-manager';
 import { MockWorkspaceStorageHandler } from '../../mocks';
+import { tabStateFileContentFactory } from '../../factories';
 
 describe('PersistenceStore', () => {
   const createMockHandler = () => new MockWorkspaceStorageHandler();
@@ -34,15 +34,14 @@ describe('PersistenceStore', () => {
       const handler = createMockHandler();
       const store = createPersistenceStore(handler);
 
-      const mockData: TabStateFileContent = {
-        version: 2,
+      const mockData = tabStateFileContentFactory.build({
         groups: {},
         history: {},
         addons: {},
         selectedGroup: null as unknown as string,
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       store.send({ type: 'LOAD' });
       store.send({ type: 'DONE', data: mockData, success: true });
@@ -57,15 +56,14 @@ describe('PersistenceStore', () => {
       const handler = createMockHandler();
       const store = createPersistenceStore(handler);
 
-      const customData: TabStateFileContent = {
-        version: 2,
+      const customData = tabStateFileContentFactory.build({
         groups: { test: {} as any },
         history: {},
         addons: {},
         selectedGroup: 'test',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       store.send({ type: 'DONE', data: customData, success: true });
       store.send({ type: 'CLEAR' });
@@ -93,15 +91,14 @@ describe('PersistenceStore', () => {
       const handler = createMockHandler();
       const store = createPersistenceStore(handler);
 
-      const mockData: TabStateFileContent = {
-        version: 2,
+      const mockData = tabStateFileContentFactory.build({
         groups: {},
         history: {},
         addons: {},
         selectedGroup: 'group1',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       store.send({ type: 'SAVE', data: mockData });
       
@@ -118,15 +115,14 @@ describe('PersistenceStore', () => {
       const handler = createMockHandler();
       const store = createPersistenceStore(handler);
 
-      const mockData: TabStateFileContent = {
-        version: 2,
+      const mockData = tabStateFileContentFactory.build({
         groups: { test: {} as any },
         history: {},
         addons: {},
         selectedGroup: 'test',
         previousSelectedGroup: null as unknown as string,
         quickSlots: {}
-      };
+      });
 
       store.send({ type: 'SAVE', data: mockData });
 
