@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { commands, window } from 'vscode';
+import { commands } from 'vscode';
 import {
   closeAllEditors,
   getEditorLayout,

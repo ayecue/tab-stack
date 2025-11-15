@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  window,
   TextEditor,
   NotebookEditor,
-  TabInputText,
-  TabInputTextDiff,
-  TabInputNotebook,
   Uri
 } from 'vscode';
 
