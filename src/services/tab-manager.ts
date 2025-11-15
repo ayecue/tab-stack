@@ -138,10 +138,8 @@ export class TabManagerService implements ITabManagerService {
     this._stateHandler = newStateHandler;
     this.applyState();
     this.triggerSync();
-
-    this._disposables.push(
-      this._stateHandler.onDidChangeState(() => void this.triggerSync())
-    );
+    this._stateHandler.onDidChangeState(() => void this.triggerSync());
+    this._stateHandler.onDidImportState(() => void this.applyState());
   }
 
   private initializeEvents() {

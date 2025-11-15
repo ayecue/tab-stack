@@ -35,6 +35,7 @@ export class TabStateHandler implements Disposable {
   private _configService: ConfigService;
   private _storeSubscription: { unsubscribe: () => void } | null;
   private _stateUpdateEmitter: EventEmitter<TabStateStoreContext>;
+  private _importStateEmitter: EventEmitter<TabStateStoreContext>;
 
   constructor(
     configService: ConfigService,
@@ -45,6 +46,7 @@ export class TabStateHandler implements Disposable {
       TabStateHandler.SAVE_DEBOUNCE_DELAY
     );
     this._stateUpdateEmitter = new EventEmitter<TabStateStoreContext>();
+    this._importStateEmitter = new EventEmitter<TabStateStoreContext>();
     this._configService = configService;
     this._tabStore = createTabStateStore();
     this._persistenceHandler = persistenceHandler;
@@ -88,6 +90,10 @@ export class TabStateHandler implements Disposable {
 
   get onDidChangeState(): Event<TabStateStoreContext> {
     return this._stateUpdateEmitter.event;
+  }
+
+  get onDidImportState(): Event<TabStateStoreContext> {
+    return this._importStateEmitter.event;
   }
 
   get groups() {
@@ -344,6 +350,7 @@ export class TabStateHandler implements Disposable {
     this._storeSubscription?.unsubscribe();
     this._persistenceHandler.reset();
     this._stateUpdateEmitter.dispose();
+    this._importStateEmitter.dispose();
   }
 
   getGroups(): Record<string, StateContainer> {
@@ -422,6 +429,8 @@ export class TabStateHandler implements Disposable {
         previousSelectedGroup: newContent.previousSelectedGroup
       }
     });
+
+    this._importStateEmitter.fire(this._tabStore.getSnapshot().context);
 
     return true;
   }
