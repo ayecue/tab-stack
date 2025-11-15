@@ -90,6 +90,7 @@ describe('TabManagerService', () => {
   describe('group operations', () => {
     beforeEach(async () => {
       await service.attachStateHandler();
+      await service.waitForRenderComplete();
     });
 
     it('creates a group', async () => {

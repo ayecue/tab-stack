@@ -90,4 +90,23 @@ describe('tab-state store', () => {
     context = store.getSnapshot().context;
     expect(context.currentStateContainer?.id).toBe(target.id);
   });
+
+  it('ignores write operations when locked and allows them when unlocked', () => {
+    const store = createTabStateStore();
+    const group = stateContainerFactory.build({ id: 'group-locked', name: 'Locked' });
+
+    // Lock the store and try to create a group
+    store.send({ type: 'LOCK_STATE' });
+    store.send({ type: 'CREATE_GROUP', stateContainer: group });
+
+    let context = store.getSnapshot().context;
+    expect(context.groups[group.id]).toBeUndefined();
+
+    // Unlock and create group again
+    store.send({ type: 'UNLOCK_STATE' });
+    store.send({ type: 'CREATE_GROUP', stateContainer: group });
+
+    context = store.getSnapshot().context;
+    expect(context.groups[group.id]).toEqual(group);
+  });
 });

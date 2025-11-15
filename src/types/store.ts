@@ -15,6 +15,7 @@ export interface TabStateStoreContext {
   previousStateContainer: StateContainer | null;
   isInitialized: boolean;
   isLoading: boolean;
+  isLocked: boolean;
 }
 
 // File Store Context
@@ -121,6 +122,14 @@ export type TabStateImportStateEvent = {
   data: TabStateFileContent;
 };
 
+export type TabStateLockEvent = {
+  type: 'LOCK_STATE';
+};
+
+export type TabStateUnlockEvent = {
+  type: 'UNLOCK_STATE';
+};
+
 // Tab State Store Events Union
 export type TabStateStoreEvents =
   | TabStateInitializeEvent
@@ -141,7 +150,9 @@ export type TabStateStoreEvents =
   | TabStateSetQuickSlotEvent
   | TabStateClearQuickSlotEvent
   | TabStateResetStateEvent
-  | TabStateImportStateEvent;
+  | TabStateImportStateEvent
+  | TabStateLockEvent
+  | TabStateUnlockEvent;
 
 // File Store Event Types
 export type FileStoreLoadStartEvent = {

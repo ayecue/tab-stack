@@ -69,6 +69,8 @@ export class TabManagerService implements ITabManagerService {
   private _selectionTrackerService: SelectionTrackerService;
   private _gitService: GitService | null;
 
+  private _renderCompleteEmitter: EventEmitter<void>;
+
   private _syncViewEmitter: EventEmitter<
     Omit<ExtensionTabsSyncMessage, 'type'>
   >;
@@ -106,6 +108,7 @@ export class TabManagerService implements ITabManagerService {
     this._notifyViewEmitter = new EventEmitter<
       Omit<ExtensionNotificationMessage, 'type'>
     >();
+    this._renderCompleteEmitter = new EventEmitter<void>();
 
     this.initializeEvents();
   }
@@ -126,6 +129,10 @@ export class TabManagerService implements ITabManagerService {
     return this._notifyViewEmitter.event;
   }
 
+  get onDidCompleteRender() {
+    return this._renderCompleteEmitter.event;
+  }
+
   async attachStateHandler() {
     this._stateHandler = null;
 
@@ -143,6 +150,19 @@ export class TabManagerService implements ITabManagerService {
     this.triggerSync();
     this._stateHandler.onDidChangeState(() => void this.triggerSync());
     this._stateHandler.onDidImportState(() => void this.applyState(null));
+  }
+
+  async waitForRenderComplete(): Promise<void> {
+    if (!this._rendering) {
+      return;
+    }
+
+    return new Promise((resolve) => {
+      const disposable = this.onDidCompleteRender(() => {
+        disposable.dispose();
+        resolve();
+      });
+    });
   }
 
   private initializeEvents() {
@@ -273,6 +293,7 @@ export class TabManagerService implements ITabManagerService {
 
   private async next() {
     this._rendering = true;
+    this._stateHandler.lockState();
 
     while (this._nextRenderingItem !== null) {
       try {
@@ -297,14 +318,14 @@ export class TabManagerService implements ITabManagerService {
         }
 
         await this.render();
-        // Introduce a small delay to allow VS Code to process UI updates
-        await delay(TabManagerService.RENDER_COOLDOWN_MS);
       } catch (error) {
         this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
       }
     }
 
+    this._stateHandler.unlockState();
     this._rendering = false;
+    this._renderCompleteEmitter.fire();
     void this.refresh();
   }
 

@@ -53,6 +53,18 @@ export class TabStateHandler implements Disposable {
     this._storeSubscription = null;
   }
 
+  lockState(): void {
+    this._tabStore.send({ type: 'LOCK_STATE' });
+  }
+
+  unlockState(): void {
+    this._tabStore.send({ type: 'UNLOCK_STATE' });
+  }
+
+  isLocked(): boolean {
+    return this._tabStore.getSnapshot().context.isLocked;
+  }
+
   async initialize() {
     await this._persistenceHandler.load();
 

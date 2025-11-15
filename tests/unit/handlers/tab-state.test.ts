@@ -293,6 +293,21 @@ describe('TabStateHandler', () => {
 
       expect(result.state.selectionMap[selection.id]).toEqual(selection.selection);
     });
+
+    it('locks and prevents changes while locked', async () => {
+      handler.lockState();
+      const result = await handler.createGroup('Locked Group');
+
+      // No group should be created while locked
+      const found = Object.values(handler.groups).some((g) => g.name === 'Locked Group');
+      expect(found).toBe(false);
+
+      // Unlock and create again
+      handler.unlockState();
+      const created = await handler.createGroup('Locked Group');
+      expect(created).not.toBeNull();
+      expect(handler.groups[created!.id].name).toBe('Locked Group');
+    });
   });
 
   describe('state containers', () => {
