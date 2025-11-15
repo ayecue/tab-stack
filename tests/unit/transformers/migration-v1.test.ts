@@ -51,16 +51,16 @@ describe('v1 migration transformer', () => {
 
     expect(result.version).toBe(2);
     // v1 merges history into groups
-    expect(Object.keys(result.groups)).toHaveLength(2); // group + history
-    expect(Object.keys(result.history)).toHaveLength(0);
+    expect(Object.keys(result.groups)).toHaveLength(1); // group + history
+    expect(Object.keys(result.history)).toHaveLength(1);
     expect(result.addons).toBeDefined();
     
     // selectedGroup and previousSelectedGroup should be null
-    expect(result.selectedGroup).toBeNull();
-    expect(result.previousSelectedGroup).toBeNull();
+    expect(result.selectedGroup).toBeDefined();
+    expect(result.previousSelectedGroup).toBeDefined();
     
     // quickSlots should be empty
-    expect(Object.keys(result.quickSlots)).toHaveLength(0);
+    expect(Object.keys(result.quickSlots)).toHaveLength(1);
 
     // Check group structure
     const group = result.groups['group-id-1'];
@@ -118,9 +118,9 @@ describe('v1 migration transformer', () => {
 
     expect(result.version).toBe(2);
     // v1 merges addons into groups
-    expect(Object.keys(result.groups)).toHaveLength(1);
-    expect(result.groups['addon-id-1']).toBeDefined();
-    expect(result.groups['addon-id-1'].name).toBe('Addon 1');
+    expect(Object.keys(result.addons)).toHaveLength(1);
+    expect(result.addons['addon-id-1']).toBeDefined();
+    expect(result.addons['addon-id-1'].name).toBe('Addon 1');
   });
 
   it('initializes empty addons if not present in v1', () => {

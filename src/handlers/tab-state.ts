@@ -2,9 +2,9 @@ import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
-import { transform as migrate } from '../transformers/migration';
 import { ConfigService } from '../services/config';
 import { createTabStateStore, TabStateStore } from '../stores/tab-state';
+import { transform as migrate } from '../transformers/migration';
 import {
   toAbsoluteTabStateFile,
   toRelativeTabStateFile
@@ -183,6 +183,12 @@ export class TabStateHandler implements Disposable {
       }
     };
 
+    console.log(
+      '>>',
+      availableSelectionIds,
+      newStateContainer.state.selectionMap
+    );
+
     this._tabStore.send({
       type: 'SYNC_STATE',
       stateContainer: newStateContainer
@@ -207,10 +213,7 @@ export class TabStateHandler implements Disposable {
       }
     };
 
-    console.log(
-      '>>',
-      JSON.stringify(newStateContainer.state.selectionMap, null, 2)
-    );
+    console.log('>>', newStateContainer.state.selectionMap);
 
     this._tabStore.send({
       type: 'SYNC_STATE',

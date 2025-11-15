@@ -5,8 +5,7 @@ import {
   TabInputNotebookDiff,
   TabInputText,
   TabInputTextDiff,
-  TextEditor,
-  window
+  TextEditor
 } from 'vscode';
 
 import {
@@ -18,48 +17,8 @@ import {
   TabKind,
   TabState
 } from '../types/tabs';
-import {
-  isNotebookEditorWithDiffInformation,
-  isTextEditorWithDiffInformation
-} from '../types/vscode';
-
-export function findAssociatedTab(
-  condition: (tab: Tab) => boolean
-): Tab | null {
-  for (const group of window.tabGroups.all) {
-    for (const tab of group.tabs) {
-      if (condition(tab)) {
-        return tab;
-      }
-    }
-  }
-  return null;
-}
 
 export function getTabTrackerKeyFromRawTextEditor(editor: TextEditor): string {
-  if (isTextEditorWithDiffInformation(editor)) {
-    const diffInformation = editor.diffInformation[0];
-    const modifiedUri = diffInformation.modified.toString();
-    const originalUri = diffInformation.original.toString();
-    let viewColumn = editor.viewColumn;
-
-    if (viewColumn == null) {
-      const tab = findAssociatedTab((tab) => {
-        return (
-          tab.input instanceof TabInputTextDiff &&
-          tab.input.modified.toString() === modifiedUri &&
-          tab.input.original.toString() === originalUri
-        );
-      });
-
-      if (tab != null) {
-        viewColumn = tab.group.viewColumn;
-      }
-    }
-
-    return `${modifiedUri}::${originalUri}::${viewColumn ?? 1}::text`;
-  }
-
   const uri = editor.document.uri.toString();
   const viewColumn = editor.viewColumn;
 
@@ -72,37 +31,13 @@ export function getTabTrackerKeyFromRawNotebookEditor(
   const uri = editor.notebook.uri.toString();
   const viewColumn = editor.viewColumn;
 
-  if (isNotebookEditorWithDiffInformation(editor)) {
-    const diffInformation = editor.diffInformation[0];
-    const modifiedUri = diffInformation.modified.toString();
-    const originalUri = diffInformation.original.toString();
-    let viewColumn = editor.viewColumn;
-
-    if (viewColumn == null) {
-      const tab = findAssociatedTab((tab) => {
-        return (
-          tab.input instanceof TabInputTextDiff &&
-          tab.input.modified.toString() === modifiedUri &&
-          tab.input.original.toString() === originalUri
-        );
-      });
-
-      if (tab != null) {
-        viewColumn = tab.group.viewColumn;
-      }
-    }
-
-    return `${modifiedUri}::${originalUri}::${viewColumn ?? 1}::notebook`;
-  }
-
   return `${uri}::${viewColumn}::notebook`;
 }
 
 export function getTabTrackerKey(tab: Tab): string | null {
   if (tab.input instanceof TabInputText) {
     return `${tab.input.uri.toString()}::${tab.group.viewColumn}::text`;
-  }
-  if (tab.input instanceof TabInputTextDiff) {
+  } else if (tab.input instanceof TabInputTextDiff) {
     return `${tab.input.modified.toString()}::${tab.input.original.toString()}::${tab.group.viewColumn}::text`;
   } else if (tab.input instanceof TabInputNotebook) {
     return `${tab.input.uri.toString()}::${tab.group.viewColumn}::notebook`;

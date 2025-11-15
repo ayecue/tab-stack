@@ -37,7 +37,7 @@ export function transform(payload: any): TabStateFileContent {
     addons: {},
     selectedGroup: content.selectedGroup,
     previousSelectedGroup: content.previousSelectedGroup,
-    quickSlots: {}
+    quickSlots: content.quickSlots
   };
 
   if (content.groups) {
