@@ -3,6 +3,10 @@ import { commands, Disposable, window } from 'vscode';
 import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
 import { ViewManagerProvider } from './providers/view-manager';
+import {
+  ExtensionNotificationMessage,
+  ExtensionTabsSyncMessage
+} from './types/messages';
 
 async function requestGroupId(
   tabManagerService: TabManagerService
@@ -365,6 +369,57 @@ export function createCommands(
     }
   );
 
+  // Test-only: capture Sync/Notification payloads emitted by the service (no webview changes)
+  type CapturedSync = Omit<ExtensionTabsSyncMessage, 'type'>;
+  type CapturedNotify = Omit<ExtensionNotificationMessage, 'type'>;
+
+  let __test__syncMessages: CapturedSync[] = [];
+  let __test__notifications: CapturedNotify[] = [];
+  let __test__subscriptions: Disposable[] = [];
+
+  const testStartCapture = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__startCapture`,
+    async () => {
+      __test__syncMessages = [];
+      __test__notifications = [];
+      __test__subscriptions.forEach((d) => d.dispose());
+      __test__subscriptions = [];
+      __test__subscriptions.push(
+        tabManagerService.onDidSyncTabs((p) => __test__syncMessages.push(p))
+      );
+      __test__subscriptions.push(
+        tabManagerService.onDidNotify((p) => __test__notifications.push(p))
+      );
+      return true;
+    }
+  );
+
+  const testGetCaptured = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__getCapturedMessages`,
+    async (clear = false) => {
+      const result = {
+        sync: [...__test__syncMessages],
+        notify: [...__test__notifications]
+      };
+      if (clear) {
+        __test__syncMessages = [];
+        __test__notifications = [];
+      }
+      return result;
+    }
+  );
+
+  const testStopCapture = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__stopCapture`,
+    async () => {
+      __test__subscriptions.forEach((d) => d.dispose());
+      __test__subscriptions = [];
+      __test__syncMessages = [];
+      __test__notifications = [];
+      return true;
+    }
+  );
+
   return [
     refreshCommand,
     quickSwitchCommand,
@@ -386,5 +441,8 @@ export function createCommands(
     ,testDispatch
     ,testGetState
     ,testWebviewReady
+    ,testStartCapture
+    ,testGetCaptured
+    ,testStopCapture
   ];
 }
