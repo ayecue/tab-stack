@@ -56,7 +56,6 @@ import {
 import { SelectionTrackerService } from './selection-tracker';
 
 export class TabManagerService implements ITabManagerService {
-  static readonly RENDER_COOLDOWN_MS = 100 as const;
   static readonly REFRESH_DEBOUNCE_DELAY = 10 as const;
 
   private _rendering: boolean;
