@@ -183,12 +183,6 @@ export class TabStateHandler implements Disposable {
       }
     };
 
-    console.log(
-      '>>',
-      availableSelectionIds,
-      newStateContainer.state.selectionMap
-    );
-
     this._tabStore.send({
       type: 'SYNC_STATE',
       stateContainer: newStateContainer
@@ -212,8 +206,6 @@ export class TabStateHandler implements Disposable {
         }
       }
     };
-
-    console.log('>>', newStateContainer.state.selectionMap);
 
     this._tabStore.send({
       type: 'SYNC_STATE',
