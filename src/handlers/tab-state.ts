@@ -2,6 +2,7 @@ import debounce, { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
+import { transform as migrate } from '../transformers/migration';
 import { ConfigService } from '../services/config';
 import { createTabStateStore, TabStateStore } from '../stores/tab-state';
 import {
@@ -405,13 +406,14 @@ export class TabStateHandler implements Disposable {
     }
 
     const newContent = toAbsoluteTabStateFile(
-      fileContent,
+      migrate(fileContent),
       Uri.parse(workspaceFolder)
     );
 
     this._tabStore.send({
       type: 'IMPORT_STATE',
       data: {
+        version: newContent.version,
         groups: newContent.groups,
         history: newContent.history,
         addons: newContent.addons,
