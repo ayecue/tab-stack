@@ -104,7 +104,7 @@ Key options:
 - Some tab types (such as certain webviews or terminals) can’t be reopened automatically by VS Code; Tab Stack marks these as **not recoverable** so you can spot them at a glance.
 - State is tracked **per workspace** – different workspaces can have independent collections.
 
-For detailed changes over time, see the [Changelog](./CHANGELOG.md).
+For detailed changes over time, see the [Changelog](https://github.com/ayecue/tab-stack/blob/main/CHANGELOG.md).
 
 ---
 
