@@ -35,8 +35,8 @@ export function transform(payload: any): TabStateFileContent {
     groups: {},
     history: {},
     addons: {},
-    selectedGroup: null,
-    previousSelectedGroup: null,
+    selectedGroup: content.selectedGroup,
+    previousSelectedGroup: content.previousSelectedGroup,
     quickSlots: {}
   };
 
@@ -55,7 +55,7 @@ export function transform(payload: any): TabStateFileContent {
       for (const [historyName, historyState] of Object.entries(
         content.history
       )) {
-        migratedContent.groups[historyName] = {
+        migratedContent.history[historyName] = {
           ...historyState,
           state: {
             ...historyState.state,
@@ -67,7 +67,7 @@ export function transform(payload: any): TabStateFileContent {
 
     if (content.addons) {
       for (const [addonId, addonState] of Object.entries(content.addons)) {
-        migratedContent.groups[addonId] = {
+        migratedContent.addons[addonId] = {
           ...addonState,
           state: {
             ...addonState.state,
