@@ -1,10 +1,10 @@
-import { runTests } from '@vscode/test-electron';
-import path from 'node:path';
+const { runTests } = require('@vscode/test-electron');
+const path = require('node:path');
 
 async function main() {
   try {
-    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
-    const extensionTestsPath = path.resolve(__dirname, './suite/index');
+    const extensionDevelopmentPath = path.resolve(__dirname, '../..');
+    const extensionTestsPath = path.resolve(__dirname, './suite/index.cjs');
 
     await runTests({
       extensionDevelopmentPath,

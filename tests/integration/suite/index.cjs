@@ -1,8 +1,8 @@
-import { glob } from 'glob';
-import Mocha from 'mocha';
-import path from 'node:path';
+const { glob } = require('glob');
+const Mocha = require('mocha');
+const path = require('node:path');
 
-export async function run(): Promise<void> {
+exports.run = async function() {
   const mocha = new Mocha({
     ui: 'tdd',
     color: true,
@@ -10,7 +10,7 @@ export async function run(): Promise<void> {
   });
 
   const testsRoot = path.resolve(__dirname, '.');
-  const files = await glob('**/*.test.js', { cwd: testsRoot });
+  const files = await glob('**/*.test.cjs', { cwd: testsRoot });
 
   for (const file of files) {
     mocha.addFile(path.resolve(testsRoot, file));

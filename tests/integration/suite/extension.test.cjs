@@ -1,6 +1,6 @@
-import { suite, test } from 'mocha';
-import assert from 'node:assert';
-import * as vscode from 'vscode';
+const { suite, test, expect } = require('mocha');
+const assert = require('assert');
+const vscode = require('vscode');
 
 const EXTENSION_ID = 'ayecue.tab-stack';
 const COMMAND_PREFIX = 'tabStack.';
