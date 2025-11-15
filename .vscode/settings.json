@@ -5,5 +5,8 @@
       "path": "",
       "args": []
     }
-  }
+  },
+  "tabStack.history.maxEntries": 5,
+  "tabStack.gitIntegration.enabled": true,
+  "tabStack.gitIntegration.groupPrefix": "branch/"
 }

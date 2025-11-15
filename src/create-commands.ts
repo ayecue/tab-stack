@@ -2,6 +2,7 @@ import { commands, Disposable, window } from 'vscode';
 
 import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
+import { ViewManagerProvider } from './providers/view-manager';
 
 async function requestGroupId(
   tabManagerService: TabManagerService
@@ -318,6 +319,52 @@ export function createCommands(
     quickSlotCommands.push(quickSlotCommand);
   }
 
+  // Test-only helper commands (not contributed to menus):
+  const testOpenView = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__openView`,
+    async () => {
+      // Ensure the view container is revealed; this resolves the view provider
+      await commands.executeCommand('workbench.view.extension.tabStack');
+    }
+  );
+
+  const testDispatch = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__webviewDispatch`,
+    async (data: any) => {
+      await ViewManagerProvider.__test__dispatchFromWebview(data);
+      return true;
+    }
+  );
+
+  const testWebviewReady = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__webviewReady`,
+    async () => {
+      return ViewManagerProvider.__test__messageHandler != null;
+    }
+  );
+
+  const testGetState = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__getState`,
+    async () => {
+      const groups = tabManagerService.state?.getGroups?.() ?? {};
+      const addons = tabManagerService.state?.getAddons?.() ?? {};
+      const history = tabManagerService.state?.getHistory?.() ?? {};
+      const quickSlots = tabManagerService.state?.getQuickSlots?.() ?? {};
+      const selectedGroupId = tabManagerService.state?.stateContainer?.id ?? null;
+      return {
+        groups: Object.fromEntries(
+          Object.values(groups).map((g) => [g.id, { id: g.id, name: g.name }])
+        ),
+        addons: Object.fromEntries(
+          Object.values(addons).map((a) => [a.id, { id: a.id, name: a.name }])
+        ),
+        historyIds: Object.keys(history),
+        quickSlots,
+        selectedGroupId
+      };
+    }
+  );
+
   return [
     refreshCommand,
     quickSwitchCommand,
@@ -335,5 +382,9 @@ export function createCommands(
     clearQuickSlotCommand,
     clearAllTabsCommand,
     ...quickSlotCommands
+    ,testOpenView
+    ,testDispatch
+    ,testGetState
+    ,testWebviewReady
   ];
 }
