@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Storage type setting**: Users can now choose between file-based storage (`.vscode/tmstate.json`) and VS Code's workspace state storage (hidden, not in git)
+- **Selection persistence**: The cursor/selection position is now persisted for each tab and restored when applying groups, snapshots, or using quick switch
 
 ## [1.2.5] - 10-11-2025
 
