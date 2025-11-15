@@ -15,14 +15,13 @@ export interface TabStateStoreContext {
   previousStateContainer: StateContainer | null;
   isInitialized: boolean;
   isLoading: boolean;
+  isLocked: boolean;
 }
 
 // File Store Context
 export interface FileStoreContext {
   data: TabStateFileContent | null;
   isLoading: boolean;
-  location: string | null;
-  storageType: 'in-memory' | 'persistent' | null;
 }
 
 // Tab State Store Event Types
@@ -123,6 +122,14 @@ export type TabStateImportStateEvent = {
   data: TabStateFileContent;
 };
 
+export type TabStateLockEvent = {
+  type: 'LOCK_STATE';
+};
+
+export type TabStateUnlockEvent = {
+  type: 'UNLOCK_STATE';
+};
+
 // Tab State Store Events Union
 export type TabStateStoreEvents =
   | TabStateInitializeEvent
@@ -143,7 +150,9 @@ export type TabStateStoreEvents =
   | TabStateSetQuickSlotEvent
   | TabStateClearQuickSlotEvent
   | TabStateResetStateEvent
-  | TabStateImportStateEvent;
+  | TabStateImportStateEvent
+  | TabStateLockEvent
+  | TabStateUnlockEvent;
 
 // File Store Event Types
 export type FileStoreLoadStartEvent = {
@@ -153,8 +162,6 @@ export type FileStoreLoadStartEvent = {
 export type FileStoreLoadSuccessEvent = {
   type: 'DONE';
   data: TabStateFileContent;
-  location: string;
-  storageType: 'in-memory' | 'persistent';
   success: boolean;
 };
 

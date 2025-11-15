@@ -1,7 +1,16 @@
 import debounce, { DebouncedFunction } from 'debounce';
-import { Disposable, EventEmitter, Uri, window, workspace } from 'vscode';
+import { get } from 'http';
+import {
+  Disposable,
+  EventEmitter,
+  ExtensionContext,
+  Uri,
+  window,
+  workspace
+} from 'vscode';
 
 import { TabStateHandler } from '../handlers/tab-state';
+import { PersistenceMediator } from '../mediators/persistence';
 import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
@@ -9,9 +18,11 @@ import {
   ExtensionTabsSyncMessage
 } from '../types/messages';
 import {
+  createEmptyStateContainer,
   ITabManagerService,
   QuickSlotIndex,
   RenderingItem,
+  StateContainer,
   TabStateFileContent
 } from '../types/tab-manager';
 import {
@@ -32,6 +43,7 @@ import {
   findTabByViewColumnAndIndex,
   findTabGroupByViewColumn,
   getTabState,
+  isSelectionMapEqual,
   isTabStateEqual
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
@@ -41,18 +53,22 @@ import {
   GitRepositoryOpenEvent,
   GitService
 } from './git';
+import { SelectionTrackerService } from './selection-tracker';
 
 export class TabManagerService implements ITabManagerService {
-  static readonly RENDER_COOLDOWN_MS = 100 as const;
   static readonly REFRESH_DEBOUNCE_DELAY = 10 as const;
 
   private _rendering: boolean;
   private _nextRenderingItem: RenderingItem;
 
+  private _context: ExtensionContext;
   private _stateHandler: TabStateHandler;
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
+  private _selectionTrackerService: SelectionTrackerService;
   private _gitService: GitService | null;
+
+  private _renderCompleteEmitter: EventEmitter<void>;
 
   private _syncViewEmitter: EventEmitter<
     Omit<ExtensionTabsSyncMessage, 'type'>
@@ -67,19 +83,23 @@ export class TabManagerService implements ITabManagerService {
   refresh: DebouncedFunction<() => Promise<void>>;
 
   constructor(
+    context: ExtensionContext,
     layoutService: EditorLayoutService,
     configService: ConfigService,
+    selectionTrackerService: SelectionTrackerService,
     gitService: GitService | null = null
   ) {
     this.refresh = debounce(
       this._refresh.bind(this),
       TabManagerService.REFRESH_DEBOUNCE_DELAY
     );
+    this._context = context;
     this._nextRenderingItem = null;
     this._stateHandler = null;
     this._rendering = false;
     this._layoutService = layoutService;
     this._configService = configService;
+    this._selectionTrackerService = selectionTrackerService;
     this._gitService = gitService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
@@ -87,6 +107,7 @@ export class TabManagerService implements ITabManagerService {
     this._notifyViewEmitter = new EventEmitter<
       Omit<ExtensionNotificationMessage, 'type'>
     >();
+    this._renderCompleteEmitter = new EventEmitter<void>();
 
     this.initializeEvents();
   }
@@ -107,17 +128,40 @@ export class TabManagerService implements ITabManagerService {
     return this._notifyViewEmitter.event;
   }
 
+  get onDidCompleteRender() {
+    return this._renderCompleteEmitter.event;
+  }
+
   async attachStateHandler() {
     this._stateHandler = null;
-    const newStateHandler = new TabStateHandler(this._configService);
+
+    const persistenceMediator = new PersistenceMediator(
+      this._context,
+      this._configService
+    );
+    const newStateHandler = new TabStateHandler(
+      this._configService,
+      persistenceMediator
+    );
     await newStateHandler.initialize();
     this._stateHandler = newStateHandler;
-    this.applyState();
+    this.applyState(null);
     this.triggerSync();
+    this._stateHandler.onDidChangeState(() => void this.triggerSync());
+    this._stateHandler.onDidImportState(() => void this.applyState(null));
+  }
 
-    this._disposables.push(
-      this._stateHandler.onDidChangeState(() => void this.triggerSync())
-    );
+  async waitForRenderComplete(): Promise<void> {
+    if (!this._rendering) {
+      return;
+    }
+
+    return new Promise((resolve) => {
+      const disposable = this.onDidCompleteRender(() => {
+        disposable.dispose();
+        resolve();
+      });
+    });
   }
 
   private initializeEvents() {
@@ -129,6 +173,17 @@ export class TabManagerService implements ITabManagerService {
     );
     this._disposables.push(
       this._layoutService.onDidChangeLayout(() => void this.refresh())
+    );
+    this._disposables.push(
+      this._selectionTrackerService.onDidChangeSelection((editorSelection) => {
+        if (!this._stateHandler) {
+          return;
+        }
+        if (this._rendering) {
+          return;
+        }
+        this._stateHandler.syncSelection(editorSelection);
+      })
     );
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
@@ -221,13 +276,13 @@ export class TabManagerService implements ITabManagerService {
     await this._stateHandler.syncStateWithVSCode();
   }
 
-  applyState() {
+  applyState(rollbackStateContainer: StateContainer) {
     if (!this._stateHandler) return;
     if (this._stateHandler.stateContainer == null) return;
 
     this._nextRenderingItem = {
       stateContainer: this._stateHandler.stateContainer,
-      previousStateContainer: this._stateHandler.previousStateContainer
+      rollbackStateContainer
     };
 
     if (this._rendering) return;
@@ -237,6 +292,7 @@ export class TabManagerService implements ITabManagerService {
 
   private async next() {
     this._rendering = true;
+    this._stateHandler.lockState();
 
     while (this._nextRenderingItem !== null) {
       try {
@@ -249,28 +305,33 @@ export class TabManagerService implements ITabManagerService {
             await getEditorLayout(),
             this._nextRenderingItem.stateContainer.state.layout,
             true
-          )
+          ) &&
+          (this._nextRenderingItem.rollbackStateContainer == null ||
+            isSelectionMapEqual(
+              this._stateHandler.stateContainer?.state.selectionMap,
+              this._nextRenderingItem.rollbackStateContainer?.state.selectionMap
+            ))
         ) {
           this._nextRenderingItem = null;
           continue;
         }
 
         await this.render();
-        // Introduce a small delay to allow VS Code to process UI updates
-        await delay(TabManagerService.RENDER_COOLDOWN_MS);
       } catch (error) {
         this.notify(ExtensionNotificationKind.Error, 'Failed to rerender tabs');
       }
     }
 
+    this._stateHandler.unlockState();
     this._rendering = false;
+    this._renderCompleteEmitter.fire();
     void this.refresh();
   }
 
   private async render() {
     const currentStateContainer = this._nextRenderingItem.stateContainer;
     const previousStateContainer =
-      this._nextRenderingItem.previousStateContainer;
+      this._nextRenderingItem.rollbackStateContainer;
 
     this._nextRenderingItem = null;
 
@@ -278,18 +339,24 @@ export class TabManagerService implements ITabManagerService {
       await closeAllEditors();
 
       if (countTabs() > 0) {
-        this._stateHandler.setState(previousStateContainer);
+        this._stateHandler.setState(
+          previousStateContainer ?? createEmptyStateContainer()
+        );
         return;
       }
     }
 
     this._layoutService.setLayout(currentStateContainer.state.layout);
     await setEditorLayout(currentStateContainer.state.layout);
-    await applyTabState(currentStateContainer.state.tabState, {
-      preserveActiveTab: true,
-      preservePinnedTabs: true,
-      preserveTabFocus: true
-    });
+    await applyTabState(
+      currentStateContainer.state.tabState,
+      {
+        preserveActiveTab: true,
+        preservePinnedTabs: true,
+        preserveTabFocus: true
+      },
+      currentStateContainer.state.selectionMap
+    );
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
@@ -492,6 +559,7 @@ export class TabManagerService implements ITabManagerService {
       availableWorkspaceFolders,
       gitIntegration,
       historyMaxEntries: this._configService.getHistoryMaxEntries(),
+      storageType: this._configService.getStorageType(),
       rendering: this._rendering
     });
   }
@@ -521,11 +589,15 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    await applyTabState(addon.state.tabState, {
-      preserveActiveTab: false,
-      preservePinnedTabs: true,
-      preserveTabFocus: false
-    });
+    await applyTabState(
+      addon.state.tabState,
+      {
+        preserveActiveTab: false,
+        preservePinnedTabs: true,
+        preserveTabFocus: false
+      },
+      addon.state.selectionMap
+    );
   }
 
   switchToGroup(groupId: string | null) {
@@ -542,6 +614,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     const loaded = this._stateHandler.loadState(groupId);
 
     if (!loaded) {
@@ -552,7 +625,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   createGroup(groupId: string) {
@@ -582,6 +655,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     const loaded = this._stateHandler.loadHistoryState(historyId);
 
     if (!loaded) {
@@ -589,7 +663,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   deleteGroup(groupId: string) {
@@ -628,6 +702,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     const loaded = this._stateHandler.loadState(groupId);
 
     if (!loaded) {
@@ -639,7 +714,7 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   quickSwitch(): void {
@@ -647,8 +722,9 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    const rollbackStateContainer = this._stateHandler.stateContainer;
     this._stateHandler.setState(this._stateHandler.previousStateContainer);
-    this.applyState();
+    this.applyState(rollbackStateContainer);
   }
 
   async selectWorkspaceFolder(folderPath: string | null): Promise<void> {

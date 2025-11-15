@@ -9,6 +9,7 @@ import {
   ExtensionNotificationMessage,
   ExtensionTabsSyncMessage
 } from './messages';
+import { SelectionRange } from './selection-tracker';
 import { TabInfo, TabState } from './tabs';
 
 export type QuickSlotIndex = string;
@@ -16,6 +17,7 @@ export type QuickSlotIndex = string;
 export type QuickSlotAssignments = Partial<Record<QuickSlotIndex, string>>;
 
 export interface TabManagerState {
+  selectionMap: Record<string, SelectionRange>;
   tabState: TabState;
   layout: Layout;
 }
@@ -46,20 +48,21 @@ export function createEmptyStateContainer(): StateContainer {
       layout: {
         orientation: 0,
         groups: []
-      }
+      },
+      selectionMap: {}
     },
     lastSelectedAt: 0,
     createdAt: Date.now()
   };
 }
 
-export const CURRENT_STATE_FILE_VERSION = 1;
+export const CURRENT_STATE_FILE_VERSION = 2;
 
 export interface TabStateFileContent {
   version?: number;
   groups: Record<string, StateContainer>;
   history: Record<string, StateContainer>;
-  addons?: Record<string, StateContainer>;
+  addons: Record<string, StateContainer>;
   selectedGroup: string;
   previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;
@@ -79,7 +82,7 @@ export function createDefaultTabStateFileContent(): TabStateFileContent {
 
 export interface RenderingItem {
   stateContainer: StateContainer;
-  previousStateContainer: StateContainer;
+  rollbackStateContainer: StateContainer;
 }
 
 export interface ITabManagerService extends Disposable {

@@ -3,16 +3,15 @@ import { nanoid } from 'nanoid';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 
 import { ConfigService } from '../services/config';
-import {
-  createFileStore,
-  load as loadFile,
-  StorageStore
-} from '../stores/file';
 import { createTabStateStore, TabStateStore } from '../stores/tab-state';
+import { transform as migrate } from '../transformers/migration';
 import {
   toAbsoluteTabStateFile,
   toRelativeTabStateFile
 } from '../transformers/tab-uris';
+import { aggregateTrackerKeysFromTabState } from '../transformers/tracker-key';
+import { PersistenceHandler } from '../types/persistence';
+import { EditorSelection, SelectionRange } from '../types/selection-tracker';
 import { TabStateStoreContext } from '../types/store';
 import {
   createEmptyStateContainer,
@@ -32,27 +31,44 @@ export class TabStateHandler implements Disposable {
   save: DebouncedFunction<() => Promise<void>>;
 
   private _tabStore: TabStateStore;
-  private _fileStore: StorageStore;
+  private _persistenceHandler: PersistenceHandler;
   private _configService: ConfigService;
   private _storeSubscription: { unsubscribe: () => void } | null;
   private _stateUpdateEmitter: EventEmitter<TabStateStoreContext>;
+  private _importStateEmitter: EventEmitter<TabStateStoreContext>;
 
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    persistenceHandler: PersistenceHandler
+  ) {
     this.save = debounce(
       this._save.bind(this),
       TabStateHandler.SAVE_DEBOUNCE_DELAY
     );
     this._stateUpdateEmitter = new EventEmitter<TabStateStoreContext>();
+    this._importStateEmitter = new EventEmitter<TabStateStoreContext>();
     this._configService = configService;
     this._tabStore = createTabStateStore();
-    this._fileStore = createFileStore();
+    this._persistenceHandler = persistenceHandler;
     this._storeSubscription = null;
   }
 
-  async initialize() {
-    await loadFile(this._fileStore, this._configService);
+  lockState(): void {
+    this._tabStore.send({ type: 'LOCK_STATE' });
+  }
 
-    const fileState = this._fileStore.getSnapshot().context.data;
+  unlockState(): void {
+    this._tabStore.send({ type: 'UNLOCK_STATE' });
+  }
+
+  isLocked(): boolean {
+    return this._tabStore.getSnapshot().context.isLocked;
+  }
+
+  async initialize() {
+    await this._persistenceHandler.load();
+
+    const fileState = this._persistenceHandler.get();
 
     if (!fileState) {
       return;
@@ -71,19 +87,25 @@ export class TabStateHandler implements Disposable {
 
     // Subscribe to store changes to trigger saves
     this._storeSubscription = this._tabStore.subscribe(async () => {
-      if (this._tabStore.getSnapshot().context.currentStateContainer == null) {
+      const snapshot = this._tabStore.getSnapshot();
+
+      if (snapshot.context.currentStateContainer == null) {
         void this.syncStateWithVSCode();
         return;
       }
 
       void this.save();
 
-      this._stateUpdateEmitter.fire(this._tabStore.getSnapshot().context);
+      this._stateUpdateEmitter.fire(snapshot.context);
     });
   }
 
   get onDidChangeState(): Event<TabStateStoreContext> {
     return this._stateUpdateEmitter.event;
+  }
+
+  get onDidImportState(): Event<TabStateStoreContext> {
+    return this._importStateEmitter.event;
   }
 
   get groups() {
@@ -153,12 +175,47 @@ export class TabStateHandler implements Disposable {
     const tabState = getTabState();
     const layout = await getEditorLayout();
     const snapshot = this._tabStore.getSnapshot();
+    const availableSelectionIds = aggregateTrackerKeysFromTabState(tabState);
+    const baseStateContainer =
+      snapshot.context.currentStateContainer ?? createEmptyStateContainer();
+    const selectionMap = baseStateContainer.state.selectionMap ?? {};
     const newStateContainer = {
-      ...(snapshot.context.currentStateContainer ??
-        createEmptyStateContainer()),
+      ...baseStateContainer,
       state: {
+        selectionMap: availableSelectionIds.reduce<
+          Record<string, SelectionRange>
+        >((result, id) => {
+          if (id in selectionMap) {
+            result[id] = selectionMap[id];
+          }
+          return result;
+        }, {}),
         tabState,
         layout
+      }
+    };
+
+    this._tabStore.send({
+      type: 'SYNC_STATE',
+      stateContainer: newStateContainer
+    });
+
+    return newStateContainer;
+  }
+
+  syncSelection(editorSelection: EditorSelection) {
+    const snapshot = this._tabStore.getSnapshot();
+    const baseStateContainer =
+      snapshot.context.currentStateContainer ?? createEmptyStateContainer();
+    const selectionMap = baseStateContainer.state.selectionMap ?? {};
+    const newStateContainer = {
+      ...baseStateContainer,
+      state: {
+        ...baseStateContainer.state,
+        selectionMap: {
+          ...selectionMap,
+          [editorSelection.id]: editorSelection.selection
+        }
       }
     };
 
@@ -285,24 +342,22 @@ export class TabStateHandler implements Disposable {
     const snapshot = this._tabStore.getSnapshot();
     const context = snapshot.context;
 
-    this._fileStore.send({
-      type: 'SAVE',
-      data: {
-        version: CURRENT_STATE_FILE_VERSION,
-        groups: context.groups,
-        history: context.history,
-        addons: context.addons,
-        selectedGroup: context.currentStateContainer?.id || null,
-        previousSelectedGroup: context.previousStateContainer?.id || null,
-        quickSlots: context.quickSlots
-      }
+    this._persistenceHandler.save({
+      version: CURRENT_STATE_FILE_VERSION,
+      groups: context.groups,
+      history: context.history,
+      addons: context.addons,
+      selectedGroup: context.currentStateContainer?.id || null,
+      previousSelectedGroup: context.previousStateContainer?.id || null,
+      quickSlots: context.quickSlots
     });
   }
 
   dispose() {
     this._storeSubscription?.unsubscribe();
-    this._fileStore.send({ type: 'RESET' });
+    this._persistenceHandler.reset();
     this._stateUpdateEmitter.dispose();
+    this._importStateEmitter.dispose();
   }
 
   getGroups(): Record<string, StateContainer> {
@@ -342,14 +397,13 @@ export class TabStateHandler implements Disposable {
   }
 
   async reloadStateFile(): Promise<void> {
-    this._fileStore.send({ type: 'RESET' });
+    this._persistenceHandler.reset();
     this._tabStore.send({ type: 'RESET_STATE' });
     await this.initialize();
   }
 
   exportStateFile(): TabStateFileContent {
-    const storageSnapshot = this._fileStore.getSnapshot();
-    const fileData = storageSnapshot.context.data;
+    const fileData = this._persistenceHandler.get();
 
     if (!fileData) {
       return null;
@@ -366,13 +420,14 @@ export class TabStateHandler implements Disposable {
     }
 
     const newContent = toAbsoluteTabStateFile(
-      fileContent,
+      migrate(fileContent),
       Uri.parse(workspaceFolder)
     );
 
     this._tabStore.send({
       type: 'IMPORT_STATE',
       data: {
+        version: newContent.version,
         groups: newContent.groups,
         history: newContent.history,
         addons: newContent.addons,
@@ -381,6 +436,8 @@ export class TabStateHandler implements Disposable {
         previousSelectedGroup: newContent.previousSelectedGroup
       }
     });
+
+    this._importStateEmitter.fire(this._tabStore.getSnapshot().context);
 
     return true;
   }

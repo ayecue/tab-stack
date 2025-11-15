@@ -3,7 +3,8 @@ import { Disposable, EventEmitter, workspace, WorkspaceFolder } from 'vscode';
 import {
   ConfigChangeEvent,
   GitIntegrationConfig,
-  GitIntegrationMode
+  GitIntegrationMode,
+  StorageType
 } from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 
@@ -28,10 +29,14 @@ export class ConfigService implements Disposable {
 
       if (
         e.affectsConfiguration('tabStack.masterWorkspaceFolder') ||
-        e.affectsConfiguration('tabStack.gitIntegration')
+        e.affectsConfiguration('tabStack.gitIntegration') ||
+        e.affectsConfiguration('tabStack.storage.type')
       ) {
         if (e.affectsConfiguration('tabStack.gitIntegration')) {
           changes.gitIntegration = this.getGitIntegrationConfig();
+        }
+        if (e.affectsConfiguration('tabStack.storage.type')) {
+          changes.storageType = this.getStorageType();
         }
         this._onDidChangeConfig.fire(changes);
       }
@@ -66,6 +71,16 @@ export class ConfigService implements Disposable {
     // Guard against misconfiguration
     if (typeof value !== 'number' || Number.isNaN(value)) return 10;
     return Math.max(1, Math.min(100, Math.floor(value)));
+  }
+
+  getStorageType(): StorageType {
+    const config = workspace.getConfiguration('tabStack.storage');
+    return config.get<StorageType>('type', StorageType.File);
+  }
+
+  async setStorageType(storageType: StorageType): Promise<void> {
+    const config = workspace.getConfiguration('tabStack.storage');
+    await config.update('type', storageType, false);
   }
 
   async setGitIntegrationEnabled(enabled: boolean): Promise<void> {

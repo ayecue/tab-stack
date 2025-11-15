@@ -1,125 +1,118 @@
 # Tab Stack
 
-Save, switch, and recover complete VS Code tab layouts. Git‑aware, renameable, and fast.
+Save and restore complete VS Code tab layouts with groups, snapshots, add-ons, and Git-aware workflows.
 
-Create named groups and snapshots, assign quick slots for instant recall, and optionally auto‑switch groups when you change branches.
+Tab Stack keeps your **tabs, layout, and cursor position** per tab so you can jump between tasks without losing context.
 
-<img src="https://github.com/ayecue/tab-stack/blob/main/assets/preview.gif?raw=true" alt="Preview" width="600">
-
-## Highlights
-
-- **Save named tab groups** and reopen entire working sets with a click.
-- **Capture snapshots** of every open tab and restore them later.
-- **Add-ons (apply without replacing)** — save reusable tab sets you can apply on top of your current layout without closing anything.
-- **Assign quick slots (1–9)** for instant recall via UI, palette, or keys.
-- **Git‑aware workflows** — auto‑create or auto‑switch groups on branch change (configurable).
-- **Smart ordering** — groups are sorted by most recently used.
-- **Multi‑root friendly** — choose which workspace folder to track.
-- **Drag and drop** — reorder tabs between columns with intuitive drag and drop.
-- **Import/Export** — backup and share your tab collections across workspaces.
-- **Filter tabs** — quickly find and organize tabs with built-in filtering.
-
-## Installation
-
-### From the Marketplace
-
-Search for **“Tab Stack”** by `ayecue` in the Extensions Marketplace (or follow the link once it is published) and click **Install**.
-
-## Getting started
-
-1. Open the **Tab Stack** view from the activity bar.
-2. Click **Save Group** to capture your current layout.
-3. In **Groups**:
-  - Click the edit icon to rename the group (names are fully editable).
-  - Assign a quick slot (1–9) from the dropdown for instant recall.
-  - Drag and drop to reorder tabs between columns.
-4. In **Snapshots**:
-  - Click the camera to capture a snapshot.
-5. (Optional) **Git Integration**:
-  - Open the Settings panel and enable Git Integration. Choose auto‑switch, auto‑create, or full‑auto. Optionally set a prefix like `git:`.
-6. Use shortcuts:
-  - Quick Switch: Cmd/Ctrl + Alt + Shift + 0
-  - Quick Slots: Cmd/Ctrl + Alt + Shift + 1…9
-7. Add-ons (optional):
-  - Switch to the Add-ons tab, click + to save the current tabs as an add-on.
-  - Click the edit icon to rename add-ons (just like groups).
-  - Click an add-on to apply it — it adds tabs on top of your current layout without closing existing ones.
-8. Import/Export:
-  - Use the toolbar buttons to export your collections as a backup or to share with others.
-  - Import previously exported collections to restore or transfer them to another workspace.
-
-## Commands & shortcuts
-
-| Command ID | Description | Default keybinding* |
-| --- | --- | --- |
-| `tabStack.refresh` | Sync the view with the current VS Code tab state. | — |
-| `tabStack.quickSwitch` | Toggle between the two most recent tab states. | `Ctrl`/`Cmd` + `Alt` + `Shift` + `0` |
-| `tabStack.clearSelection` | Return to the live layout without a saved group applied. | — |
-| `tabStack.switchGroup` | Choose and apply any saved group. | — |
-| `tabStack.createGroup` | Save the current set of open tabs as a reusable group. | — |
-| `tabStack.assignQuickSlot` | Assign the current group to a quick slot (also available in the UI). | — |
-| `tabStack.deleteGroup` | Remove a saved group. | — |
-| `tabStack.snapshot` | Capture a snapshot of every open tab (saved to history). | — |
-| `tabStack.restoreSnapshot` | Restore one of the saved snapshots. | — |
-| `tabStack.deleteSnapshot` | Delete a snapshot from history. | — |
-| `tabStack.createAddon` | Save the current tabs as an add-on (applies without replacing). | — |
-| `tabStack.applyAddon` | Apply an add-on on top of your current layout. | — |
-| `tabStack.deleteAddon` | Delete a saved add-on. | — |
-| `tabStack.quickSlot1` – `tabStack.quickSlot9` | Apply the group assigned to quick slots 1–9. | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` … `9` |
-
-\*On macOS the shortcuts use `Cmd` instead of `Ctrl`.
-
-## Tips
-
-- **Rename groups and add-ons anytime** — rename from the Groups or Add-ons list; saved tabs and quick slots stay intact.
-- **Drag and drop** — reorder tabs between columns by dragging them in any group view.
-- **Filter tabs** — use the filter input to quickly find specific tabs in large collections.
-- **Collapsible panels** — collapse collection panels (Groups, Snapshots, Add-ons) to save space and focus on what matters.
-- **Collection tooltips** — hover over any collection item to see tab and column counts at a glance.
-- **Import/Export** — backup your collections regularly or share them with teammates for consistent setups.
-- **Git Integration modes** — choose auto‑switch, auto‑create, or full‑auto to match your workflow.
-- **Custom prefixes** — keep Git‑created groups tidy with a prefix like `git:` (e.g., `git:main`).
-- **MRU sorting** — your most recently used groups surface to the top automatically.
-- **Snapshots** — labels with timestamps make restores obvious.
-- **Quick slots from the UI** — assign 1–9 directly from the Groups list.
-- **Quick Switch** — jump between two active contexts with a single shortcut.
-- **Layout accuracy** — column sizing and splits are tracked and refreshed automatically.
-- **Multi‑root** — pick which workspace folder to track in Settings.
-- **Add-ons are additive** — they never replace or close your current tabs; perfect for reusable toolsets or pin sets.
-- **Limitations** — some tab types (like certain webviews or terminals) can't be automatically reopened by VS Code. Tab Stack marks these as not recoverable so you can quickly spot them.
-
-## Configuration
-
-Tab Stack can be configured through the Settings panel in the webview or via VS Code settings:
-
-### Git Integration Settings
-
-- `tabStack.gitIntegration.enabled` (boolean): Enable automatic group management based on Git branch changes.
-  - Default: `false`
-
-- `tabStack.gitIntegration.mode` (string): How Tab Stack manages groups based on Git branches.
-  - Values: `auto-switch`, `auto-create`, `full-auto`
-  - Default: `full-auto`
-  - Behavior:
-    - `auto-switch`: Automatically switch to an existing group when the branch changes
-    - `auto-create`: Automatically create a group for new branches and switch to it
-    - `full-auto`: Create groups for new branches and auto-switch between them
-
-- `tabStack.gitIntegration.groupPrefix` (string): Prefix for automatically created Git-based groups.
-  - Default: `"git:"`
-  - Example: `git:main`, `git:feature/login`
-
-### Workspace Settings
-
-- `tabStack.masterWorkspaceFolder` (string | null): Path to the workspace folder used for storing tab state and tracking Git branches.
-  - If not set, the first workspace folder will be used.
-  - You can also configure this from the Settings panel in the Tab Stack view.
-
-## Contributing & feedback
-
-Bug reports and feature suggestions are welcome! Open an issue on [GitHub](https://github.com/ayecue/tab-stack/issues).
+<p align="center">
+  <img src="https://github.com/ayecue/tab-stack/blob/main/assets/preview.gif?raw=true" alt="Preview" width="600" />
+</p>
 
 ---
 
-Enjoy a tidy editor! Tab Stack keeps your context safe so you can focus on building.
+## Why use Tab Stack?
+
+VS Code already remembers a bit of your layout, but it is not built for:
+
+- Quickly switching between **named workspaces** (e.g. "Feature A", "Bugfix 123")
+- Keeping a **history of layouts** you can roll back to
+- Re-using the same **tooling tabs** on top of any project
+- Automatically tying groups to **Git branches**
+
+Tab Stack does all of that while restoring the **exact tabs, columns, and cursor/selection** per tab.
+
+---
+
+## Features at a glance
+
+- **Groups** - Save named tab layouts and re-apply them with a click
+- **Snapshots (history)** - Capture "points in time" of all open tabs and restore later
+- **Add-ons** - Reusable tab sets you can apply on top of your current layout (nothing gets closed)
+- **Quick slots 1-9** - Assign groups to numbered slots for instant recall via shortcuts
+- **Quick Switch** - Jump between your last two states (great for ping-ponging between tasks)
+- **Git integration** - Auto-create and/or auto-switch groups when you change branches, with configurable prefixes like `git:main`
+- **Layout fidelity** - Columns and splits are tracked; selections/cursors are persisted per tab (text editors and notebooks)
+- **Import/Export** - Backup and share your collections across workspaces or machines
+- **Multi-root aware** - Choose which workspace folder Tab Stack uses as its "master"
+
+---
+
+## Quick start
+
+1. Open the **Tab Stack** view from the activity bar.
+2. Arrange your tabs and editor columns as you like.
+3. Click **Save Group** to capture the current layout.
+4. (Optional) Assign the group to a **quick slot (1-9)** for one-keystroke recall.
+5. Use **Quick Switch** to bounce between the two most recent states:
+	 - `Cmd`/`Ctrl` + `Alt` + `Shift` + `0`
+6. (Optional) Enable **Git integration** in the Settings panel to automatically create/switch groups per branch.
+
+That is it - from here you can start building up groups, snapshots, and add-ons as your workflow evolves.
+
+---
+
+## Commands & keybindings
+
+Most functionality is available both through the **Tab Stack view** and the **Command Palette**.
+
+| Command ID | What it does | Default keybinding* |
+| --- | --- | --- |
+| `tabStack.quickSwitch` | Toggle between the two most recent tab states | `Ctrl`/`Cmd` + `Alt` + `Shift` + `0` |
+| `tabStack.quickSlot1` - `tabStack.quickSlot9` | Apply groups assigned to quick slots 1-9 | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` ... `9` |
+| `tabStack.createGroup` | Save current tabs as a named group | - |
+| `tabStack.switchGroup` | Pick and apply a saved group | - |
+| `tabStack.snapshot` | Capture a snapshot of all open tabs | - |
+| `tabStack.restoreSnapshot` | Restore a snapshot from history | - |
+| `tabStack.createAddon` | Save current tabs as an add-on (overlay) | - |
+| `tabStack.applyAddon` | Apply an add-on on top of the current layout | - |
+
+\*On macOS the shortcuts use `Cmd` instead of `Ctrl`.
+
+Additional commands like refresh, delete group/add‑on/snapshot, and quick slot assignment are also available via the Command Palette and the Tab Stack UI.
+
+---
+
+## Settings
+
+You can configure Tab Stack from **VS Code Settings** or from the **Settings panel** inside the Tab Stack view.
+
+Key options:
+
+- **Storage**
+	- `tabStack.storage.type` - Where to store state:
+			- `file` (default) - `.vscode/tmstate.json` in your workspace
+			- `workspace-state` - VS Code’s internal workspace state (hidden, not in git)
+
+- **Workspace scope**
+	- `tabStack.masterWorkspaceFolder` - Which workspace folder Tab Stack uses as its main reference (defaults to the first folder)
+
+- **Git integration**
+	- `tabStack.gitIntegration.enabled` - Turn Git-based group management on/off
+	- `tabStack.gitIntegration.mode` - Behavior when branches change:
+		- `auto-switch` - Switch to an existing group for the branch
+		- `auto-create` - Create a new group for the branch and switch to it
+		- `full-auto` (default) - Combination of auto-create and auto-switch
+	- `tabStack.gitIntegration.groupPrefix` - Prefix for Git groups (default `git:`), e.g. `git:main`, `git:feature/login`
+
+- **History**
+	- `tabStack.history.maxEntries` - Maximum number of snapshots to retain (default 10)
+
+---
+
+## Notes & limitations
+
+- Some tab types (such as certain webviews or terminals) cannot be reopened automatically by VS Code; Tab Stack marks these as **not recoverable** so you can spot them at a glance.
+- State is tracked **per workspace** - different workspaces can have independent collections.
+
+For detailed changes over time, see the [Changelog](https://github.com/ayecue/tab-stack/blob/main/CHANGELOG.md).
+
+---
+
+## Contributing & feedback
+
+Bug reports, ideas, and PRs are very welcome.
+
+- Issues: <https://github.com/ayecue/tab-stack/issues>
+
+If Tab Stack improves your workflow, consider sharing it with your team or leaving a review in the Marketplace.
 

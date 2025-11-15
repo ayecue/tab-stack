@@ -1,4 +1,8 @@
-import { GitIntegrationConfig, GitIntegrationMode } from './config';
+import {
+  GitIntegrationConfig,
+  GitIntegrationMode,
+  StorageType
+} from './config';
 import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
 import { TabState } from './tabs';
 
@@ -50,6 +54,7 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
   historyMaxEntries: number;
+  storageType: StorageType;
   rendering: boolean;
 }
 
@@ -72,6 +77,7 @@ export enum WebviewMessageType {
   ClearWorkspaceFolder = 'clear-workspace-folder',
   UpdateGitIntegration = 'update-git-integration',
   UpdateHistoryMaxEntries = 'update-history-max-entries',
+  UpdateStorageType = 'update-storage-type',
   NewAddon = 'new-addon',
   RenameAddon = 'rename-addon',
   DeleteAddon = 'delete-addon',
@@ -181,6 +187,11 @@ export interface WebviewUpdateHistoryMaxEntriesMessage
   extends BaseWebviewMessage {
   type: WebviewMessageType.UpdateHistoryMaxEntries;
   maxEntries: number;
+}
+
+export interface WebviewUpdateStorageTypeMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.UpdateStorageType;
+  storageType: StorageType;
 }
 
 export interface WebviewCreateAddonMessage extends BaseWebviewMessage {

@@ -1,6 +1,8 @@
-import { commands, Uri, window } from 'vscode';
+import { commands, Position, Range, Uri, window } from 'vscode';
 
+import { getTabInfoTrackerKey } from '../transformers/tracker-key';
 import { Layout } from '../types/commands';
+import { SelectionRange } from '../types/selection-tracker';
 import {
   TabInfo,
   TabInfoCustom,
@@ -146,7 +148,10 @@ export async function moveTab(
   }
 }
 
-export async function openTab(tab: TabInfo): Promise<boolean> {
+export async function openTab(
+  tab: TabInfo,
+  selectionMap?: Record<string, SelectionRange>
+): Promise<boolean> {
   // just a fallback for older versions of tab stack
   if (tab.kind == null) {
     // @ts-ignore
@@ -155,15 +160,30 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
 
   switch (tab.kind) {
     case TabKind.TabInputText: {
+      const trackerId = getTabInfoTrackerKey(tab);
       const textTab = tab as TabInfoText;
       await commands.executeCommand('vscode.open', Uri.parse(textTab.uri), {
         viewColumn: tab.viewColumn,
         preview: false,
-        preserveFocus: true
+        preserveFocus: true,
+        selection:
+          selectionMap && trackerId in selectionMap
+            ? new Range(
+                new Position(
+                  selectionMap[trackerId].start.line,
+                  selectionMap[trackerId].start.character
+                ),
+                new Position(
+                  selectionMap[trackerId].end.line,
+                  selectionMap[trackerId].end.character
+                )
+              )
+            : undefined
       });
       return true;
     }
     case TabKind.TabInputTextDiff: {
+      const trackerId = getTabInfoTrackerKey(tab);
       const textDiffTab = tab as TabInfoTextDiff;
       await commands.executeCommand(
         'vscode.diff',
@@ -173,7 +193,20 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
         {
           viewColumn: tab.viewColumn,
           preview: false,
-          preserveFocus: true
+          preserveFocus: true,
+          selection:
+            selectionMap && trackerId in selectionMap
+              ? new Range(
+                  new Position(
+                    selectionMap[trackerId].start.line,
+                    selectionMap[trackerId].start.character
+                  ),
+                  new Position(
+                    selectionMap[trackerId].end.line,
+                    selectionMap[trackerId].end.character
+                  )
+                )
+              : undefined
         }
       );
       return true;
@@ -193,6 +226,7 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
       return true;
     }
     case TabKind.TabInputNotebook: {
+      const trackerId = getTabInfoTrackerKey(tab);
       const notebookTab = tab as TabInfoNotebook;
       await commands.executeCommand(
         'vscode.openWith',
@@ -201,12 +235,26 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
         {
           viewColumn: tab.viewColumn,
           preview: false,
-          preserveFocus: true
+          preserveFocus: true,
+          selection:
+            selectionMap && trackerId in selectionMap
+              ? new Range(
+                  new Position(
+                    selectionMap[trackerId].start.line,
+                    selectionMap[trackerId].start.character
+                  ),
+                  new Position(
+                    selectionMap[trackerId].end.line,
+                    selectionMap[trackerId].end.character
+                  )
+                )
+              : undefined
         }
       );
       return true;
     }
     case TabKind.TabInputNotebookDiff: {
+      const trackerId = getTabInfoTrackerKey(tab);
       const notebookDiffTab = tab as TabInfoNotebookDiff;
       await commands.executeCommand(
         'vscode.diff',
@@ -216,7 +264,20 @@ export async function openTab(tab: TabInfo): Promise<boolean> {
         {
           viewColumn: tab.viewColumn,
           preview: false,
-          preserveFocus: true
+          preserveFocus: true,
+          selection:
+            selectionMap && trackerId in selectionMap
+              ? new Range(
+                  new Position(
+                    selectionMap[trackerId].start.line,
+                    selectionMap[trackerId].start.character
+                  ),
+                  new Position(
+                    selectionMap[trackerId].end.line,
+                    selectionMap[trackerId].end.character
+                  )
+                )
+              : undefined
         }
       );
       return true;

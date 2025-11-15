@@ -4,6 +4,11 @@ orbs:
   node: circleci/node@5.1.0
 
 commands:
+  test:
+    steps:
+      - run:
+          name: Run unit tests
+          command: npm run test:unit
   build:  
     steps:
       - run:
@@ -17,6 +22,7 @@ jobs:
     steps:
       - checkout
       - node/install-packages
+      - test
       - build
   publish-ovsx: 
     docker:

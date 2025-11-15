@@ -1,23 +1,23 @@
 import { nanoid } from 'nanoid';
 
-import {
-  QuickSlotAssignments,
-  StateContainer,
-  TabManagerState
-} from '../../types/tab-manager';
+import { Layout } from '../../types/commands';
+import { QuickSlotAssignments } from '../../types/tab-manager';
+import { TabGroupInfo } from '../../types/tabs';
+import { TabStateFileContentV1 } from './v1';
 
-export interface TabStateFileContentV0 {
-  groups: Record<string, TabManagerState>;
-  history: Record<string, TabManagerState>;
-  selectedGroup: string;
-  previousSelectedGroup: string;
-  quickSlots: QuickSlotAssignments;
+export interface TabStateV0 {
+  tabGroups: Record<number, TabGroupInfo>;
+  activeGroup: number | null;
 }
 
-export interface TabStateFileContentV1 {
-  version?: number;
-  groups: Record<string, StateContainer>;
-  history: Record<string, StateContainer>;
+export interface TabTabManagerStateV0 {
+  tabState: TabStateV0;
+  layout: Layout;
+}
+
+export interface TabStateFileContentV0 {
+  groups: Record<string, TabTabManagerStateV0>;
+  history: Record<string, TabTabManagerStateV0>;
   selectedGroup: string;
   previousSelectedGroup: string;
   quickSlots: QuickSlotAssignments;

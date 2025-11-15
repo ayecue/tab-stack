@@ -1,4 +1,7 @@
 .DS_Store
+.vscode-test
+docs
+coverage
 node_modules
 out
 test.src

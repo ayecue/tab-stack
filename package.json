@@ -8,19 +8,24 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
     "@types/color-convert": "^2.0.0",
-    "@types/node": "^12.12.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.12.12",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
+    "@vitest/coverage-v8": "^2.1.4",
     "@vscode/test-electron": "^2.0.3",
     "@vscode/test-web": "^0.0.56",
     "esbuild": "0.21.0",
@@ -35,10 +40,16 @@
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-security": "^1.5.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
+    "fishery": "^2.2.0",
+    "glob": "^11.0.0",
+    "happy-dom": "^14.10.1",
+    "jest-mock-vscode": "^4.8.2",
+    "mocha": "^10.7.3",
     "ovsx": "^0.10.1",
     "source-map-support": "^0.5.12",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
+    "vitest": "^2.1.4",
     "vsce": "^2.15.0"
   },
   "scripts": {
@@ -53,6 +64,11 @@
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "pretest:integration": "npm run compile",
+    "test:integration": "node ./tests/integration/runTest.cjs",
     "test:browser": "npm run compile:ts && npm run compile:browser && vscode-test-web --extensionDevelopmentPath=. ."
   },
   "homepage": "https://github.com/ayecue/tab-stack",
@@ -324,6 +340,19 @@
           "minimum": 1,
           "maximum": 100,
           "description": "Maximum number of snapshots to retain in history. Older entries are pruned automatically."
+        },
+        "tabStack.storage.type": {
+          "type": "string",
+          "enum": [
+            "file",
+            "workspace-state"
+          ],
+          "enumDescriptions": [
+            "Store tab state in .vscode/tmstate.json file (visible and git-trackable)",
+            "Store tab state in VS Code's workspace state (hidden, not in git)"
+          ],
+          "default": "file",
+          "description": "Storage method for tab state persistence."
         }
       }
     }

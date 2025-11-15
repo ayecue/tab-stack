@@ -34,7 +34,8 @@ export const createInitialTabStateContext = (): TabStateStoreContext => ({
   currentStateContainer: null,
   previousStateContainer: null,
   isInitialized: false,
-  isLoading: false
+  isLoading: false,
+  isLocked: false
 });
 
 // Create the store
@@ -75,7 +76,16 @@ export const createTabStateStore = (): Store<
         };
       },
 
+      LOCK_STATE: (context: TabStateStoreContext) => {
+        return { ...context, isLocked: true };
+      },
+
+      UNLOCK_STATE: (context: TabStateStoreContext) => {
+        return { ...context, isLocked: false };
+      },
+
       SYNC_STATE: (context: TabStateStoreContext, event: TabStateSyncEvent) => {
+        if (context.isLocked) return context;
         const currentStateContainer = event.stateContainer;
         const changes: Partial<TabStateStoreContext> = {
           currentStateContainer
@@ -139,6 +149,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateImportStateEvent
       ) => {
+        if (context.isLocked) return context;
         const currentStateContainer =
           event.data.selectedGroup in event.data.groups
             ? event.data.groups[event.data.selectedGroup]
@@ -166,6 +177,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateCreateGroupEvent
       ) => {
+        if (context.isLocked) return context;
         const newStateContainer = event.stateContainer;
 
         return {
@@ -183,6 +195,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateRenameGroupEvent
       ) => {
+        if (context.isLocked) return context;
         const group = context.groups[event.groupId];
 
         if (!group) {
@@ -214,6 +227,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateDeleteGroupEvent
       ) => {
+        if (context.isLocked) return context;
         const group = context.groups[event.groupId];
 
         if (!group) {
@@ -242,6 +256,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateLoadGroupEvent
       ) => {
+        if (context.isLocked) return context;
         const group = context.groups[event.groupId];
 
         if (!group) {
@@ -271,6 +286,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateAddToHistoryEvent
       ) => {
+        if (context.isLocked) return context;
         const newStateContainer = event.stateContainer;
 
         return {
@@ -286,6 +302,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateDeleteHistoryEntryEvent
       ) => {
+        if (context.isLocked) return context;
         const historyEntry = context.history[event.historyId];
 
         if (!historyEntry) {
@@ -302,6 +319,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateLoadHistoryStateEvent
       ) => {
+        if (context.isLocked) return context;
         const historyEntry = context.history[event.historyId];
 
         if (!historyEntry) {
@@ -320,6 +338,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStatePruneHistoryEvent
       ) => {
+        if (context.isLocked) return context;
         const entries = Object.values(context.history);
 
         if (entries.length <= event.maxEntries) {
@@ -328,7 +347,7 @@ export const createTabStateStore = (): Store<
 
         const keyToExclude = entries
           .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
-          .slice(entries.length)
+          .slice(0, entries.length - event.maxEntries)
           .map((it) => it.id);
 
         return {
@@ -344,6 +363,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateCreateAddonEvent
       ) => {
+        if (context.isLocked) return context;
         const newStateContainer = event.stateContainer;
 
         return {
@@ -359,6 +379,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateRenameAddonEvent
       ) => {
+        if (context.isLocked) return context;
         const addon = context.addons[event.addonId];
 
         if (!addon) {
@@ -383,6 +404,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateDeleteAddonEvent
       ) => {
+        if (context.isLocked) return context;
         const addon = context.addons[event.addonId];
 
         if (!addon) {
@@ -402,6 +424,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateSetQuickSlotEvent
       ) => {
+        if (context.isLocked) return context;
         const existingIndexes = Object.keys(context.quickSlots).filter(
           (index) => context.quickSlots[index] === event.groupId
         );
@@ -420,6 +443,7 @@ export const createTabStateStore = (): Store<
         context: TabStateStoreContext,
         event: TabStateClearQuickSlotEvent
       ) => {
+        if (context.isLocked) return context;
         return {
           ...context,
           quickSlots: excludeKeys(context.quickSlots, [event.slot])

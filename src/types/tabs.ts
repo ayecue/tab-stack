@@ -1,3 +1,5 @@
+import { NotebookEditor, Tab, TextEditor } from 'vscode';
+
 export enum TabKind {
   TabInputText = 'tabInputText',
   TabInputTextDiff = 'tabInputTextDiff',
@@ -78,3 +80,17 @@ export interface TabState {
   tabGroups: Record<number, TabGroupInfo>;
   activeGroup: number | null;
 }
+
+export interface TabAssociatedWithTextEditor {
+  tab: Tab;
+  editor: TextEditor | null;
+}
+
+export interface TabAssociatedWithNotebookEditor {
+  tab: Tab;
+  editor: NotebookEditor | null;
+}
+
+export type TabAssociatedEditor =
+  | TabAssociatedWithTextEditor
+  | TabAssociatedWithNotebookEditor;
