@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 16-11-2025
+
+### Fix
+
+- Always pass git service regardless if git extension is available or not
+
 ## [1.2.6] - 15-11-2025
 
 ### Added

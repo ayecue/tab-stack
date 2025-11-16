@@ -66,7 +66,7 @@ export class TabManagerService implements ITabManagerService {
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
   private _selectionTrackerService: SelectionTrackerService;
-  private _gitService: GitService | null;
+  private _gitService: GitService;
 
   private _renderCompleteEmitter: EventEmitter<void>;
 
@@ -87,7 +87,7 @@ export class TabManagerService implements ITabManagerService {
     layoutService: EditorLayoutService,
     configService: ConfigService,
     selectionTrackerService: SelectionTrackerService,
-    gitService: GitService | null = null
+    gitService: GitService
   ) {
     this.refresh = debounce(
       this._refresh.bind(this),

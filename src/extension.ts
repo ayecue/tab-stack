@@ -32,7 +32,7 @@ export async function activate(context: ExtensionContext) {
     layoutService,
     configService,
     selectionTracker,
-    gitInitialized ? gitService : null
+    gitService
   );
 
   await tabManagerService.attachStateHandler();
