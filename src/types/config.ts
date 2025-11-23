@@ -15,8 +15,11 @@ export interface GitIntegrationConfig {
   groupPrefix: string;
 }
 
+export type TabRecoveryMapping = Record<string, string>;
+
 export interface ConfigChangeEvent {
   masterWorkspaceFolder: string | null;
   gitIntegration?: GitIntegrationConfig;
   storageType?: StorageType;
+  tabRecoveryMappings?: TabRecoveryMapping;
 }

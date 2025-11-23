@@ -1,5 +1,4 @@
-import debounce, { DebouncedFunction } from 'debounce';
-import { get } from 'http';
+import { nanoid } from 'nanoid';
 import {
   Disposable,
   EventEmitter,
@@ -9,8 +8,15 @@ import {
   workspace
 } from 'vscode';
 
-import { TabStateHandler } from '../handlers/tab-state';
+import { TabActiveStateHandler } from '../handlers/tab-active-state';
+import { TabCollectionStateHandler } from '../handlers/tab-collection-state';
+import { TabStateContainerHandler } from '../handlers/tab-state-container';
 import { PersistenceMediator } from '../mediators/persistence';
+import { transform as migrate } from '../transformers/migration';
+import {
+  toAbsoluteTabStateFile,
+  toRelativeTabStateFile
+} from '../transformers/tab-uris';
 import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
@@ -19,6 +25,7 @@ import {
 } from '../types/messages';
 import {
   createEmptyStateContainer,
+  CURRENT_STATE_FILE_VERSION,
   ITabManagerService,
   QuickSlotIndex,
   RenderingItem,
@@ -34,38 +41,35 @@ import {
   setEditorLayout,
   unpinEditor
 } from '../utils/commands';
-import { delay } from '../utils/delay';
 import { isLayoutEqual } from '../utils/is-layout-equal';
 import {
-  applyTabState,
   closeTab,
   countTabs,
   findTabByViewColumnAndIndex,
   findTabGroupByViewColumn,
-  getTabState,
-  isSelectionMapEqual,
   isTabStateEqual
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
+import { getLogger, ScopedLogger } from './logger';
 import {
   GitBranchChangeEvent,
   GitRepositoryOpenEvent,
   GitService
 } from './git';
-import { SelectionTrackerService } from './selection-tracker';
 
 export class TabManagerService implements ITabManagerService {
-  static readonly REFRESH_DEBOUNCE_DELAY = 10 as const;
-
   private _rendering: boolean;
   private _nextRenderingItem: RenderingItem;
 
   private _context: ExtensionContext;
-  private _stateHandler: TabStateHandler;
+  private _activeStateHandler: TabActiveStateHandler | null;
+  private _stateContainerHandler: TabStateContainerHandler | null;
+  private _collectionHandler: TabCollectionStateHandler | null;
+  private _persistenceMediator: PersistenceMediator | null;
+
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
-  private _selectionTrackerService: SelectionTrackerService;
   private _gitService: GitService;
 
   private _renderCompleteEmitter: EventEmitter<void>;
@@ -79,27 +83,23 @@ export class TabManagerService implements ITabManagerService {
   >;
 
   private _disposables: Disposable[] = [];
-
-  refresh: DebouncedFunction<() => Promise<void>>;
+  private _log: ScopedLogger;
 
   constructor(
     context: ExtensionContext,
     layoutService: EditorLayoutService,
     configService: ConfigService,
-    selectionTrackerService: SelectionTrackerService,
     gitService: GitService
   ) {
-    this.refresh = debounce(
-      this._refresh.bind(this),
-      TabManagerService.REFRESH_DEBOUNCE_DELAY
-    );
     this._context = context;
     this._nextRenderingItem = null;
-    this._stateHandler = null;
+    this._activeStateHandler = null;
+    this._stateContainerHandler = null;
+    this._collectionHandler = null;
+    this._persistenceMediator = null;
     this._rendering = false;
     this._layoutService = layoutService;
     this._configService = configService;
-    this._selectionTrackerService = selectionTrackerService;
     this._gitService = gitService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
@@ -108,6 +108,7 @@ export class TabManagerService implements ITabManagerService {
       Omit<ExtensionNotificationMessage, 'type'>
     >();
     this._renderCompleteEmitter = new EventEmitter<void>();
+    this._log = getLogger().child('TabManager');
 
     this.initializeEvents();
   }
@@ -117,7 +118,16 @@ export class TabManagerService implements ITabManagerService {
   }
 
   get state() {
-    return this._stateHandler;
+    return {
+      groups: this._collectionHandler?.groups ?? {},
+      history: this._collectionHandler?.history ?? {},
+      addons: this._collectionHandler?.addons ?? {},
+      quickSlots: this._collectionHandler?.quickSlots ?? {},
+      stateContainer:
+        this._stateContainerHandler?.currentStateContainer ?? null,
+      previousStateContainer:
+        this._stateContainerHandler?.previousStateContainer ?? null
+    };
   }
 
   get onDidSyncTabs() {
@@ -133,22 +143,117 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async attachStateHandler() {
-    this._stateHandler = null;
+    this._log.info('attaching state handlers');
+    // Dispose old handlers
+    this._activeStateHandler?.dispose();
+    this._stateContainerHandler?.dispose();
+    this._collectionHandler?.dispose();
 
-    const persistenceMediator = new PersistenceMediator(
+    // Create new handlers
+    this._activeStateHandler = new TabActiveStateHandler(
+      this._layoutService,
+      this._configService
+    );
+    this._stateContainerHandler = new TabStateContainerHandler();
+    this._collectionHandler = new TabCollectionStateHandler();
+
+    // Setup persistence
+    this._persistenceMediator = new PersistenceMediator(
       this._context,
       this._configService
     );
-    const newStateHandler = new TabStateHandler(
-      this._configService,
-      persistenceMediator
+    await this._persistenceMediator.load();
+
+    const fileState = this._persistenceMediator.get();
+
+    this._collectionHandler.initialize({
+      groups: fileState.groups,
+      history: fileState.history,
+      addons: fileState.addons,
+      quickSlots: fileState.quickSlots
+    });
+
+    // Set current state container
+    let currentStateContainer =
+      fileState.selectedGroup in fileState.groups
+        ? fileState.groups[fileState.selectedGroup]
+        : null;
+    const previousStateContainer =
+      fileState.previousSelectedGroup in fileState.groups
+        ? fileState.groups[fileState.previousSelectedGroup]
+        : null;
+
+    if (currentStateContainer == null) {
+      this._activeStateHandler.syncTabs();
+      currentStateContainer = createEmptyStateContainer();
+      currentStateContainer.state =
+        this._activeStateHandler.getTabManagerState();
+    }
+
+    this._stateContainerHandler.initialize(
+      currentStateContainer,
+      previousStateContainer
     );
-    await newStateHandler.initialize();
-    this._stateHandler = newStateHandler;
+
     this.applyState(null);
+
+    // Connect handlers
+    this._activeStateHandler.onDidChangeState((tabManagerState) => {
+      this._stateContainerHandler.updateTabState(tabManagerState);
+    });
+
+    this._stateContainerHandler.onDidChangeState(
+      ({ currentStateContainer }) => {
+        if (currentStateContainer.id in this._collectionHandler.groups) {
+          this._collectionHandler.updateGroup(
+            currentStateContainer.id,
+            currentStateContainer
+          );
+        }
+
+        void this.save();
+        this.triggerSync();
+      }
+    );
+
+    this._collectionHandler.onDidChangeState(() => {
+      void this.save();
+      this.triggerSync();
+    });
+
+    void this.save();
     this.triggerSync();
-    this._stateHandler.onDidChangeState(() => void this.triggerSync());
-    this._stateHandler.onDidImportState(() => void this.applyState(null));
+  }
+
+  private async save(): Promise<void> {
+    if (
+      !this._persistenceMediator ||
+      !this._collectionHandler ||
+      !this._stateContainerHandler
+    ) {
+      return;
+    }
+
+    const selectedGroupId =
+      this._stateContainerHandler.currentStateContainer?.id in
+      this._collectionHandler.groups
+        ? this._stateContainerHandler.currentStateContainer?.id
+        : null;
+    const previousSelectedGroupId =
+      this._stateContainerHandler.previousStateContainer?.id in
+      this._collectionHandler.groups
+        ? this._stateContainerHandler.previousStateContainer?.id
+        : null;
+
+    this._persistenceMediator.save({
+      version: CURRENT_STATE_FILE_VERSION,
+      groups: this._collectionHandler.groups,
+      history: this._collectionHandler.history,
+      addons: this._collectionHandler.addons,
+      selectedGroup: selectedGroupId,
+      previousSelectedGroup: previousSelectedGroupId,
+      quickSlots: this._collectionHandler.quickSlots
+    });
   }
 
   async waitForRenderComplete(): Promise<void> {
@@ -165,26 +270,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   private initializeEvents() {
-    this._disposables.push(
-      window.tabGroups.onDidChangeTabs(() => void this.refresh())
-    );
-    this._disposables.push(
-      window.tabGroups.onDidChangeTabGroups(() => void this.refresh())
-    );
-    this._disposables.push(
-      this._layoutService.onDidChangeLayout(() => void this.refresh())
-    );
-    this._disposables.push(
-      this._selectionTrackerService.onDidChangeSelection((editorSelection) => {
-        if (!this._stateHandler) {
-          return;
-        }
-        if (this._rendering) {
-          return;
-        }
-        this._stateHandler.syncSelection(editorSelection);
-      })
-    );
+    // No longer need to listen to tab events here - TabActiveStateHandler does this
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
         if (changes.masterWorkspaceFolder !== undefined) {
@@ -217,7 +303,7 @@ export class TabManagerService implements ITabManagerService {
     }
 
     const groupName = `${gitConfig.groupPrefix}${event.currentBranch}`;
-    const groups = this._stateHandler.getGroups();
+    const groups = this._collectionHandler?.groups ?? {};
     const correlatingGroupId = Object.values(groups).find(
       (g) => g.name === groupName
     )?.id;
@@ -265,23 +351,12 @@ export class TabManagerService implements ITabManagerService {
     }
   }
 
-  private async _refresh(): Promise<void> {
-    if (!this._stateHandler) {
-      return;
-    }
-    if (this._rendering) {
-      return;
-    }
-
-    await this._stateHandler.syncStateWithVSCode();
-  }
-
   applyState(rollbackStateContainer: StateContainer) {
-    if (!this._stateHandler) return;
-    if (this._stateHandler.stateContainer == null) return;
+    if (!this._stateContainerHandler) return;
+    if (this._stateContainerHandler.currentStateContainer == null) return;
 
     this._nextRenderingItem = {
-      stateContainer: this._stateHandler.stateContainer,
+      stateContainer: this._stateContainerHandler.currentStateContainer,
       rollbackStateContainer
     };
 
@@ -292,26 +367,26 @@ export class TabManagerService implements ITabManagerService {
 
   private async next() {
     this._rendering = true;
-    this._stateHandler.lockState();
+    this._stateContainerHandler?.lockState();
 
     while (this._nextRenderingItem !== null) {
       try {
+        const currentTabState = this._activeStateHandler?.getTabState();
         if (
+          currentTabState &&
           isTabStateEqual(
-            getTabState(),
+            currentTabState,
             this._nextRenderingItem.stateContainer.state.tabState
           ) &&
           isLayoutEqual(
             await getEditorLayout(),
             this._nextRenderingItem.stateContainer.state.layout,
             true
-          ) &&
-          (this._nextRenderingItem.rollbackStateContainer == null ||
-            isSelectionMapEqual(
-              this._stateHandler.stateContainer?.state.selectionMap,
-              this._nextRenderingItem.rollbackStateContainer?.state.selectionMap
-            ))
+          )
         ) {
+          this._activeStateHandler.mergeTabState(
+            this._nextRenderingItem.stateContainer.state.tabState
+          );
           this._nextRenderingItem = null;
           continue;
         }
@@ -322,10 +397,12 @@ export class TabManagerService implements ITabManagerService {
       }
     }
 
-    this._stateHandler.unlockState();
+    this._stateContainerHandler?.unlockState();
     this._rendering = false;
     this._renderCompleteEmitter.fire();
-    void this.refresh();
+    this._stateContainerHandler.updateTabState(
+      this._activeStateHandler.getTabManagerState()
+    );
   }
 
   private async render() {
@@ -333,13 +410,14 @@ export class TabManagerService implements ITabManagerService {
     const previousStateContainer =
       this._nextRenderingItem.rollbackStateContainer;
 
+    this._log.info(`render: applying state "${currentStateContainer.name}" (${currentStateContainer.id})`);
     this._nextRenderingItem = null;
 
     if (countTabs() > 0) {
       await closeAllEditors();
 
       if (countTabs() > 0) {
-        this._stateHandler.setState(
+        this._stateContainerHandler?.setCurrentStateContainer(
           previousStateContainer ?? createEmptyStateContainer()
         );
         return;
@@ -348,15 +426,18 @@ export class TabManagerService implements ITabManagerService {
 
     this._layoutService.setLayout(currentStateContainer.state.layout);
     await setEditorLayout(currentStateContainer.state.layout);
-    await applyTabState(
-      currentStateContainer.state.tabState,
-      {
-        preserveActiveTab: true,
-        preservePinnedTabs: true,
-        preserveTabFocus: true
-      },
-      currentStateContainer.state.selectionMap
-    );
+
+    // Use the TabActiveStateHandler to apply the tab state
+    if (this._activeStateHandler) {
+      await this._activeStateHandler.applyTabState(
+        currentStateContainer.state.tabState,
+        {
+          preserveActiveTab: true,
+          preservePinnedTabs: true,
+          preserveTabFocus: true
+        }
+      );
+    }
   }
 
   async toggleTabPin(viewColumn: number, index: number): Promise<void> {
@@ -434,9 +515,19 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async exportStateFile(exportUri: string): Promise<void> {
-    if (!this._stateHandler) return;
+    if (!this._collectionHandler || !this._stateContainerHandler) return;
 
-    const fileContent = this._stateHandler.exportStateFile();
+    const fileContent = toRelativeTabStateFile({
+      version: CURRENT_STATE_FILE_VERSION,
+      groups: this._collectionHandler.groups,
+      history: this._collectionHandler.history,
+      addons: this._collectionHandler.addons,
+      quickSlots: this._collectionHandler.quickSlots,
+      selectedGroup:
+        this._stateContainerHandler.currentStateContainer?.id || null,
+      previousSelectedGroup:
+        this._stateContainerHandler.previousStateContainer?.id || null
+    });
     const data = new TextEncoder().encode(JSON.stringify(fileContent, null, 2));
     await workspace.fs.writeFile(Uri.parse(exportUri), data);
     this.notify(
@@ -446,7 +537,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async importStateFile(importUri: string): Promise<void> {
-    if (!this._stateHandler) return;
+    if (!this._collectionHandler) return;
 
     const data = await workspace.fs.readFile(Uri.file(importUri));
     let fileContent: TabStateFileContent | null = null;
@@ -463,19 +554,40 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this._stateHandler.importStateFile(fileContent);
+    const workspaceFolder = this._configService.getMasterWorkspaceFolder();
+    if (!workspaceFolder) {
+      return;
+    }
+
+    const newContent = toAbsoluteTabStateFile(
+      migrate(fileContent),
+      Uri.parse(workspaceFolder)
+    );
+
+    this._collectionHandler.initialize({
+      groups: newContent.groups,
+      history: newContent.history,
+      addons: newContent.addons,
+      quickSlots: newContent.quickSlots
+    });
+
+    // Apply the imported state
+    this.applyState(null);
   }
 
   triggerSync() {
-    if (!this._stateHandler) return;
-    if (this._stateHandler.stateContainer == null) return;
+    if (
+      !this._collectionHandler ||
+      !this._stateContainerHandler ||
+      !this._activeStateHandler
+    )
+      return;
+    if (this._stateContainerHandler.currentStateContainer == null) return;
 
-    const [groups, history, addons, quickSlots] = [
-      this._stateHandler.getGroups(),
-      this._stateHandler.getHistory(),
-      this._stateHandler.getAddons(),
-      this._stateHandler.getQuickSlots()
-    ];
+    const groups = this._collectionHandler.groups;
+    const history = this._collectionHandler.history;
+    const addons = this._collectionHandler.addons;
+    const quickSlots = this._collectionHandler.quickSlots;
     const groupValues = Object.values(groups);
 
     groupValues.sort((a, b) => {
@@ -510,7 +622,8 @@ export class TabManagerService implements ITabManagerService {
       }));
 
     this._syncViewEmitter.fire({
-      tabState: this._stateHandler.stateContainer.state.tabState,
+      tabState:
+        this._stateContainerHandler.currentStateContainer.state.tabState,
       histories: historyValues.map((entry) => {
         const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
         const tabCount = tabGroupsArray.reduce(
@@ -551,8 +664,8 @@ export class TabManagerService implements ITabManagerService {
         };
       }),
       selectedGroup:
-        this._stateHandler.stateContainer.id in groups
-          ? this._stateHandler.stateContainer.id
+        this._stateContainerHandler.currentStateContainer.id in groups
+          ? this._stateContainerHandler.currentStateContainer.id
           : null,
       quickSlots,
       masterWorkspaceFolder,
@@ -565,59 +678,78 @@ export class TabManagerService implements ITabManagerService {
   }
 
   createAddon(name: string): void {
-    if (!this._stateHandler) return;
-    const currentState = this._stateHandler.stateContainer.state;
-    this._stateHandler.addToAddons(currentState, name);
+    if (!this._collectionHandler || !this._stateContainerHandler) return;
+    const currentState =
+      this._stateContainerHandler.currentStateContainer?.state;
+    if (!currentState) return;
+
+    const isNameAlreadyExisting = Object.values(
+      this._collectionHandler.addons
+    ).some((it) => it.name === name);
+    if (isNameAlreadyExisting) {
+      return;
+    }
+
+    const stateContainer: StateContainer = {
+      id: nanoid(),
+      name,
+      state: currentState,
+      createdAt: Date.now(),
+      lastSelectedAt: 0
+    };
+
+    this._collectionHandler.addAddon(stateContainer);
   }
 
   deleteAddon(addonId: string): void {
-    if (!this._stateHandler) return;
-    this._stateHandler.deleteAddon(addonId);
+    if (!this._collectionHandler) return;
+    this._collectionHandler.removeAddon(addonId);
   }
 
   renameAddon(addonId: string, newName: string): void {
-    if (!this._stateHandler) return;
-    this._stateHandler.renameAddon(addonId, newName);
+    if (!this._collectionHandler) return;
+    this._collectionHandler.renameAddon(addonId, newName);
   }
 
   async applyAddon(addonId: string): Promise<void> {
-    if (!this._stateHandler) return;
-    const addons = this._stateHandler.getAddons();
+    if (!this._collectionHandler || !this._activeStateHandler) return;
+    const addons = this._collectionHandler.addons;
     const addon = addons[addonId];
     if (!addon) {
       this.notify(ExtensionNotificationKind.Warning, 'Add-on not found');
       return;
     }
 
-    await applyTabState(
-      addon.state.tabState,
-      {
-        preserveActiveTab: false,
-        preservePinnedTabs: true,
-        preserveTabFocus: false
-      },
-      addon.state.selectionMap
-    );
+    await this._activeStateHandler.applyTabState(addon.state.tabState, {
+      preserveActiveTab: false,
+      preservePinnedTabs: true,
+      preserveTabFocus: false
+    });
   }
 
   switchToGroup(groupId: string | null) {
-    if (!this._stateHandler) {
+    if (!this._stateContainerHandler || !this._collectionHandler) {
       return;
     }
 
-    if (this._stateHandler.stateContainer.id === groupId) {
+    if (this._stateContainerHandler.currentStateContainer?.id === groupId) {
+      this._log.debug(`switchToGroup: already on group ${groupId}, skipping`);
       return;
     }
+
+    this._log.info(`switchToGroup: ${groupId ?? 'fork (no group)'}`);
 
     if (groupId == null) {
-      this._stateHandler.forkState();
+      this._stateContainerHandler.forkState();
       return;
     }
 
-    const rollbackStateContainer = this._stateHandler.stateContainer;
-    const loaded = this._stateHandler.loadState(groupId);
+    const rollbackStateContainer =
+      this._stateContainerHandler.currentStateContainer;
+    const groups = this._collectionHandler.groups;
+    const targetGroup = groups[groupId];
 
-    if (!loaded) {
+    if (!targetGroup) {
       this.notify(
         ExtensionNotificationKind.Warning,
         `Group "${groupId}" not found`
@@ -625,74 +757,123 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    // Update collection to mark group as loaded
+    this._collectionHandler.loadGroup(groupId);
+
+    // Set the new state container
+    this._stateContainerHandler.setCurrentStateContainer(targetGroup);
+
     this.applyState(rollbackStateContainer);
   }
 
   createGroup(groupId: string) {
-    if (!this._stateHandler) {
+    if (!this._collectionHandler || !this._stateContainerHandler) {
       return;
     }
-    this._stateHandler.createGroup(groupId);
+
+    this._log.info(`createGroup: "${groupId}"`);
+
+    const isNameAlreadyExisting = Object.values(
+      this._collectionHandler.groups
+    ).some((it) => it.name === groupId);
+    if (isNameAlreadyExisting) {
+      return;
+    }
+
+    const currentState =
+      this._stateContainerHandler.currentStateContainer?.state;
+    if (!currentState) return;
+
+    const stateContainer: StateContainer = {
+      id: nanoid(),
+      name: groupId,
+      state: currentState,
+      createdAt: Date.now(),
+      lastSelectedAt: Date.now()
+    };
+
+    this._collectionHandler.addGroup(stateContainer);
+    this._stateContainerHandler.setCurrentStateContainer(stateContainer);
   }
 
   renameGroup(groupId: string, nextGroupId: string) {
-    if (!this._stateHandler) {
+    if (!this._collectionHandler) {
       return;
     }
 
-    this._stateHandler.renameGroup(groupId, nextGroupId);
+    this._collectionHandler.renameGroup(groupId, nextGroupId);
   }
 
   takeSnapshot() {
-    if (!this._stateHandler) {
+    if (!this._collectionHandler || !this._stateContainerHandler) {
       return;
     }
-    this._stateHandler.addCurrentStateToHistory();
+
+    const currentState =
+      this._stateContainerHandler.currentStateContainer?.state;
+    if (!currentState) return;
+
+    const stateContainer: StateContainer = {
+      id: nanoid(),
+      name: new Date().toISOString(),
+      state: currentState,
+      createdAt: Date.now(),
+      lastSelectedAt: Date.now()
+    };
+
+    this._collectionHandler.addHistory(stateContainer);
+
+    const maxEntries = this._configService.getHistoryMaxEntries();
+    this._collectionHandler.pruneHistory(maxEntries);
   }
 
   recoverSnapshot(historyId: string) {
-    if (!this._stateHandler) {
+    if (!this._stateContainerHandler || !this._collectionHandler) {
       return;
     }
 
-    const rollbackStateContainer = this._stateHandler.stateContainer;
-    const loaded = this._stateHandler.loadHistoryState(historyId);
+    const rollbackStateContainer =
+      this._stateContainerHandler.currentStateContainer;
+    const history = this._collectionHandler.history;
+    const targetHistory = history[historyId];
 
-    if (!loaded) {
+    if (!targetHistory) {
       this.notify(ExtensionNotificationKind.Warning, 'History entry not found');
       return;
     }
 
+    this._stateContainerHandler.setCurrentStateContainer(targetHistory);
     this.applyState(rollbackStateContainer);
   }
 
   deleteGroup(groupId: string) {
-    if (!this._stateHandler) {
+    this._log.info(`deleteGroup: ${groupId}`);
+    if (!this._collectionHandler) {
       return;
     }
-    this._stateHandler.deleteGroup(groupId);
+    this._collectionHandler.removeGroup(groupId);
   }
 
   deleteSnapshot(historyId: string) {
-    if (!this._stateHandler) {
+    if (!this._collectionHandler) {
       return;
     }
-    this._stateHandler.deleteHistoryEntry(historyId);
+    this._collectionHandler.removeHistory(historyId);
   }
 
   assignQuickSlot(slot: QuickSlotIndex, groupId: string | null) {
-    if (!this._stateHandler) {
+    if (!this._collectionHandler) {
       return;
     }
-    this._stateHandler.setQuickSlot(slot, groupId);
+    this._collectionHandler.setQuickSlot(slot, groupId);
   }
 
   applyQuickSlot(slot: QuickSlotIndex) {
-    if (!this._stateHandler) {
+    if (!this._collectionHandler || !this._stateContainerHandler) {
       return;
     }
 
-    const groupId = this._stateHandler.getQuickSlotAssignment(slot);
+    const groupId = this._collectionHandler.getQuickSlotAssignment(slot);
 
     if (!groupId) {
       this.notify(
@@ -702,11 +883,13 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    const rollbackStateContainer = this._stateHandler.stateContainer;
-    const loaded = this._stateHandler.loadState(groupId);
+    const rollbackStateContainer =
+      this._stateContainerHandler.currentStateContainer;
+    const groups = this._collectionHandler.groups;
+    const targetGroup = groups[groupId];
 
-    if (!loaded) {
-      this._stateHandler.setQuickSlot(slot, null);
+    if (!targetGroup) {
+      this._collectionHandler.setQuickSlot(slot, null);
       this.notify(
         ExtensionNotificationKind.Warning,
         `Saved group "${groupId}" was not found. Quick slot ${slot} was cleared.`
@@ -714,17 +897,28 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
+    // Update collection to mark group as loaded
+    this._collectionHandler.loadGroup(groupId);
+    this._stateContainerHandler.setCurrentStateContainer(targetGroup);
+
     this.applyState(rollbackStateContainer);
   }
 
   quickSwitch(): void {
-    if (!this._stateHandler) {
+    this._log.info('quickSwitch');
+    if (!this._stateContainerHandler) {
       return;
     }
 
-    const rollbackStateContainer = this._stateHandler.stateContainer;
-    this._stateHandler.setState(this._stateHandler.previousStateContainer);
-    this.applyState(rollbackStateContainer);
+    const rollbackStateContainer =
+      this._stateContainerHandler.currentStateContainer;
+    const previousContainer =
+      this._stateContainerHandler.previousStateContainer;
+
+    if (previousContainer) {
+      this._stateContainerHandler.setCurrentStateContainer(previousContainer);
+      this.applyState(rollbackStateContainer);
+    }
   }
 
   async selectWorkspaceFolder(folderPath: string | null): Promise<void> {
@@ -740,12 +934,18 @@ export class TabManagerService implements ITabManagerService {
     this._disposables = [];
     this._syncViewEmitter.dispose();
     this._notifyViewEmitter.dispose();
-    this._stateHandler?.dispose();
+    this._renderCompleteEmitter.dispose();
 
-    this._stateHandler = null;
+    this._activeStateHandler?.dispose();
+    this._stateContainerHandler?.dispose();
+    this._collectionHandler?.dispose();
+
+    this._activeStateHandler = null;
+    this._stateContainerHandler = null;
+    this._collectionHandler = null;
+    this._persistenceMediator = null;
     this._layoutService = null;
     this._configService = null;
     this._gitService = null;
-    this._configService = null;
   }
 }

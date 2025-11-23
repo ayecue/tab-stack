@@ -1,4 +1,5 @@
 import { Factory } from 'fishery';
+import { nanoid } from 'nanoid';
 import { TabInfo, TabKind } from '../../src/types/tabs';
 
 export interface TabFactoryParams {
@@ -9,6 +10,8 @@ export interface TabFactoryParams {
   isDirty?: boolean;
   isPinned?: boolean;
   viewColumn?: number;
+  index?: number;
+  isRecoverable?: boolean;
   originalUri?: string;
   modifiedUri?: string;
 }
@@ -22,11 +25,15 @@ export const tabFactory = Factory.define<TabInfo, TabFactoryParams>(({
   const kind = transientParams?.kind ?? TabKind.TabInputText;
 
   const base: Partial<TabInfo> = {
+    id: nanoid(),
     label: transientParams?.label ?? `file-${seq}.ts`,
     isActive: transientParams?.isActive ?? false,
     isDirty: transientParams?.isDirty ?? false,
     isPinned: transientParams?.isPinned ?? false,
     viewColumn: transientParams?.viewColumn ?? 1,
+    index: transientParams?.index ?? seq - 1,
+    isRecoverable: transientParams?.isRecoverable ?? true,
+    meta: { type: 'textEditor' },
     kind
   };
 

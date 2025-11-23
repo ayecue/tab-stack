@@ -10,6 +10,8 @@ export class MockConfigService {
   public getGitIntegrationConfig = vi.fn();
   public getAvailableWorkspaceFolders = vi.fn();
   public setMasterWorkspaceFolder = vi.fn();
+  public getTabRecoveryMappings = vi.fn();
+  public setTabRecoveryMappings = vi.fn();
   public onDidChangeConfig = vi.fn(() => ({ dispose: vi.fn() }));
   
   constructor(defaultConfig: Record<string, any> = {}) {
@@ -23,7 +25,9 @@ export class MockConfigService {
       groupPrefix: 'branch/'
     });
     this.getAvailableWorkspaceFolders.mockReturnValue(defaultConfig.availableWorkspaceFolders ?? []);
+    this.getTabRecoveryMappings.mockReturnValue(defaultConfig.tabRecoveryMappings ?? {});
     this.setMasterWorkspaceFolder.mockResolvedValue(undefined);
+    this.setTabRecoveryMappings.mockResolvedValue(undefined);
   }
   
   public setConfig(config: Record<string, any>): void {

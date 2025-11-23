@@ -1,8 +1,19 @@
-import { Tab, TabGroup, window } from 'vscode';
+import {
+  Tab,
+  TabGroup,
+  TabInputCustom,
+  TabInputNotebook,
+  TabInputNotebookDiff,
+  TabInputTerminal,
+  TabInputText,
+  TabInputTextDiff,
+  TabInputWebview,
+  window
+} from 'vscode';
 
 import { transformTabToTabInfo } from '../transformers/tab';
-import { SelectionRange } from '../types/selection-tracker';
 import {
+  SelectionRange,
   TabGroupInfo,
   TabInfo,
   TabInfoNotebookDiff,
@@ -10,7 +21,6 @@ import {
   TabKind,
   TabState
 } from '../types/tabs';
-import { focusTabInGroup, openTab, pinEditor } from './commands';
 
 export function findTabByViewColumnAndIndex(
   viewColumn: number,
@@ -98,17 +108,27 @@ export function isTabStateEqual(stateA: TabState, stateB: TabState): boolean {
     const groupA = stateA.tabGroups[groupKeysA[i]] as TabGroupInfo;
     const groupB = stateB.tabGroups[groupKeysB[i]] as TabGroupInfo;
 
-    if (groupA.tabs.length !== groupB.tabs.length) {
+    const recoverableTabsA = groupA.tabs.filter((tab) => tab.isRecoverable);
+    const recoverableTabsB = groupB.tabs.filter((tab) => tab.isRecoverable);
+
+    if (recoverableTabsA.length !== recoverableTabsB.length) {
       return false;
     }
 
-    for (let j = 0; j < groupA.tabs.length; j++) {
-      if (!isTabInfoEqual(groupA.tabs[j], groupB.tabs[j])) {
+    for (let j = 0; j < recoverableTabsA.length; j++) {
+      if (!isTabInfoEqual(recoverableTabsA[j], recoverableTabsB[j])) {
         return false;
       }
     }
 
-    if (!isTabInfoEqual(groupA.activeTab, groupB.activeTab)) {
+    const activeTabARecoverable = groupA.activeTab?.isRecoverable ?? false;
+    const activeTabBRecoverable = groupB.activeTab?.isRecoverable ?? false;
+
+    if (activeTabARecoverable && activeTabBRecoverable) {
+      if (!isTabInfoEqual(groupA.activeTab, groupB.activeTab)) {
+        return false;
+      }
+    } else if (activeTabARecoverable !== activeTabBRecoverable) {
       return false;
     }
   }
@@ -163,8 +183,8 @@ export function getTabState(): TabState {
       viewColumn: viewColumn || 0
     };
 
-    group.tabs.forEach((tab) => {
-      const tabInfo: TabInfo = transformTabToTabInfo(tab, group.viewColumn);
+    group.tabs.forEach((tab, index) => {
+      const tabInfo: TabInfo = transformTabToTabInfo(tab, group, index);
 
       if (tab.isActive) {
         tabGroupInfo.activeTab = tabInfo;
@@ -179,54 +199,42 @@ export function getTabState(): TabState {
   return tabState;
 }
 
-export interface ApplyTabStateOptions {
-  preservePinnedTabs: boolean;
-  preserveTabFocus: boolean;
-  preserveActiveTab: boolean;
+export function createTabKey(
+  tab: Tab,
+  tabGroup: TabGroup,
+  index: number
+): string {
+  const viewColumn = tabGroup.viewColumn;
+
+  if (tab.input instanceof TabInputText) {
+    return `${viewColumn}:text:${tab.input.uri.toString()}`;
+  } else if (tab.input instanceof TabInputTextDiff) {
+    return `${viewColumn}:textDiff:${tab.input.original.toString()}|${tab.input.modified.toString()}`;
+  } else if (tab.input instanceof TabInputCustom) {
+    return `${viewColumn}:custom:${tab.input.viewType}:${tab.input.uri.toString()}`;
+  } else if (tab.input instanceof TabInputWebview) {
+    return `${viewColumn}:${index}:webview:${tab.input.viewType}`;
+  } else if (tab.input instanceof TabInputNotebook) {
+    return `${viewColumn}:notebook:${tab.input.notebookType}:${tab.input.uri.toString()}`;
+  } else if (tab.input instanceof TabInputNotebookDiff) {
+    return `${viewColumn}:notebookDiff:${tab.input.notebookType}:${tab.input.original.toString()}|${tab.input.modified.toString()}`;
+  } else if (tab.input instanceof TabInputTerminal) {
+    return `${viewColumn}:${index}:terminal:${tab.label}`;
+  }
+
+  return `${viewColumn}:${index}:${tab.label}`;
 }
 
-export async function applyTabState(
-  tabState: TabState,
-  options: ApplyTabStateOptions,
-  selectionMap?: Record<string, SelectionRange>
-): Promise<void> {
-  const tabGroupItems = Object.values(tabState.tabGroups);
-  const pinnedTabs: { tab: TabInfo; index: number }[] = [];
-  const activeTabs: { tab: TabInfo; index: number }[] = [];
-  const focusedViewColumn = tabState.tabGroups[tabState.activeGroup].viewColumn;
-  const focusedIndex = tabState.tabGroups[tabState.activeGroup].tabs.findIndex(
-    (tab) => tab.isActive
-  );
-
-  await Promise.all(
-    tabGroupItems.map(async (group) => {
-      for (let i = 0; i < group.tabs.length; i++) {
-        const tab = group.tabs[i];
-        if (tab.isPinned) pinnedTabs.push({ tab, index: i });
-        if (tab.isActive) activeTabs.push({ tab, index: i });
-        await openTab(tab, selectionMap);
-      }
-    })
-  );
-
-  if (options.preservePinnedTabs) {
-    for (let i = 0; i < pinnedTabs.length; i++) {
-      const { tab, index } = pinnedTabs[i];
-      await pinEditor(tab.viewColumn, index, false);
-    }
-  }
-
-  if (options.preserveActiveTab) {
-    for (let i = 0; i < activeTabs.length; i++) {
-      const { tab, index } = activeTabs[i];
-      if (tab.viewColumn === focusedViewColumn && index === focusedIndex) {
-        continue;
-      }
-      await focusTabInGroup(tab.viewColumn, index);
-    }
-  }
-
-  if (options.preserveTabFocus) {
-    await focusTabInGroup(focusedViewColumn, focusedIndex);
-  }
+export function createSelectionRange(
+  startLine: number,
+  startCharacter: number,
+  endLine: number,
+  endCharacter: number
+): SelectionRange {
+  return {
+    start: { line: startLine, character: startCharacter },
+    end: { line: endLine, character: endCharacter },
+    isEmpty: startLine === endLine && startCharacter === endCharacter,
+    isSingleLine: startLine === endLine
+  };
 }

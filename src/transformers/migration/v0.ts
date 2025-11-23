@@ -2,16 +2,11 @@ import { nanoid } from 'nanoid';
 
 import { Layout } from '../../types/commands';
 import { QuickSlotAssignments } from '../../types/tab-manager';
-import { TabGroupInfo } from '../../types/tabs';
 import { TabStateFileContentV1 } from './v1';
-
-export interface TabStateV0 {
-  tabGroups: Record<number, TabGroupInfo>;
-  activeGroup: number | null;
-}
+import { TabStateV2 } from './v2';
 
 export interface TabTabManagerStateV0 {
-  tabState: TabStateV0;
+  tabState: TabStateV2;
   layout: Layout;
 }
 

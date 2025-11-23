@@ -44,6 +44,69 @@ describe('tab-utils equality helpers', () => {
     expect(isTabStateEqual(baseState, differentOrder)).toBe(false);
   });
 
+  it('ignores unrecoverable tabs when comparing states', () => {
+    const recoverableTab = tabFactory.build({ 
+      uri: 'file:///note.ts', 
+      label: 'note.ts', 
+      isRecoverable: true 
+    });
+    const unrecoverableTab1 = tabFactory.build({ 
+      label: 'Terminal 1', 
+      kind: TabKind.TabInputTerminal,
+      isRecoverable: false 
+    });
+    const unrecoverableTab2 = tabFactory.build({ 
+      label: 'Terminal 2', 
+      kind: TabKind.TabInputTerminal,
+      isRecoverable: false 
+    });
+
+    const stateWithUnrecoverable1 = tabStateFactory.build({}, { 
+      transient: { tabs: [recoverableTab, unrecoverableTab1] } 
+    });
+    const stateWithUnrecoverable2 = tabStateFactory.build({}, { 
+      transient: { tabs: [recoverableTab, unrecoverableTab2] } 
+    });
+    const stateWithoutUnrecoverable = tabStateFactory.build({}, { 
+      transient: { tabs: [recoverableTab] } 
+    });
+
+    // States with different unrecoverable tabs should be considered equal
+    // if their recoverable tabs are the same
+    expect(isTabStateEqual(stateWithUnrecoverable1, stateWithUnrecoverable2)).toBe(true);
+    expect(isTabStateEqual(stateWithUnrecoverable1, stateWithoutUnrecoverable)).toBe(true);
+  });
+
+  it('treats unrecoverable active tabs as equal', () => {
+    const recoverableTab = tabFactory.build({ 
+      uri: 'file:///note.ts', 
+      label: 'note.ts', 
+      isRecoverable: true 
+    });
+    const unrecoverableActiveTab1 = tabFactory.build({ 
+      label: 'Terminal 1', 
+      kind: TabKind.TabInputTerminal,
+      isRecoverable: false,
+      isActive: true
+    });
+    const unrecoverableActiveTab2 = tabFactory.build({ 
+      label: 'Terminal 2', 
+      kind: TabKind.TabInputTerminal,
+      isRecoverable: false,
+      isActive: true
+    });
+
+    const state1 = tabStateFactory.build({}, { 
+      transient: { tabs: [recoverableTab, unrecoverableActiveTab1] } 
+    });
+    const state2 = tabStateFactory.build({}, { 
+      transient: { tabs: [recoverableTab, unrecoverableActiveTab2] } 
+    });
+
+    // States with different unrecoverable active tabs should be treated as equal
+    expect(isTabStateEqual(state1, state2)).toBe(true);
+  });
+
   it('compares selection maps structurally', () => {
     const makeSelection = (
       overrides: Partial<SelectionRange> = {}

@@ -442,12 +442,12 @@ body {
 .tab-column.active {
   border-color: var(--vscode-focusBorder);
 }
-.tab-item.unknown-kind:not(.active) {
+.tab-item.unrecoverable-kind:not(.active) {
   border-color: rgba(255, 204, 0, 0.55);
   background: rgba(255, 204, 0, 0.12);
 }
 
-.tab-item.unknown-kind:not(.active):hover {
+.tab-item.unrecoverable-kind:not(.active):hover {
   border-color: rgba(255, 204, 0, 0.7);
   background: rgba(255, 204, 0, 0.18);
 }
@@ -560,18 +560,18 @@ body {
   border-radius: 4px;
 }
 
-.tab-item.unknown-kind:not(.active) {
+.tab-item.unrecoverable-kind:not(.active) {
   border-color: rgba(255, 204, 0, 0.5);
   background: rgba(255, 204, 0, 0.12);
   border-style: dashed;
 }
 
-.tab-item.unknown-kind:not(.active):hover {
+.tab-item.unrecoverable-kind:not(.active):hover {
   border-color: rgba(255, 204, 0, 0.65);
   background: rgba(255, 204, 0, 0.18);
 }
 
-.tab-item.unknown-kind:not(.active) .tab-icon {
+.tab-item.unrecoverable-kind:not(.active) .tab-icon {
   background: rgba(255, 204, 0, 0.2);
 }
 

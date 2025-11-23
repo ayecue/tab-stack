@@ -28,6 +28,10 @@ export class EditorLayoutService implements Disposable {
     return this._emitter.event;
   }
 
+  get currentLayout(): Layout | null {
+    return this._lastLayout;
+  }
+
   setLayout(layout: Layout): void {
     this._lastLayout = layout;
   }

@@ -52,13 +52,13 @@ export const TabItem: React.FC<TabItemProps> = ({
 
   const fileName = tab.label;
   const extension = getFileExtension(fileName);
-  const isUnknownKind = tab.kind === TabKind.Unknown;
+  const isUnrecoverable = !tab.isRecoverable;
   const kindSlug = tab.kind.toLowerCase();
   const activeClass = [
     tab.isActive ? 'active' : '',
     tab.isPinned ? 'pinned' : '',
     isColumnActive ? 'column-active' : '',
-    isUnknownKind ? 'unknown-kind' : '',
+    isUnrecoverable ? 'unrecoverable-kind' : '',
     isDragging ? 'dragging' : '',
     isDraggedOver ? 'drag-over' : '',
     isDraggedOver && dropPosition === 'before' ? 'drop-before' : '',
@@ -72,7 +72,7 @@ export const TabItem: React.FC<TabItemProps> = ({
 
   const ariaLabelParts: string[] = [fileName];
 
-  if (isUnknownKind) {
+  if (isUnrecoverable) {
     ariaLabelParts.push('unsupported tab type (cannot restore automatically)');
   }
 
@@ -108,7 +108,7 @@ export const TabItem: React.FC<TabItemProps> = ({
             <span className={tabNameClassName} title={fileName}>
               {fileName}
             </span>
-            {isUnknownKind && (
+            {isUnrecoverable && (
               <span
                 className="tab-kind-indicator"
                 role="img"

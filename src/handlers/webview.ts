@@ -52,9 +52,9 @@ export class WebviewHandler implements Disposable {
     };
 
     this._view.webview.html = await this._getHtmlForWebview();
-    this._view.webview.onDidReceiveMessage((data) =>
-      this._messageEmitter.fire(data)
-    );
+    this._view.webview.onDidReceiveMessage((data) => {
+      this._messageEmitter.fire(data);
+    });
   }
 
   private async _getHtmlForWebview() {

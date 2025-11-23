@@ -1,160 +1,211 @@
 import {
   QuickSlotAssignments,
-  QuickSlotIndex,
   StateContainer,
   TabStateFileContent
 } from './tab-manager';
+import { TabInfo, TabInfoId } from './tabs';
 
-// Tab State Store Context
-export interface TabStateStoreContext {
-  groups: Record<string, StateContainer>;
-  history: Record<string, StateContainer>;
-  addons: Record<string, StateContainer>;
-  quickSlots: QuickSlotAssignments;
-  currentStateContainer: StateContainer | null;
-  previousStateContainer: StateContainer | null;
-  isInitialized: boolean;
-  isLoading: boolean;
+export interface TabActiveStateStoreContext {
+  tabs: Record<TabInfoId, TabInfo>;
   isLocked: boolean;
 }
 
-// File Store Context
-export interface FileStoreContext {
-  data: TabStateFileContent | null;
-  isLoading: boolean;
+export type TabActiveStateSetTabsEvent = {
+  type: 'SET_TABS';
+  tabs: Record<TabInfoId, TabInfo>;
+};
+
+export type TabActiveStateAddTabEvent = {
+  type: 'ADD_TAB';
+  payload: TabInfo;
+};
+
+export type TabActiveStateUpdateTabEvent = {
+  type: 'UPDATE_TAB';
+  payload: TabInfo;
+};
+
+export type TabActiveStateRemoveTabEvent = {
+  type: 'REMOVE_TAB';
+  payload: TabInfoId;
+};
+
+export type TabActiveStateResetEvent = {
+  type: 'RESET';
+};
+
+export type TabActiveStateLockEvent = {
+  type: 'LOCK_STATE';
+};
+
+export type TabActiveStateUnlockEvent = {
+  type: 'UNLOCK_STATE';
+};
+
+export type TabActiveStateStoreEvents =
+  | TabActiveStateSetTabsEvent
+  | TabActiveStateAddTabEvent
+  | TabActiveStateUpdateTabEvent
+  | TabActiveStateRemoveTabEvent
+  | TabActiveStateResetEvent
+  | TabActiveStateLockEvent
+  | TabActiveStateUnlockEvent;
+
+export interface TabStateContainerStoreContext {
+  currentStateContainer: StateContainer | null;
+  previousStateContainer: StateContainer | null;
+  isLocked: boolean;
 }
 
-// Tab State Store Event Types
-export type TabStateInitializeEvent = {
+export type TabStateContainerInitializeEvent = {
   type: 'INITIALIZE';
-  data: TabStateFileContent;
-};
-
-export type TabStateSyncEvent = {
-  type: 'SYNC_STATE';
   stateContainer: StateContainer;
+  previousStateContainer?: StateContainer;
 };
 
-export type TabStateSetStateEvent = {
+export type TabStateContainerSetStateEvent = {
   type: 'SET_STATE';
   stateContainer: StateContainer;
 };
 
-export type TabStateForkStateEvent = {
+export type TabStateContainerSyncStateEvent = {
+  type: 'SYNC_STATE';
+  stateContainer: StateContainer;
+};
+
+export type TabStateContainerForkStateEvent = {
   type: 'FORK_STATE';
 };
 
-export type TabStateCreateGroupEvent = {
+export type TabStateContainerLockStateEvent = {
+  type: 'LOCK_STATE';
+};
+
+export type TabStateContainerUnlockStateEvent = {
+  type: 'UNLOCK_STATE';
+};
+
+export type TabStateContainerResetEvent = {
+  type: 'RESET';
+};
+
+export type TabStateContainerStoreEvents =
+  | TabStateContainerInitializeEvent
+  | TabStateContainerSetStateEvent
+  | TabStateContainerSyncStateEvent
+  | TabStateContainerForkStateEvent
+  | TabStateContainerLockStateEvent
+  | TabStateContainerUnlockStateEvent
+  | TabStateContainerResetEvent;
+
+export interface TabCollectionStateStoreContext {
+  groups: Record<string, StateContainer>;
+  history: Record<string, StateContainer>;
+  addons: Record<string, StateContainer>;
+  quickSlots: QuickSlotAssignments;
+}
+
+export type TabCollectionStateInitializeEvent = {
+  type: 'INITIALIZE';
+  data: TabCollectionStateStoreContext;
+};
+
+export type TabCollectionStateCreateGroupEvent = {
   type: 'CREATE_GROUP';
   stateContainer: StateContainer;
 };
 
-export type TabStateRenameGroupEvent = {
+export type TabCollectionStateUpdateGroupEvent = {
+  type: 'UPDATE_GROUP';
+  groupId: string;
+  stateContainer: StateContainer;
+};
+
+export type TabCollectionStateRenameGroupEvent = {
   type: 'RENAME_GROUP';
   groupId: string;
   newName: string;
 };
 
-export type TabStateDeleteGroupEvent = {
+export type TabCollectionStateDeleteGroupEvent = {
   type: 'DELETE_GROUP';
   groupId: string;
 };
 
-export type TabStateLoadGroupEvent = {
+export type TabCollectionStateLoadGroupEvent = {
   type: 'LOAD_GROUP';
   groupId: string;
   timestamp: number;
 };
 
-export type TabStateAddToHistoryEvent = {
+export type TabCollectionStateAddToHistoryEvent = {
   type: 'ADD_TO_HISTORY';
   stateContainer: StateContainer;
 };
 
-export type TabStateDeleteHistoryEntryEvent = {
-  type: 'DELETE_HISTORY_ENTRY';
-  historyId: string;
-};
-
-export type TabStateLoadHistoryStateEvent = {
-  type: 'LOAD_HISTORY_STATE';
-  historyId: string;
-};
-
-export type TabStatePruneHistoryEvent = {
+export type TabCollectionStatePruneHistoryEvent = {
   type: 'PRUNE_HISTORY';
   maxEntries: number;
 };
 
-export type TabStateCreateAddonEvent = {
+export type TabCollectionStateDeleteHistoryEntryEvent = {
+  type: 'DELETE_HISTORY_ENTRY';
+  historyId: string;
+};
+
+export type TabCollectionStateCreateAddonEvent = {
   type: 'CREATE_ADDON';
   stateContainer: StateContainer;
 };
 
-export type TabStateRenameAddonEvent = {
+export type TabCollectionStateRenameAddonEvent = {
   type: 'RENAME_ADDON';
   addonId: string;
   newName: string;
 };
 
-export type TabStateDeleteAddonEvent = {
+export type TabCollectionStateDeleteAddonEvent = {
   type: 'DELETE_ADDON';
   addonId: string;
 };
 
-export type TabStateSetQuickSlotEvent = {
+export type TabCollectionStateSetQuickSlotEvent = {
   type: 'SET_QUICK_SLOT';
-  slot: QuickSlotIndex;
-  groupId: string | null;
+  slot: string;
+  groupId: string;
 };
 
-export type TabStateClearQuickSlotEvent = {
+export type TabCollectionStateClearQuickSlotEvent = {
   type: 'CLEAR_QUICK_SLOT';
-  slot: QuickSlotIndex;
+  slot: string;
 };
 
-export type TabStateResetStateEvent = {
-  type: 'RESET_STATE';
+export type TabCollectionStateResetEvent = {
+  type: 'RESET';
 };
 
-export type TabStateImportStateEvent = {
-  type: 'IMPORT_STATE';
-  data: TabStateFileContent;
-};
+export type TabCollectionStateStoreEvents =
+  | TabCollectionStateInitializeEvent
+  | TabCollectionStateCreateGroupEvent
+  | TabCollectionStateUpdateGroupEvent
+  | TabCollectionStateRenameGroupEvent
+  | TabCollectionStateDeleteGroupEvent
+  | TabCollectionStateLoadGroupEvent
+  | TabCollectionStateAddToHistoryEvent
+  | TabCollectionStatePruneHistoryEvent
+  | TabCollectionStateDeleteHistoryEntryEvent
+  | TabCollectionStateCreateAddonEvent
+  | TabCollectionStateRenameAddonEvent
+  | TabCollectionStateDeleteAddonEvent
+  | TabCollectionStateSetQuickSlotEvent
+  | TabCollectionStateClearQuickSlotEvent
+  | TabCollectionStateResetEvent;
 
-export type TabStateLockEvent = {
-  type: 'LOCK_STATE';
-};
+export interface FileStoreContext {
+  data: TabStateFileContent | null;
+  isLoading: boolean;
+}
 
-export type TabStateUnlockEvent = {
-  type: 'UNLOCK_STATE';
-};
-
-// Tab State Store Events Union
-export type TabStateStoreEvents =
-  | TabStateInitializeEvent
-  | TabStateSyncEvent
-  | TabStateSetStateEvent
-  | TabStateForkStateEvent
-  | TabStateCreateGroupEvent
-  | TabStateRenameGroupEvent
-  | TabStateDeleteGroupEvent
-  | TabStateLoadGroupEvent
-  | TabStateAddToHistoryEvent
-  | TabStateDeleteHistoryEntryEvent
-  | TabStateLoadHistoryStateEvent
-  | TabStatePruneHistoryEvent
-  | TabStateCreateAddonEvent
-  | TabStateRenameAddonEvent
-  | TabStateDeleteAddonEvent
-  | TabStateSetQuickSlotEvent
-  | TabStateClearQuickSlotEvent
-  | TabStateResetStateEvent
-  | TabStateImportStateEvent
-  | TabStateLockEvent
-  | TabStateUnlockEvent;
-
-// File Store Event Types
 export type FileStoreLoadStartEvent = {
   type: 'LOAD';
 };
@@ -178,7 +229,6 @@ export type FileStoreResetEvent = {
   type: 'RESET';
 };
 
-// File Store Events Union
 export type FileStoreEvents =
   | FileStoreLoadStartEvent
   | FileStoreLoadSuccessEvent

@@ -4,7 +4,8 @@ import {
   ConfigChangeEvent,
   GitIntegrationConfig,
   GitIntegrationMode,
-  StorageType
+  StorageType,
+  TabRecoveryMapping
 } from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
 
@@ -102,6 +103,16 @@ export class ConfigService implements Disposable {
     const config = workspace.getConfiguration('tabStack.history');
     const clampedValue = Math.max(1, Math.min(100, Math.floor(maxEntries)));
     await config.update('maxEntries', clampedValue, false);
+  }
+
+  getTabRecoveryMappings(): TabRecoveryMapping {
+    const config = workspace.getConfiguration('tabStack');
+    return config.get<TabRecoveryMapping>('tabRecoveryMappings', {});
+  }
+
+  async setTabRecoveryMappings(mappings: TabRecoveryMapping): Promise<void> {
+    const config = workspace.getConfiguration('tabStack');
+    await config.update('tabRecoveryMappings', mappings, false);
   }
 
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {
