@@ -204,8 +204,14 @@ export function createTabKey(
   tabGroup: TabGroup,
   index: number
 ): string {
-  const viewColumn = tabGroup.viewColumn;
+  return createTabKeyByViewColumn(tab, tabGroup.viewColumn ?? 0, index);
+}
 
+export function createTabKeyByViewColumn(
+  tab: Tab,
+  viewColumn: number,
+  index: number
+): string {
   if (tab.input instanceof TabInputText) {
     return `${viewColumn}:text:${tab.input.uri.toString()}`;
   } else if (tab.input instanceof TabInputTextDiff) {

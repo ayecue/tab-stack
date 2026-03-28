@@ -509,7 +509,6 @@ export class TabManagerService implements ITabManagerService {
       await moveTab(fromViewColumn, fromIndex, toViewColumn, toIndex);
     } catch (error) {
       this.notify(ExtensionNotificationKind.Error, 'Failed to move tab');
-      console.error('Error moving tab:', error);
     }
   }
 

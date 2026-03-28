@@ -36,9 +36,9 @@ import {
   TabKind,
   TabState
 } from '../types/tabs';
-import { focusTabInGroup, pinEditor } from '../utils/commands';
+import { focusTabInGroup, moveTab, pinEditor } from '../utils/commands';
 import { delay, delayImmediate } from '../utils/delay';
-import { createSelectionRange, createTabKey } from '../utils/tab-utils';
+import { createSelectionRange, createTabKey, createTabKeyByViewColumn } from '../utils/tab-utils';
 import { updatedDiff } from 'deep-object-diff';
 
 export class TabActiveStateHandler implements Disposable {
@@ -392,7 +392,6 @@ export class TabActiveStateHandler implements Disposable {
   getTabState(): TabState {
     // Return cached state if available
     if (this._cachedTabState !== null) {
-      console.log('returning cached tab state', this._cachedTabState);
       return this._cachedTabState;
     }
 
@@ -668,43 +667,81 @@ export class TabActiveStateHandler implements Disposable {
     const pinnedTabs: { tab: TabInfo; index: number }[] = [];
     const activeTabs: { tab: TabInfo; index: number }[] = [];
     const focusedViewColumn =
-      tabState.tabGroups[tabState.activeGroup]?.viewColumn ?? 0;
+      tabState.tabGroups[tabState.activeGroup]?.viewColumn ?? 1;
     const focusedIndex =
       tabState.tabGroups[tabState.activeGroup]?.tabs.findIndex(
         (tab) => tab.isActive
       ) ?? 0;
+    const misplacedTabs: {
+      actualViewColumn: number;
+      actualIndex: number;
+      targetViewColumn: number;
+      targetIndex: number;
+    }[] = [];
 
     for (let i = 0; i < tabGroupItems.length; i++) {
       const group = tabGroupItems[i];
-      const offset = window.tabGroups.all[i]?.tabs.length ?? 0;
+      let offset = window.tabGroups.all[i]?.tabs.length ?? 0;
 
       for (let j = 0; j < group.tabs.length; j++) {
         const tab = group.tabs[j];
-
-        if (tab.isPinned) pinnedTabs.push({ tab, index: j });
-        if (tab.isActive) activeTabs.push({ tab, index: j });
-
+        const targetViewColumn = group.viewColumn;
+        const targetIndex = offset + j;
         const result = await this.openTab(tab);
 
-        if (result.success) {
-          const activeTabGroup = window.tabGroups.activeTabGroup;
-          const currentTab = activeTabGroup.activeTab;
+        if (!result.success) {
+          // If the tab couldn't be opened, we skip it but still need to adjust the offset for subsequent tabs
+          offset--;
+          this._log.warn(`failed to open tab "${tab.label}", skipping...`);
+          continue;
+        }
 
-          if (currentTab && activeTabGroup) {
-            const tabKey = createTabKey(currentTab, activeTabGroup, offset + j);
+        const activeTabGroup = window.tabGroups.activeTabGroup;
+        const currentTab = activeTabGroup.activeTab;
 
-            newTabs[tab.id] = {
-              ...tab,
-              index: offset + j
-            };
+        if (currentTab == null || activeTabGroup == null) {
+          // This can happen if the opened tab is immediately closed by the user or an extension, so we just skip it
+          offset--;
+          this._log.warn(`opened tab "${tab.label}" but it was not found in any tab group, skipping...`);
+          continue;
+        }
 
-            this._associatedTabs.set(tabKey, tab.id);
-            if (result.instance != null) {
-              this._associatedInstances.set(result.instance!, tab.id);
-            }
-          }
+        const actualViewColumn = activeTabGroup.viewColumn;
+        const actualIndex = activeTabGroup.tabs.indexOf(currentTab);
+        const tabKey = createTabKeyByViewColumn(currentTab, targetViewColumn, targetIndex);
+
+        newTabs[tab.id] = {
+          ...tab,
+          index: targetIndex
+        };
+
+        this._associatedTabs.set(tabKey, tab.id);
+
+        // Preserve pinned and active states if needed
+        if (tab.isPinned) pinnedTabs.push({ tab, index: targetIndex });
+        // For active tab, we will focus it at the end to avoid multiple focus changes during restore
+        if (tab.isActive) activeTabs.push({ tab, index: targetIndex });
+        // Update associated instance mapping
+        if (result.instance != null) this._associatedInstances.set(result.instance, tab.id);
+        // Track if tab ended up in the wrong position
+        if (actualViewColumn !== tab.viewColumn) {
+          misplacedTabs.push({
+            actualViewColumn,
+            actualIndex,
+            targetViewColumn,
+            targetIndex
+          });
         }
       }
+    }
+
+    // Move misplaced tabs to their correct viewColumn and index
+    for (let i = 0; i < misplacedTabs.length; i++) {
+      const { actualViewColumn, actualIndex, targetViewColumn, targetIndex } = misplacedTabs[i];
+      this._log.debug(
+        `moving tab from ${actualViewColumn}:${actualIndex} to ${targetViewColumn}:${targetIndex}`
+      );
+      await moveTab(actualViewColumn, actualIndex, targetViewColumn, targetIndex);
     }
 
     // Pin tabs if needed
