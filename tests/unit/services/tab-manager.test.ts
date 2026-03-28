@@ -357,6 +357,153 @@ describe('TabManagerService', () => {
     });
   });
 
+  describe('group import/export', () => {
+    beforeEach(async () => {
+      await service.attachStateHandler();
+      await service.waitForRenderComplete();
+    });
+
+    it('exports a group to file', async () => {
+      vi.mocked(workspace.fs.writeFile).mockResolvedValue(undefined);
+
+      service.createGroup('export-me');
+      const group = Object.values(service.state.groups).find(g => g.name === 'export-me');
+      expect(group).toBeDefined();
+
+      // Clear previous writeFile calls from createGroup's save
+      vi.mocked(workspace.fs.writeFile).mockClear();
+
+      await service.exportGroup(group!.id, 'file:///export.tabstack');
+
+      expect(workspace.fs.writeFile).toHaveBeenCalled();
+      const writeCall = vi.mocked(workspace.fs.writeFile).mock.calls.find(call => {
+        const uri = call[0] as Uri;
+        return uri.toString().includes('export.tabstack');
+      });
+      expect(writeCall).toBeDefined();
+      const written = JSON.parse(new TextDecoder().decode(writeCall![1] as Uint8Array));
+      expect(written.type).toBe('tabstack-group');
+      expect(written.group.name).toBe('export-me');
+      expect(written.version).toBeDefined();
+    });
+
+    it('shows warning when exporting non-existent group', async () => {
+      await service.exportGroup('non-existent', 'file:///export.tabstack');
+
+      expect(window.showWarningMessage).toHaveBeenCalled();
+    });
+
+    it('imports a group from file', async () => {
+      const groupData = {
+        version: 3,
+        type: 'tabstack-group',
+        group: {
+          id: 'imported-id',
+          name: 'imported-group',
+          state: {
+            tabState: { tabGroups: {}, activeGroup: null },
+            layout: { orientation: 0, groups: [] }
+          },
+          createdAt: Date.now(),
+          lastSelectedAt: 0
+        }
+      };
+      const mockData = new TextEncoder().encode(JSON.stringify(groupData));
+      vi.mocked(workspace.fs.readFile).mockResolvedValue(mockData);
+      configService.getMasterWorkspaceFolder.mockReturnValue('file:///workspace');
+
+      await service.importGroup('/import.tabstack');
+
+      const imported = Object.values(service.state.groups).find(g => g.name === 'imported-group');
+      expect(imported).toBeDefined();
+      // should have a new ID (not the original)
+      expect(imported!.id).not.toBe('imported-id');
+    });
+
+    it('handles invalid group file on import', async () => {
+      const mockData = new TextEncoder().encode('not json');
+      vi.mocked(workspace.fs.readFile).mockResolvedValue(mockData);
+
+      await service.importGroup('/bad.tabstack');
+
+      expect(window.showErrorMessage).toHaveBeenCalled();
+    });
+
+    it('rejects files with wrong type field', async () => {
+      const badData = { version: 3, type: 'wrong', group: null };
+      const mockData = new TextEncoder().encode(JSON.stringify(badData));
+      vi.mocked(workspace.fs.readFile).mockResolvedValue(mockData);
+
+      await service.importGroup('/wrong-type.tabstack');
+
+      expect(window.showErrorMessage).toHaveBeenCalled();
+    });
+
+    it('prompts on duplicate name and allows overwrite', async () => {
+      service.createGroup('dup-group');
+      const existing = Object.values(service.state.groups).find(g => g.name === 'dup-group');
+      expect(existing).toBeDefined();
+
+      const groupData = {
+        version: 3,
+        type: 'tabstack-group',
+        group: {
+          id: 'new-id',
+          name: 'dup-group',
+          state: {
+            tabState: { tabGroups: {}, activeGroup: null },
+            layout: { orientation: 0, groups: [] }
+          },
+          createdAt: Date.now(),
+          lastSelectedAt: 0
+        }
+      };
+      const mockData = new TextEncoder().encode(JSON.stringify(groupData));
+      vi.mocked(workspace.fs.readFile).mockResolvedValue(mockData);
+      vi.mocked(window.showQuickPick).mockResolvedValue('Yes' as any);
+      configService.getMasterWorkspaceFolder.mockReturnValue('file:///workspace');
+
+      await service.importGroup('/dup.tabstack');
+
+      // Old group should be gone
+      expect(service.state.groups[existing!.id]).toBeUndefined();
+      // New group with same name should exist
+      const imported = Object.values(service.state.groups).find(g => g.name === 'dup-group');
+      expect(imported).toBeDefined();
+      expect(imported!.id).not.toBe(existing!.id);
+    });
+
+    it('cancels import when user declines overwrite', async () => {
+      service.createGroup('dup-group2');
+      const existing = Object.values(service.state.groups).find(g => g.name === 'dup-group2');
+      expect(existing).toBeDefined();
+
+      const groupData = {
+        version: 3,
+        type: 'tabstack-group',
+        group: {
+          id: 'new-id-2',
+          name: 'dup-group2',
+          state: {
+            tabState: { tabGroups: {}, activeGroup: null },
+            layout: { orientation: 0, groups: [] }
+          },
+          createdAt: Date.now(),
+          lastSelectedAt: 0
+        }
+      };
+      const mockData = new TextEncoder().encode(JSON.stringify(groupData));
+      vi.mocked(workspace.fs.readFile).mockResolvedValue(mockData);
+      vi.mocked(window.showQuickPick).mockResolvedValue('No' as any);
+      configService.getMasterWorkspaceFolder.mockReturnValue('file:///workspace');
+
+      await service.importGroup('/dup2.tabstack');
+
+      // Original group should still exist
+      expect(service.state.groups[existing!.id]).toBeDefined();
+    });
+  });
+
   describe('workspace folder', () => {
     beforeEach(async () => {
       await service.attachStateHandler();

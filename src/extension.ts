@@ -1,6 +1,7 @@
 import { ExtensionContext, window } from 'vscode';
 
 import { createCommands } from './create-commands';
+import { createUriHandler } from './create-uri-handler';
 import { ViewManagerProvider } from './providers/view-manager';
 import { ConfigService } from './services/config';
 import { EditorLayoutService } from './services/editor-layout';
@@ -62,7 +63,8 @@ export async function activate(context: ExtensionContext) {
     configService,
     tabManagerService,
     viewManagerProvider,
-    ...createCommands(tabManagerService)
+    ...createCommands(tabManagerService),
+    createUriHandler()
   );
 
   if (gitInitialized) {
