@@ -15,7 +15,9 @@ import { PersistenceMediator } from '../mediators/persistence';
 import { transform as migrate } from '../transformers/migration';
 import {
   toAbsoluteTabStateFile,
-  toRelativeTabStateFile
+  toRelativeTabStateFile,
+  toRelativeStateContainer,
+  toAbsoluteStateContainer
 } from '../transformers/tab-uris';
 import { GitIntegrationMode } from '../types/config';
 import {
@@ -30,6 +32,7 @@ import {
   QuickSlotIndex,
   RenderingItem,
   StateContainer,
+  TabStackGroupFile,
   TabStateFileContent
 } from '../types/tab-manager';
 import {
@@ -573,6 +576,101 @@ export class TabManagerService implements ITabManagerService {
 
     // Apply the imported state
     this.applyState(null);
+  }
+
+  async exportGroup(groupId: string, exportUri: string): Promise<void> {
+    if (!this._collectionHandler) return;
+
+    const group = this._collectionHandler.groups[groupId];
+    if (!group) {
+      this.notify(
+        ExtensionNotificationKind.Warning,
+        `Group "${groupId}" not found`
+      );
+      return;
+    }
+
+    const fileContent: TabStackGroupFile = {
+      version: CURRENT_STATE_FILE_VERSION,
+      type: 'tabstack-group',
+      group: toRelativeStateContainer(group)
+    };
+
+    const data = new TextEncoder().encode(JSON.stringify(fileContent, null, 2));
+    await workspace.fs.writeFile(Uri.parse(exportUri), data);
+    this.notify(
+      ExtensionNotificationKind.Info,
+      `Group "${group.name}" exported successfully.`
+    );
+  }
+
+  async importGroup(importUri: string): Promise<void> {
+    if (!this._collectionHandler || !this._stateContainerHandler) return;
+
+    const data = await workspace.fs.readFile(Uri.file(importUri));
+    let fileContent: TabStackGroupFile | null = null;
+
+    try {
+      fileContent = JSON.parse(
+        new TextDecoder().decode(data)
+      ) as TabStackGroupFile;
+    } catch {
+      this.notify(
+        ExtensionNotificationKind.Error,
+        'Invalid group file. Could not parse JSON.'
+      );
+      return;
+    }
+
+    if (fileContent.type !== 'tabstack-group' || !fileContent.group) {
+      this.notify(
+        ExtensionNotificationKind.Error,
+        'Invalid group file. Missing type or group data.'
+      );
+      return;
+    }
+
+    const workspaceFolder = this._configService.getMasterWorkspaceFolder();
+    if (!workspaceFolder) {
+      return;
+    }
+
+    const importedGroup = toAbsoluteStateContainer(
+      fileContent.group,
+      Uri.parse(workspaceFolder)
+    );
+
+    // Assign a new ID to avoid collisions with existing groups
+    const newGroup: StateContainer = {
+      ...importedGroup,
+      id: nanoid(),
+      lastSelectedAt: Date.now()
+    };
+
+    // Check if a group with the same name already exists
+    const existingGroup = Object.values(this._collectionHandler.groups).find(
+      (g) => g.name === newGroup.name
+    );
+
+    if (existingGroup) {
+      const overwrite = await window.showQuickPick(['Yes', 'No'], {
+        title: `A group named "${newGroup.name}" already exists. Overwrite?`
+      });
+
+      if (overwrite === 'Yes') {
+        this._collectionHandler.removeGroup(existingGroup.id);
+      } else {
+        return;
+      }
+    }
+
+    this._collectionHandler.addGroup(newGroup);
+    this._stateContainerHandler.setCurrentStateContainer(newGroup);
+    this.applyState(null);
+    this.notify(
+      ExtensionNotificationKind.Info,
+      `Group "${newGroup.name}" imported successfully.`
+    );
   }
 
   triggerSync() {

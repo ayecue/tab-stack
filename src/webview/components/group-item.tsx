@@ -260,6 +260,19 @@ export const GroupItem: React.FC<GroupItemProps> = ({
                 className="neutral"
                 onClick={(event) => {
                   event.stopPropagation();
+                  messagingService.exportGroup(groupId);
+                }}
+                title="Export group"
+              >
+                <i className="codicon codicon-cloud-upload" aria-hidden="true" />
+              </button>
+            )}
+            {!isEditing && (
+              <button
+                type="button"
+                className="neutral"
+                onClick={(event) => {
+                  event.stopPropagation();
                   onStartRename(groupId, name);
                 }}
                 title="Rename group"

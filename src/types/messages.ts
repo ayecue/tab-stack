@@ -83,7 +83,9 @@ export enum WebviewMessageType {
   DeleteAddon = 'delete-addon',
   ApplyAddon = 'apply-addon',
   ExportStateFile = 'export-state-file',
-  ImportStateFile = 'import-state-file'
+  ImportStateFile = 'import-state-file',
+  ExportGroup = 'export-group',
+  ImportGroup = 'import-group'
 }
 
 export interface BaseWebviewMessage {
@@ -221,4 +223,13 @@ export interface WebviewExportStateFileMessage extends BaseWebviewMessage {
 
 export interface WebviewImportStateFileMessage extends BaseWebviewMessage {
   type: WebviewMessageType.ImportStateFile;
+}
+
+export interface WebviewExportGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ExportGroup;
+  groupId: string;
+}
+
+export interface WebviewImportGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.ImportGroup;
 }

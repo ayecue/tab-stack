@@ -140,6 +140,15 @@ export const GroupsCollection: React.FC = () => {
             <button
               type="button"
               className="section-action"
+              onClick={() => messagingService.importGroup()}
+              aria-label="Import group from file"
+              title="Import group"
+            >
+              <i className="codicon codicon-cloud-download" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="section-action"
               onClick={startCreate}
               disabled={isCreating}
               aria-label="Create new group"

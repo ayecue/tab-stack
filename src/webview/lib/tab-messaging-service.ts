@@ -8,7 +8,9 @@ import {
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
+  WebviewExportGroupMessage,
   WebviewExportStateFileMessage,
+  WebviewImportGroupMessage,
   WebviewImportStateFileMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
@@ -241,6 +243,21 @@ export class TabMessagingService {
   importStateFile(): void {
     const message: WebviewImportStateFileMessage = {
       type: WebviewMessageType.ImportStateFile
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  exportGroup(groupId: string): void {
+    const message: WebviewExportGroupMessage = {
+      type: WebviewMessageType.ExportGroup,
+      groupId
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  importGroup(): void {
+    const message: WebviewImportGroupMessage = {
+      type: WebviewMessageType.ImportGroup
     };
     this.messenger.sendMessage(message);
   }

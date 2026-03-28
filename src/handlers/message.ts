@@ -1,4 +1,4 @@
-import { Disposable, window } from 'vscode';
+import { Disposable, Uri, window } from 'vscode';
 
 import {
   BaseWebviewMessage,
@@ -8,6 +8,7 @@ import {
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
+  WebviewExportGroupMessage,
   WebviewMessageType,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
@@ -177,6 +178,35 @@ export class MessageHandler implements Disposable {
         });
         if (openUris && openUris[0]) {
           await tabManager.importStateFile(openUris[0].fsPath);
+        }
+        break;
+      }
+      case WebviewMessageType.ExportGroup: {
+        const { groupId } = data as WebviewExportGroupMessage;
+        const groups = tabManager.state.groups;
+        const group = groups[groupId];
+        const saveUri = await window.showSaveDialog({
+          filters: { 'Tab Stack Group': ['tabstack'] },
+          saveLabel: 'Export Group',
+          title: 'Export Tab Group',
+          defaultUri: group
+            ? Uri.file(`${group.name}.tabstack`)
+            : undefined
+        });
+        if (saveUri) {
+          await tabManager.exportGroup(groupId, saveUri.toString());
+        }
+        break;
+      }
+      case WebviewMessageType.ImportGroup: {
+        const openUris = await window.showOpenDialog({
+          canSelectMany: false,
+          filters: { 'Tab Stack Group': ['tabstack'] },
+          openLabel: 'Import Group',
+          title: 'Import Tab Group'
+        });
+        if (openUris && openUris[0]) {
+          await tabManager.importGroup(openUris[0].fsPath);
         }
         break;
       }

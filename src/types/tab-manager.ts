@@ -53,6 +53,12 @@ export function createEmptyStateContainer(): StateContainer {
 
 export const CURRENT_STATE_FILE_VERSION = 3;
 
+export interface TabStackGroupFile {
+  version: number;
+  type: 'tabstack-group';
+  group: StateContainer;
+}
+
 export interface TabStateFileContent {
   version?: number;
   groups: Record<string, StateContainer>;
@@ -122,6 +128,9 @@ export interface ITabManagerService extends Disposable {
 
   exportStateFile(exportUri: string): Promise<void>;
   importStateFile(importUri: string): Promise<void>;
+
+  exportGroup(groupId: string, exportUri: string): Promise<void>;
+  importGroup(importUri: string): Promise<void>;
 
   onDidSyncTabs: Event<Omit<ExtensionTabsSyncMessage, 'type'>>;
   onDidNotify: Event<Omit<ExtensionNotificationMessage, 'type'>>;

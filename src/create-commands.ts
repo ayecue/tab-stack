@@ -1,4 +1,4 @@
-import { commands, Disposable, window } from 'vscode';
+import { commands, Disposable, Uri, window } from 'vscode';
 
 import { ViewManagerProvider } from './providers/view-manager';
 import { TabManagerService } from './services/tab-manager';
@@ -310,6 +310,55 @@ export function createCommands(
     }
   );
 
+  const exportGroupCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.exportGroup`,
+    async (groupNameParam?: string) => {
+      const groups = tabManagerService.state.groups;
+      const groupIdParam = Object.values(groups).find(
+        (group) => group.name === groupNameParam
+      )?.id;
+      const groupId = groupIdParam || (await requestGroupId(tabManagerService));
+      if (!groupId) {
+        return;
+      }
+
+      const group = groups[groupId];
+      const saveUri = await window.showSaveDialog({
+        filters: { 'Tab Stack Group': ['tabstack'] },
+        saveLabel: 'Export Group',
+        title: 'Export Tab Group',
+        defaultUri: group
+          ? Uri.file(`${group.name}.tabstack`)
+          : undefined
+      });
+
+      if (saveUri) {
+        await tabManagerService.exportGroup(groupId, saveUri.toString());
+      }
+    }
+  );
+
+  const importGroupCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.importGroup`,
+    async (filePathParam?: string) => {
+      if (filePathParam) {
+        await tabManagerService.importGroup(filePathParam);
+        return;
+      }
+
+      const openUris = await window.showOpenDialog({
+        canSelectMany: false,
+        filters: { 'Tab Stack Group': ['tabstack'] },
+        openLabel: 'Import Group',
+        title: 'Import Tab Group'
+      });
+
+      if (openUris && openUris[0]) {
+        await tabManagerService.importGroup(openUris[0].fsPath);
+      }
+    }
+  );
+
   const quickSlotCommands = [];
 
   for (let slot = 1; slot <= 9; slot++) {
@@ -437,6 +486,8 @@ export function createCommands(
     assignQuickSlotCommand,
     clearQuickSlotCommand,
     clearAllTabsCommand,
+    exportGroupCommand,
+    importGroupCommand,
     ...quickSlotCommands,
     testOpenView,
     testDispatch,

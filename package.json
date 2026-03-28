@@ -203,6 +203,16 @@
         "category": "Tab Stack"
       },
       {
+        "command": "tabStack.exportGroup",
+        "title": "Export Group to File",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.importGroup",
+        "title": "Import Group from File",
+        "category": "Tab Stack"
+      },
+      {
         "command": "tabStack.quickSlot1",
         "title": "Apply Quick Slot 1",
         "category": "Tab Stack"
