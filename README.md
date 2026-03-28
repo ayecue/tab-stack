@@ -55,20 +55,78 @@ That is it - from here you can start building up groups, snapshots, and add-ons 
 
 Most functionality is available both through the **Tab Stack view** and the **Command Palette**.
 
+### Groups
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.createGroup` | Save current tabs as a named group | - |
+| `tabStack.switchGroup` | Pick and apply a saved group | - |
+| `tabStack.deleteGroup` | Delete a saved group | - |
+| `tabStack.clearSelection` | Clear the current group selection | - |
+| `tabStack.exportGroup` | Export a group to a `.tabstack` file | - |
+| `tabStack.importGroup` | Import a group from a `.tabstack` file | - |
+
+### Snapshots (history)
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.snapshot` | Capture a snapshot of all open tabs | - |
+| `tabStack.restoreSnapshot` | Restore a snapshot from history | - |
+| `tabStack.deleteSnapshot` | Delete a snapshot from history | - |
+
+### Add-ons
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.createAddon` | Save current tabs as an add-on (overlay) | - |
+| `tabStack.applyAddon` | Apply an add-on on top of the current layout | - |
+| `tabStack.deleteAddon` | Delete an add-on | - |
+
+### Quick slots & switching
+
 | Command ID | What it does | Default keybinding* |
 | --- | --- | --- |
 | `tabStack.quickSwitch` | Toggle between the two most recent tab states | `Ctrl`/`Cmd` + `Alt` + `Shift` + `0` |
-| `tabStack.quickSlot1` - `tabStack.quickSlot9` | Apply groups assigned to quick slots 1-9 | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` ... `9` |
-| `tabStack.createGroup` | Save current tabs as a named group | - |
-| `tabStack.switchGroup` | Pick and apply a saved group | - |
-| `tabStack.snapshot` | Capture a snapshot of all open tabs | - |
-| `tabStack.restoreSnapshot` | Restore a snapshot from history | - |
-| `tabStack.createAddon` | Save current tabs as an add-on (overlay) | - |
-| `tabStack.applyAddon` | Apply an add-on on top of the current layout | - |
+| `tabStack.quickSlot1` – `tabStack.quickSlot9` | Apply groups assigned to quick slots 1–9 | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` … `9` |
+| `tabStack.assignQuickSlot` | Assign a group to a quick slot (1–9) | - |
+| `tabStack.clearQuickSlot` | Clear a quick slot assignment | - |
+
+### Utility
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.refresh` | Refresh the Tab Stack view | - |
+| `tabStack.clearAllTabs` | Close all open tabs | - |
 
 \*On macOS the shortcuts use `Cmd` instead of `Ctrl`.
 
-Additional commands like refresh, delete group/add‑on/snapshot, and quick slot assignment are also available via the Command Palette and the Tab Stack UI.
+---
+
+## URI handler
+
+Tab Stack registers a URI handler so you can trigger commands from **outside VS Code** — browsers, terminals, documentation, links in chat, etc.
+
+The URI format is:
+
+```
+vscode://ayecue.tab-stack/<path>?<params>
+```
+
+### Supported URIs
+
+| URI path | Parameters | Example |
+| --- | --- | --- |
+| `/switch-group` | `name` (group name) | `vscode://ayecue.tab-stack/switch-group?name=Sprint` |
+| `/create-group` | `name` (group name) | `vscode://ayecue.tab-stack/create-group?name=Debug` |
+| `/delete-group` | `name` (group name) | `vscode://ayecue.tab-stack/delete-group?name=Old` |
+| `/snapshot` | — | `vscode://ayecue.tab-stack/snapshot` |
+| `/restore-snapshot` | `name` (snapshot name) | `vscode://ayecue.tab-stack/restore-snapshot?name=2024-01-15` |
+| `/apply-addon` | `name` (add-on name) | `vscode://ayecue.tab-stack/apply-addon?name=Debug%20Tools` |
+| `/export-group` | `name` (group name) | `vscode://ayecue.tab-stack/export-group?name=Sprint` |
+| `/import-group` | `file` (absolute path) | `vscode://ayecue.tab-stack/import-group?file=/path/to/group.tabstack` |
+| `/quick-switch` | — | `vscode://ayecue.tab-stack/quick-switch` |
+| `/quick-slot` | `slot` (1–9) | `vscode://ayecue.tab-stack/quick-slot?slot=1` |
+| `/assign-quick-slot` | `name`, `slot` | `vscode://ayecue.tab-stack/assign-quick-slot?name=Sprint&slot=1` |
 
 ---
 
