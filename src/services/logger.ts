@@ -1,4 +1,5 @@
 import { Disposable, LogOutputChannel, window } from 'vscode';
+import inspect from 'object-inspect';
 
 import type { Store, StoreInspectionEvent } from '@xstate/store';
 
@@ -95,7 +96,7 @@ export function inspectStore(
   store.inspect((evt: StoreInspectionEvent) => {
     if (evt.type === '@xstate.event') {
       const { type, ...payload } = evt.event;
-      const details = JSON.stringify(payload, null, 2);
+      const details = inspect(payload, { depth: 2 });
       log.debug(`event: ${type}${details}`);
     }
   });

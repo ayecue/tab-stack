@@ -392,6 +392,7 @@ export class TabActiveStateHandler implements Disposable {
   getTabState(): TabState {
     // Return cached state if available
     if (this._cachedTabState !== null) {
+      console.log('returning cached tab state', this._cachedTabState);
       return this._cachedTabState;
     }
 
@@ -411,30 +412,28 @@ export class TabActiveStateHandler implements Disposable {
     const tabsGroupedByColumn: Record<number, TabInfo[]> = {};
     tabs.forEach((tab) => {
       const column = tab.viewColumn ?? 0;
-      if (!tabsGroupedByColumn[column]) {
-        tabsGroupedByColumn[column] = [];
-      }
+      tabsGroupedByColumn[column] ??= [];
       tabsGroupedByColumn[column].push(tab);
     });
 
-    const activeTab = tabs.find((tab) => tab.isActive);
     const tabState: TabState = {
       tabGroups: {},
-      activeGroup: activeTab?.viewColumn ?? null
+      activeGroup: window.tabGroups.activeTabGroup.viewColumn
     };
 
     Object.entries(tabsGroupedByColumn).forEach(
       ([viewColumn, tabsInColumn]) => {
         const activeTabInColumn = tabsInColumn.find((tab) => tab.isActive);
         const sortedTabs: TabInfo[] = new Array(tabsInColumn.length);
+        const viewColumnNumber = Number(viewColumn);
 
         tabsInColumn.forEach((tab) => {
           sortedTabs[tab.index] = tab;
         });
 
-        tabState.tabGroups[Number(viewColumn)] = {
+        tabState.tabGroups[viewColumnNumber] = {
           tabs: sortedTabs.filter((tab): tab is TabInfo => tab != null),
-          viewColumn: Number(viewColumn),
+          viewColumn: viewColumnNumber,
           activeTab: activeTabInColumn
         };
       }
