@@ -470,6 +470,15 @@ export function createCommands(
     }
   );
 
+  const testResetState = commands.registerCommand(
+    `${EXTENSION_NAME}.__test__resetState`,
+    async () => {
+      await tabManagerService.clearAllTabs();
+      await tabManagerService.resetState();
+      return true;
+    }
+  );
+
   return [
     refreshCommand,
     quickSwitchCommand,
@@ -495,6 +504,7 @@ export function createCommands(
     testWebviewReady,
     testStartCapture,
     testGetCaptured,
-    testStopCapture
+    testStopCapture,
+    testResetState
   ];
 }

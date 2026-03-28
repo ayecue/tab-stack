@@ -1026,6 +1026,42 @@ export class TabManagerService implements ITabManagerService {
     await this._configService.setMasterWorkspaceFolder(null);
   }
 
+  async resetState(): Promise<void> {
+    if (!this._collectionHandler || !this._stateContainerHandler || !this._persistenceMediator) {
+      return;
+    }
+
+    this._collectionHandler.initialize({
+      groups: {},
+      history: {},
+      addons: {},
+      quickSlots: {}
+    });
+
+    const emptyContainer = createEmptyStateContainer();
+    this._stateContainerHandler.initialize(emptyContainer, null);
+
+    this._persistenceMediator.save({
+      version: CURRENT_STATE_FILE_VERSION,
+      groups: {},
+      history: {},
+      addons: {},
+      selectedGroup: null,
+      previousSelectedGroup: null,
+      quickSlots: {}
+    });
+
+    await this._persistenceMediator.write({
+      version: CURRENT_STATE_FILE_VERSION,
+      groups: {},
+      history: {},
+      addons: {},
+      selectedGroup: null,
+      previousSelectedGroup: null,
+      quickSlots: {}
+    });
+  }
+
   dispose() {
     this._disposables.forEach((d) => d.dispose());
     this._disposables = [];
