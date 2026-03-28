@@ -95,49 +95,8 @@ export function inspectStore(
   store.inspect((evt: StoreInspectionEvent) => {
     if (evt.type === '@xstate.event') {
       const { type, ...payload } = evt.event;
-      const details = formatEventPayload(payload);
+      const details = JSON.stringify(payload, null, 2);
       log.debug(`event: ${type}${details}`);
     }
   });
-}
-
-function formatEventPayload(payload: Record<string, unknown>): string {
-  const keys = Object.keys(payload);
-  if (keys.length === 0) return '';
-
-  const parts: string[] = [];
-
-  if ('payload' in payload) {
-    const p = payload.payload;
-    if (typeof p === 'string') {
-      parts.push(`id=${p}`);
-    } else if (p && typeof p === 'object' && 'id' in p) {
-      const obj = p as Record<string, unknown>;
-      parts.push(`id=${obj.id}`);
-      if ('label' in obj) parts.push(`label="${obj.label}"`);
-      if ('name' in obj) parts.push(`name="${obj.name}"`);
-    }
-  }
-
-  if ('stateContainer' in payload) {
-    const sc = payload.stateContainer as Record<string, unknown>;
-    if (sc?.id) parts.push(`id=${sc.id}`);
-    if (sc?.name) parts.push(`name="${sc.name}"`);
-  }
-
-  if ('groupId' in payload) parts.push(`groupId=${payload.groupId}`);
-  if ('addonId' in payload) parts.push(`addonId=${payload.addonId}`);
-  if ('historyId' in payload) parts.push(`historyId=${payload.historyId}`);
-  if ('newName' in payload) parts.push(`newName="${payload.newName}"`);
-  if ('slot' in payload) parts.push(`slot=${payload.slot}`);
-  if ('maxEntries' in payload) parts.push(`maxEntries=${payload.maxEntries}`);
-
-  if ('tabs' in payload) {
-    const tabs = payload.tabs;
-    if (tabs && typeof tabs === 'object') {
-      parts.push(`tabs=${Object.keys(tabs).length}`);
-    }
-  }
-
-  return parts.length > 0 ? ` (${parts.join(', ')})` : '';
 }

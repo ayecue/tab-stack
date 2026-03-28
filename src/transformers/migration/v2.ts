@@ -138,8 +138,7 @@ function isTabRecoverable(tab: TabInfoV2): boolean {
     tab.kind === TabKind.TabInputTextDiff ||
     tab.kind === TabKind.TabInputCustom ||
     tab.kind === TabKind.TabInputNotebook ||
-    tab.kind === TabKind.TabInputNotebookDiff ||
-    tab.kind === TabKind.TabInputTerminal
+    tab.kind === TabKind.TabInputNotebookDiff
   ) {
     return true;
   }
