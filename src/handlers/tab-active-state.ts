@@ -417,7 +417,7 @@ export class TabActiveStateHandler implements Disposable {
 
     const tabState: TabState = {
       tabGroups: {},
-      activeGroup: window.tabGroups.activeTabGroup.viewColumn
+      activeGroup: window.tabGroups?.activeTabGroup?.viewColumn ?? null
     };
 
     Object.entries(tabsGroupedByColumn).forEach(
