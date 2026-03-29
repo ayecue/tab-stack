@@ -9,6 +9,7 @@ import { GitService } from './services/git';
 import { initializeLogger } from './services/logger';
 import { TabManagerService } from './services/tab-manager';
 import { getEditorLayout } from './utils/commands';
+import { createTestHelper } from './create-test-helper';
 
 export async function activate(context: ExtensionContext) {
   const logger = initializeLogger();
@@ -64,6 +65,7 @@ export async function activate(context: ExtensionContext) {
     tabManagerService,
     viewManagerProvider,
     ...createCommands(tabManagerService),
+    ...createTestHelper(tabManagerService),
     createUriHandler()
   );
 
