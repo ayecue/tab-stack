@@ -1,9 +1,13 @@
-const { suite, test } = require('mocha');
+const { suite, test, afterEach } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
-const { CMD, activateExtension, sleep, openAndWaitWebview } = require('./helpers.cjs');
+const { CMD, activateExtension, openAndWaitWebview, trackSync, trackRender, closeAllTabs } = require('./helpers.cjs');
 
 suite('Lifecycle: group', () => {
+  afterEach(async () => {
+    await closeAllTabs();
+  });
+
   test('group lifecycle: create, rename, switch, delete', async function () {
     this.timeout(1000 * 20);
     await activateExtension();
@@ -12,11 +16,12 @@ suite('Lifecycle: group', () => {
     const name = `WL-Group-${Date.now()}`;
 
     // Create group
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group',
-      groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group',
+        groupId: name
+      });
     });
-    await sleep(1000);
 
     // Lookup newly created group id
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
@@ -24,32 +29,33 @@ suite('Lifecycle: group', () => {
     assert.ok(created, 'Group should be created');
 
     const newName = `${name}-renamed`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'rename-group',
-      groupId: created.id,
-      name: newName
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'rename-group',
+        groupId: created.id,
+        name: newName
+      });
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.groups[created.id].name, newName, 'Group should be renamed');
 
-    // Switch to group
+    // Switch to group (already current after create — no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group',
       groupId: created.id
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, created.id, 'Selected group should match');
 
     // Delete group
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'delete-group',
-      groupId: created.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'delete-group',
+        groupId: created.id
+      });
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.groups[created.id], 'Group should be deleted');
@@ -61,29 +67,30 @@ suite('Lifecycle: group', () => {
     await openAndWaitWebview();
 
     const name = `WL-DelActive-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
-    // Switch to the group
+    // Switch to the group (already current after create — no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group', groupId: group.id
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, group.id, 'Should be on the group');
 
     // Delete the currently active group
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'delete-group', groupId: group.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'delete-group', groupId: group.id
+      });
     });
-    await sleep(1000);
 
     // State should still be accessible (no crash)
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
@@ -104,51 +111,56 @@ suite('Lifecycle: group', () => {
 
     // Create all groups
     for (const name of names) {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: name
+      await trackSync(async () => {
+        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+          type: 'new-group', groupId: name
+        });
       });
-      await sleep(500);
     }
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const groups = names.map((n) => Object.values(state.groups).find((g) => g.name === n));
     assert.ok(groups.every(Boolean), 'All groups should be created');
 
-    // Switch to A, then B, then C
+    // Switch to A, then B, then C (all have same state — mergeTabState, but render event still fires)
     for (const group of groups) {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: group.id
+      await trackRender(async () => {
+        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+          type: 'switch-group', groupId: group.id
+        });
       });
-      await sleep(500);
     }
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groups[2].id, 'Should be on group C');
 
     // Delete group B (middle) while on C — should not affect current
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'delete-group', groupId: groups[1].id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'delete-group', groupId: groups[1].id
+      });
     });
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.groups[groups[1].id], 'Group B should be deleted');
     assert.strictEqual(state.selectedGroupId, groups[2].id, 'Should still be on group C');
 
     // Switch back to A
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'switch-group', groupId: groups[0].id
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'switch-group', groupId: groups[0].id
+      });
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groups[0].id, 'Should be on group A');
 
     // Delete A while it is active
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'delete-group', groupId: groups[0].id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'delete-group', groupId: groups[0].id
+      });
     });
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.groups[groups[0].id], 'Group A should be deleted');
@@ -161,19 +173,19 @@ suite('Lifecycle: group', () => {
     await openAndWaitWebview();
 
     const name = `WL-Dup-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const groupCountBefore = Object.keys(state.groups).length;
 
-    // Attempt to create another group with the same name
+    // Attempt to create another group with the same name (silently ignored — no sync)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'new-group', groupId: name
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const groupCountAfter = Object.keys(state.groups).length;
@@ -186,30 +198,31 @@ suite('Lifecycle: group', () => {
     await openAndWaitWebview();
 
     const name = `WL-RenameActive-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
-    // Switch to it
+    // Switch to it (already current after create — no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group', groupId: group.id
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, group.id, 'Should be on the group');
 
     // Rename while active
     const newName = `${name}-RENAMED`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'rename-group', groupId: group.id, name: newName
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'rename-group', groupId: group.id, name: newName
+      });
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.groups[group.id].name, newName, 'Name should be updated');
@@ -222,26 +235,25 @@ suite('Lifecycle: group', () => {
     await openAndWaitWebview();
 
     const name = `WL-Idempotent-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
-    // Switch to the group
+    // Switch to the group (already current after create — no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group', groupId: group.id
     });
-    await sleep(1000);
 
-    // Switch again — should be idempotent
+    // Switch again — should be idempotent (no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group', groupId: group.id
     });
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, group.id, 'Should still be on the same group');
@@ -254,26 +266,25 @@ suite('Lifecycle: group', () => {
     await openAndWaitWebview();
 
     const name = `WL-Fork-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
-    // Switch to the group first
+    // Switch to the group first (already current after create — no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group', groupId: group.id
     });
-    await sleep(1000);
 
-    // Switch to null — should fork
+    // Switch to null — should fork (no render)
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'switch-group', groupId: null
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     // selectedGroupId should no longer point to the group (forked to unsaved state)

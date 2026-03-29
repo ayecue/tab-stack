@@ -1,12 +1,10 @@
 import debounce, { DebouncedFunction } from 'debounce';
 import {
-  commands,
   Disposable,
   EventEmitter,
   NotebookEditor,
   Terminal,
   TextEditor,
-  Uri,
   window
 } from 'vscode';
 
@@ -21,25 +19,17 @@ import { transformTabToTabInfo } from '../transformers/tab';
 import { TabManagerState } from '../types/tab-manager';
 import {
   AssociatedTabInstance,
-  OpenTabResult,
   TabInfo,
-  TabInfoCustom,
   TabInfoId,
   TabInfoMetaNotebookEditor,
-  TabInfoMetaTerminal,
   TabInfoMetaTextEditor,
-  TabInfoNotebook,
-  TabInfoNotebookDiff,
-  TabInfoText,
-  TabInfoTextDiff,
-  TabInfoWebview,
   TabKind,
   TabState
 } from '../types/tabs';
-import { focusTabInGroup, moveTab, pinEditor } from '../utils/commands';
-import { delay, delayImmediate } from '../utils/delay';
+import { focusTabInGroup, pinEditor } from '../utils/commands';
 import { createSelectionRange, createTabKey, createTabKeyByViewColumn } from '../utils/tab-utils';
 import { updatedDiff } from 'deep-object-diff';
+import { TabFactory } from './tab-factory';
 
 export class TabActiveStateHandler implements Disposable {
   static readonly STATE_UPDATE_DEBOUNCE_DELAY = 10 as const;
@@ -53,6 +43,7 @@ export class TabActiveStateHandler implements Disposable {
   private _storeSubscription: { unsubscribe: () => void } | null;
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
+  private _tabFactory: TabFactory;
 
   private _disposables: Disposable[];
   private _cachedTabState: TabState | null;
@@ -77,6 +68,7 @@ export class TabActiveStateHandler implements Disposable {
     this._cachedTabState = null;
     this._isStateLocked = false;
     this._log = getLogger().child('ActiveStateHandler');
+    this._tabFactory = new TabFactory(this._configService);
 
     this.triggerStateUpdate = debounce(
       this._triggerStateUpdate.bind(this),
@@ -496,111 +488,6 @@ export class TabActiveStateHandler implements Disposable {
     this.syncTabs();
   }
 
-  private async openTab(tab: TabInfo): Promise<OpenTabResult> {
-    // Fallback for older versions
-    if (tab.kind == null) {
-      return { success: false, instance: null };
-    }
-
-    switch (tab.kind) {
-      case TabKind.TabInputText: {
-        const textTab = tab as TabInfoText;
-        await commands.executeCommand('vscode.open', Uri.parse(textTab.uri), {
-          viewColumn: tab.viewColumn,
-          preview: false,
-          preserveFocus: true,
-          selection: (tab.meta as TabInfoMetaTextEditor).selection
-        });
-        return { success: true, instance: window.activeTextEditor };
-      }
-      case TabKind.TabInputTextDiff: {
-        const textDiffTab = tab as TabInfoTextDiff;
-        await commands.executeCommand(
-          'vscode.diff',
-          Uri.parse(textDiffTab.originalUri),
-          Uri.parse(textDiffTab.modifiedUri),
-          tab.label,
-          {
-            viewColumn: tab.viewColumn,
-            preview: false,
-            preserveFocus: true,
-            selection: (tab.meta as TabInfoMetaTextEditor).selection
-          }
-        );
-        return { success: true, instance: window.activeTextEditor };
-      }
-      case TabKind.TabInputCustom: {
-        const customTab = tab as TabInfoCustom;
-        await commands.executeCommand(
-          'vscode.openWith',
-          Uri.parse(customTab.uri),
-          customTab.viewType,
-          {
-            viewColumn: tab.viewColumn,
-            preview: false,
-            preserveFocus: true
-          }
-        );
-        return { success: true, instance: window.activeTextEditor };
-      }
-      case TabKind.TabInputNotebook: {
-        const notebookTab = tab as TabInfoNotebook;
-        await commands.executeCommand(
-          'vscode.openWith',
-          Uri.parse(notebookTab.uri),
-          notebookTab.notebookType,
-          {
-            viewColumn: tab.viewColumn,
-            preview: false,
-            preserveFocus: true,
-            selection: (tab.meta as TabInfoMetaNotebookEditor).selection
-          }
-        );
-        return { success: true, instance: window.activeNotebookEditor };
-      }
-      case TabKind.TabInputNotebookDiff: {
-        const notebookDiffTab = tab as TabInfoNotebookDiff;
-        await commands.executeCommand(
-          'vscode.diff',
-          Uri.parse(notebookDiffTab.originalUri),
-          Uri.parse(notebookDiffTab.modifiedUri),
-          tab.label,
-          {
-            viewColumn: tab.viewColumn,
-            preview: false,
-            preserveFocus: true,
-            selection: (tab.meta as TabInfoMetaNotebookEditor).selection
-          }
-        );
-        return { success: true, instance: window.activeNotebookEditor };
-      }
-      case TabKind.TabInputTerminal:
-      case TabKind.TabInputWebview:
-      case TabKind.Unknown:
-      default: {
-        // Check regex-command mapping for unknown tabs
-        const mappings = this._configService.getTabRecoveryMappings();
-        for (const [pattern, command] of Object.entries(mappings)) {
-          try {
-            const regex = new RegExp(pattern);
-            if (regex.test(tab.label)) {
-              this._log.debug(`executing recovery command: "${command}" for tab "${tab.label}"`);
-              await commands.executeCommand(command);
-              return { success: true, instance: null };
-            }
-          } catch (error) {
-            this._log.error(
-              `failed recovery command for tab "${tab.label}"`,
-              error
-            );
-          }
-        }
-
-        return { success: false, instance: null };
-      }
-    }
-  }
-
   private findAssociatedInstanceByTabId(
     tabId: TabInfoId
   ): AssociatedTabInstance | null {
@@ -663,7 +550,6 @@ export class TabActiveStateHandler implements Disposable {
     this.lockState();
     const currentTabs = this._tabActiveStateStore.getSnapshot().context.tabs;
     const newTabs: Record<TabInfoId, TabInfo> = { ...currentTabs };
-    const tabGroupItems = Object.values(tabState.tabGroups);
     const pinnedTabs: { tab: TabInfo; index: number }[] = [];
     const activeTabs: { tab: TabInfo; index: number }[] = [];
     const focusedViewColumn =
@@ -672,77 +558,34 @@ export class TabActiveStateHandler implements Disposable {
       tabState.tabGroups[tabState.activeGroup]?.tabs.findIndex(
         (tab) => tab.isActive
       ) ?? 0;
-    const misplacedTabs: {
-      actualViewColumn: number;
-      actualIndex: number;
-      targetViewColumn: number;
-      targetIndex: number;
-    }[] = [];
+    
+    await Promise.all(
+      Object.values(tabState.tabGroups).flatMap(group =>
+        group.tabs.map(async (tab) => {
+          const result = await this._tabFactory.openTab(tab);
 
-    for (let i = 0; i < tabGroupItems.length; i++) {
-      const group = tabGroupItems[i];
-      let offset = window.tabGroups.all[i]?.tabs.length ?? 0;
+          if (!result.success) {
+            this._log.warn(`failed to open tab "${tab.label}", skipping...`);
+            return;
+          }
 
-      for (let j = 0; j < group.tabs.length; j++) {
-        const tab = group.tabs[j];
-        const targetViewColumn = group.viewColumn;
-        const targetIndex = offset + j;
-        const result = await this.openTab(tab);
+          const nativeTabViewColumn = result.tab.group.viewColumn;
+          const nativeTabIndex = result.tab.group.tabs.indexOf(result.tab);
+          const tabKey = createTabKeyByViewColumn(result.tab, nativeTabViewColumn, nativeTabIndex);
 
-        if (!result.success) {
-          // If the tab couldn't be opened, we skip it but still need to adjust the offset for subsequent tabs
-          offset--;
-          this._log.warn(`failed to open tab "${tab.label}", skipping...`);
-          continue;
-        }
+          newTabs[tab.id] = {
+            ...tab,
+            index: nativeTabIndex
+          };
 
-        const activeTabGroup = window.tabGroups.activeTabGroup;
-        const currentTab = activeTabGroup.activeTab;
+          this._associatedTabs.set(tabKey, tab.id);
 
-        if (currentTab == null || activeTabGroup == null) {
-          // This can happen if the opened tab is immediately closed by the user or an extension, so we just skip it
-          offset--;
-          this._log.warn(`opened tab "${tab.label}" but it was not found in any tab group, skipping...`);
-          continue;
-        }
-
-        const actualViewColumn = activeTabGroup.viewColumn;
-        const actualIndex = activeTabGroup.tabs.indexOf(currentTab);
-        const tabKey = createTabKeyByViewColumn(currentTab, targetViewColumn, targetIndex);
-
-        newTabs[tab.id] = {
-          ...tab,
-          index: targetIndex
-        };
-
-        this._associatedTabs.set(tabKey, tab.id);
-
-        // Preserve pinned and active states if needed
-        if (tab.isPinned) pinnedTabs.push({ tab, index: targetIndex });
-        // For active tab, we will focus it at the end to avoid multiple focus changes during restore
-        if (tab.isActive) activeTabs.push({ tab, index: targetIndex });
-        // Update associated instance mapping
-        if (result.instance != null) this._associatedInstances.set(result.instance, tab.id);
-        // Track if tab ended up in the wrong position
-        if (actualViewColumn !== tab.viewColumn) {
-          misplacedTabs.push({
-            actualViewColumn,
-            actualIndex,
-            targetViewColumn,
-            targetIndex
-          });
-        }
-      }
-    }
-
-    // Move misplaced tabs to their correct viewColumn and index
-    for (let i = 0; i < misplacedTabs.length; i++) {
-      const { actualViewColumn, actualIndex, targetViewColumn, targetIndex } = misplacedTabs[i];
-      this._log.debug(
-        `moving tab from ${actualViewColumn}:${actualIndex} to ${targetViewColumn}:${targetIndex}`
-      );
-      await moveTab(actualViewColumn, actualIndex, targetViewColumn, targetIndex);
-    }
+          if (tab.isPinned) pinnedTabs.push({ tab, index: nativeTabIndex });
+          if (tab.isActive) activeTabs.push({ tab, index: nativeTabIndex });
+          if (result.handle != null) this._associatedInstances.set(result.handle, tab.id);
+        })
+      )
+    )
 
     // Pin tabs if needed
     if (options.preservePinnedTabs) {

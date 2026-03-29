@@ -1,9 +1,13 @@
-const { suite, test } = require('mocha');
+const { suite, test, afterEach } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
-const { CMD, activateExtension, sleep, openAndWaitWebview } = require('./helpers.cjs');
+const { CMD, activateExtension, openAndWaitWebview, trackSync, closeAllTabs } = require('./helpers.cjs');
 
 suite('Lifecycle: webview sync', () => {
+  afterEach(async () => {
+    await closeAllTabs();
+  });
+
   test('webview sync roundtrip: webview sync message triggers extension sync output', async function () {
     this.timeout(1000 * 20);
     await activateExtension();
@@ -13,10 +17,11 @@ suite('Lifecycle: webview sync', () => {
     await vscode.commands.executeCommand(CMD('__test__startCapture'));
 
     // Send Sync message from webview to trigger a service sync
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'sync'
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'sync'
+      });
     });
-    await sleep(250);
 
     const captured = await vscode.commands.executeCommand(CMD('__test__getCapturedMessages'), true);
     assert.ok(captured.sync && captured.sync.length > 0, 'Expected at least one sync payload');

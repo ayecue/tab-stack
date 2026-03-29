@@ -1,50 +1,58 @@
-const { suite, test } = require('mocha');
+const { suite, test, afterEach } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
-const { CMD, activateExtension, sleep, openAndWaitWebview } = require('./helpers.cjs');
+const { CMD, activateExtension, openAndWaitWebview, trackSync, trackRender, closeAllTabs } = require('./helpers.cjs');
 
 suite('Lifecycle: quick slots', () => {
+  afterEach(async () => {
+    await closeAllTabs();
+  });
+
   test('quick slot lifecycle: assign, apply via command, clear', async function () {
     this.timeout(1000 * 20);
     await activateExtension();
     await openAndWaitWebview();
 
     const groupName = `WL-QS-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group',
-      groupId: groupName
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group',
+        groupId: groupName
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === groupName);
     assert.ok(group, 'Group should exist');
 
     // Assign slot 6 to this group
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot',
-      slot: '6',
-      groupId: group.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot',
+        slot: '6',
+        groupId: group.id
+      });
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.quickSlots['6'], group.id, 'Quick slot assigned');
 
-    // Apply quick slot via command (webview does not have apply message)
-    await vscode.commands.executeCommand(CMD('quickSlot6'));
-    await sleep(1000);
+    // Apply quick slot via command
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('quickSlot6'));
+    });
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, group.id, 'Applying quick slot should select group');
 
     // Clear quick slot via message
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot',
-      slot: '6',
-      groupId: null
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot',
+        slot: '6',
+        groupId: null
+      });
     });
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.quickSlots['6'], 'Quick slot cleared');
@@ -61,11 +69,12 @@ suite('Lifecycle: quick slots', () => {
 
     // Create three groups
     for (const name of [g1, g2, g3]) {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group',
-        groupId: name
+      await trackSync(async () => {
+        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+          type: 'new-group',
+          groupId: name
+        });
       });
-      await sleep(500);
     }
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
@@ -82,17 +91,19 @@ suite('Lifecycle: quick slots', () => {
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'assign-quick-slot', slot: '2', groupId: group2.id
     });
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '3', groupId: group3.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot', slot: '3', groupId: group3.id
+      });
     });
-    await sleep(500);
 
     // Rapidly switch between slots (simulate fast hotbar switching)
     const slotSequence = ['quickSlot1', 'quickSlot2', 'quickSlot3', 'quickSlot1', 'quickSlot3', 'quickSlot2', 'quickSlot1'];
-    for (const slotCmd of slotSequence) {
-      await vscode.commands.executeCommand(CMD(slotCmd));
-    }
-    await sleep(1500);
+    await trackSync(async () => {
+      for (const slotCmd of slotSequence) {
+        await vscode.commands.executeCommand(CMD(slotCmd));
+      }
+    });
 
     // After rapid switching, the last slot applied was quickSlot1
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
@@ -114,14 +125,16 @@ suite('Lifecycle: quick slots', () => {
     const gA = `WL-QSI-A-${Date.now()}`;
     const gB = `WL-QSI-B-${Date.now()}`;
 
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: gA
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: gA
+      });
     });
-    await sleep(500);
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: gB
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: gB
+      });
     });
-    await sleep(500);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
@@ -132,32 +145,37 @@ suite('Lifecycle: quick slots', () => {
     await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
       type: 'assign-quick-slot', slot: '7', groupId: groupA.id
     });
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '8', groupId: groupB.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot', slot: '8', groupId: groupB.id
+      });
     });
-    await sleep(500);
 
     // Switch to group A via quick slot
-    await vscode.commands.executeCommand(CMD('quickSlot7'));
-    await sleep(1000);
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('quickSlot7'));
+    });
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groupA.id, 'Should be on group A');
 
     // Switch to group B via quick slot
-    await vscode.commands.executeCommand(CMD('quickSlot8'));
-    await sleep(1000);
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('quickSlot8'));
+    });
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groupB.id, 'Should be on group B');
 
     // Quick switch should go back to A (previous)
-    await vscode.commands.executeCommand(CMD('quickSwitch'));
-    await sleep(1000);
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('quickSwitch'));
+    });
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groupA.id, 'quickSwitch should return to group A');
 
     // Another quickSwitch goes back to B
-    await vscode.commands.executeCommand(CMD('quickSwitch'));
-    await sleep(1000);
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('quickSwitch'));
+    });
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groupB.id, 'quickSwitch should toggle back to group B');
 
@@ -176,33 +194,35 @@ suite('Lifecycle: quick slots', () => {
     await openAndWaitWebview();
 
     const name = `WL-QSDeleted-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
     // Assign slot 9
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '9', groupId: group.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot', slot: '9', groupId: group.id
+      });
     });
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.quickSlots['9'], group.id, 'Slot 9 should be assigned');
 
     // Delete the group
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'delete-group', groupId: group.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'delete-group', groupId: group.id
+      });
     });
-    await sleep(1000);
 
     // Applying the quick slot should clear it and show a warning (not crash)
     await vscode.commands.executeCommand(CMD('quickSlot9'));
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(!state.quickSlots['9'], 'Quick slot should be cleared after group deletion');
@@ -216,14 +236,16 @@ suite('Lifecycle: quick slots', () => {
     const nameA = `WL-Reassign-A-${Date.now()}`;
     const nameB = `WL-Reassign-B-${Date.now()}`;
 
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: nameA
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: nameA
+      });
     });
-    await sleep(500);
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: nameB
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: nameB
+      });
     });
-    await sleep(500);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const groupA = Object.values(state.groups).find((g) => g.name === nameA);
@@ -231,26 +253,27 @@ suite('Lifecycle: quick slots', () => {
     assert.ok(groupA && groupB, 'Both groups should exist');
 
     // Assign slot 4 to group A
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '4', groupId: groupA.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot', slot: '4', groupId: groupA.id
+      });
     });
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.quickSlots['4'], groupA.id, 'Slot 4 should point to group A');
 
     // Reassign slot 4 to group B
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '4', groupId: groupB.id
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot', slot: '4', groupId: groupB.id
+      });
     });
-    await sleep(500);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.quickSlots['4'], groupB.id, 'Slot 4 should now point to group B');
 
-    // Apply slot 4 — should switch to group B
+    // Apply slot 4 — group B is already current after create, no render
     await vscode.commands.executeCommand(CMD('quickSlot4'));
-    await sleep(1000);
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.strictEqual(state.selectedGroupId, groupB.id, 'Should be on group B after applying reassigned slot');
@@ -267,14 +290,14 @@ suite('Lifecycle: quick slots', () => {
     await openAndWaitWebview();
 
     // Ensure slot 5 is not assigned
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '5', groupId: null
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'assign-quick-slot', slot: '5', groupId: null
+      });
     });
-    await sleep(500);
 
-    // Apply unassigned slot — should show warning, not crash
+    // Apply unassigned slot — should show warning, not crash (no render)
     await vscode.commands.executeCommand(CMD('quickSlot5'));
-    await sleep(500);
 
     const state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(state, 'State should be accessible after applying unassigned slot');
@@ -285,9 +308,8 @@ suite('Lifecycle: quick slots', () => {
     await activateExtension();
     await openAndWaitWebview();
 
-    // Just call quickSwitch on a fresh state — should not crash
+    // Just call quickSwitch on a fresh state — should not crash (no render)
     await vscode.commands.executeCommand(CMD('quickSwitch'));
-    await sleep(500);
 
     const state = await vscode.commands.executeCommand(CMD('__test__getState'));
     assert.ok(state, 'State should be accessible after quickSwitch with no previous');
@@ -299,22 +321,24 @@ suite('Lifecycle: quick slots', () => {
     await openAndWaitWebview();
 
     const name = `WL-AllSlots-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: name
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: name
+      });
     });
-    await sleep(1000);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
     // Assign slots 1-9 to the same group
-    for (let i = 1; i <= 9; i++) {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'assign-quick-slot', slot: String(i), groupId: group.id
-      });
-    }
-    await sleep(500);
+    await trackSync(async () => {
+      for (let i = 1; i <= 9; i++) {
+        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+          type: 'assign-quick-slot', slot: String(i), groupId: group.id
+        });
+      }
+    });
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     for (let i = 1; i <= 9; i++) {
@@ -322,12 +346,13 @@ suite('Lifecycle: quick slots', () => {
     }
 
     // Clear all slots
-    for (let i = 1; i <= 9; i++) {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'assign-quick-slot', slot: String(i), groupId: null
-      });
-    }
-    await sleep(500);
+    await trackSync(async () => {
+      for (let i = 1; i <= 9; i++) {
+        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+          type: 'assign-quick-slot', slot: String(i), groupId: null
+        });
+      }
+    });
 
     state = await vscode.commands.executeCommand(CMD('__test__getState'));
     for (let i = 1; i <= 9; i++) {
@@ -343,14 +368,16 @@ suite('Lifecycle: quick slots', () => {
     const gA = `WL-Bounce-A-${Date.now()}`;
     const gB = `WL-Bounce-B-${Date.now()}`;
 
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: gA
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: gA
+      });
     });
-    await sleep(500);
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: gB
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: gB
+      });
     });
-    await sleep(500);
 
     let state = await vscode.commands.executeCommand(CMD('__test__getState'));
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
@@ -358,20 +385,23 @@ suite('Lifecycle: quick slots', () => {
     assert.ok(groupA && groupB, 'Both groups should exist');
 
     // Switch to A then B to establish previous
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'switch-group', groupId: groupA.id
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'switch-group', groupId: groupA.id
+      });
     });
-    await sleep(1000);
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'switch-group', groupId: groupB.id
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'switch-group', groupId: groupB.id
+      });
     });
-    await sleep(1000);
 
     // Rapidly fire quickSwitch 6 times (should toggle A->B->A->B->A->B)
-    for (let i = 0; i < 6; i++) {
-      await vscode.commands.executeCommand(CMD('quickSwitch'));
-    }
-    await sleep(2000);
+    await trackRender(async () => {
+      for (let i = 0; i < 6; i++) {
+        await vscode.commands.executeCommand(CMD('quickSwitch'));
+      }
+    });
 
     // 6 toggles from B: B->A->B->A->B->A->B => ends on B (even count from B)
     state = await vscode.commands.executeCommand(CMD('__test__getState'));

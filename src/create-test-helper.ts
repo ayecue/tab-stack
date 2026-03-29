@@ -53,40 +53,40 @@ class LoggerInterceptor {
     const originalWarn = this._channel.warn;
     const originalError = this._channel.error;
 
-    this._channel.info = function (message: string, ...args: unknown[]) {
+    this._channel.info = (message: string, ...args: unknown[]) => {
       this._logMessages.push({
         level: 2,
         message,
         args
       });
-      return originalInfo.call(this, message, ...args);
+      return originalInfo.call(this._channel, message, ...args);
     };
 
-    this._channel.debug = function (message: string, ...args: unknown[]) {
+    this._channel.debug = (message: string, ...args: unknown[]) => {
       this._logMessages.push({
         level: 1,
         message,
         args
       });
-      return originalDebug.call(this, message, ...args);
+      return originalDebug.call(this._channel, message, ...args);
     };
     
-    this._channel.warn = function (message: string, ...args: unknown[]) {
+    this._channel.warn = (message: string, ...args: unknown[]) => {
       this._logMessages.push({
         level: 3,
         message,
         args
       });
-      return originalWarn.call(this, message, ...args);
+      return originalWarn.call(this._channel, message, ...args);
     };
 
-    this._channel.error = function (message: string, ...args: unknown[]) {
+    this._channel.error = (message: string, ...args: unknown[]) => {
       this._logMessages.push({
         level: 4,
         message,
         args
       });
-      return originalError.call(this, message, ...args);
+      return originalError.call(this._channel, message, ...args);
     };
   }
 
@@ -120,11 +120,11 @@ class RuntimeTracker implements Disposable {
   private attach() {
     this._subscriptions.push(
       this._tabManagerService.onDidSyncTabs(() => {
-        this._lastSync = Date.now();
+        this._lastSync++;
       }),
 
       this._tabManagerService.onDidCompleteRender(() => {
-        this._lastRender = Date.now();
+        this._lastRender++;
       }),
 
       this._tabManagerService.onDidSyncTabs((p) => this._syncMessages.push(p)),
@@ -168,7 +168,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   // Test-only helper commands (not contributed to menus):
   const testCommands: Disposable[] = [];
 
-  if (process.env.VSCODE_TAB_STACK_TEST) {
+  if (!process.env.VSCODE_TAB_STACK_TEST) {
     return testCommands;
   }
 
@@ -226,10 +226,18 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
           tabManagerService.state?.stateContainer?.id ?? null;
         return {
           groups: Object.fromEntries(
-            Object.values(groups).map((g) => [
-              g.id,
-              { id: g.id, name: g.name }
-            ])
+            Object.values(groups).map((g) => {
+              const tabGroupsArray = Object.values(g.state?.tabState?.tabGroups ?? {});
+              const tabCount = tabGroupsArray.reduce(
+                (sum, tg) => sum + tg.tabs.length, 0
+              );
+              const columnCount = tabGroupsArray.length;
+              const tabLabels = tabGroupsArray.flatMap((tg) => tg.tabs.map((t) => t.label));
+              return [
+                g.id,
+                { id: g.id, name: g.name, tabCount, columnCount, tabLabels }
+              ];
+            })
           ),
           addons: Object.fromEntries(
             Object.values(addons).map((a) => [
@@ -238,6 +246,16 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
             ])
           ),
           historyIds: Object.keys(history),
+          history: Object.fromEntries(
+            Object.values(history).map((h) => {
+              const tabGroupsArray = Object.values(h.state?.tabState?.tabGroups ?? {});
+              const tabCount = tabGroupsArray.reduce(
+                (sum, tg) => sum + tg.tabs.length, 0
+              );
+              const tabLabels = tabGroupsArray.flatMap((tg) => tg.tabs.map((t) => t.label));
+              return [h.id, { id: h.id, name: h.name, tabCount, tabLabels }];
+            })
+          ),
           quickSlots,
           selectedGroupId
         };
@@ -340,7 +358,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
           throw new Error('Invalid fromTime parameter');
         }
 
-        if (tracker.lastRender >= fromTime) {
+        if (tracker.lastRender > fromTime) {
           return Promise.resolve(true);
         }
 
@@ -349,7 +367,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
         return new Promise<boolean>((resolve) => {
           const check = () => {
-            if (tracker.lastRender >= fromTime) {
+            if (tracker.lastRender > fromTime) {
               resolve(true);
               return;
             } else if (Date.now() >= endTime) {
@@ -383,7 +401,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
           throw new Error('Invalid fromTime parameter');
         }
 
-        if (tracker.lastSync >= fromTime) {
+        if (tracker.lastSync > fromTime) {
           return Promise.resolve(true);
         }
 
@@ -392,7 +410,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
         return new Promise<boolean>((resolve) => {
           const check = () => {
-            if (tracker.lastSync >= fromTime) {
+            if (tracker.lastSync > fromTime) {
               resolve(true);
               return;
             } else if (Date.now() >= endTime) {

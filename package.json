@@ -404,9 +404,11 @@
     "deep-object-diff": "^1.1.9",
     "filter-obj": "^6.1.0",
     "nanoid": "^5.1.6",
+    "non-blocking-schedule": "^0.2.0",
     "object-inspect": "^1.13.4",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "xstate": "^5.30.0"
   },
   "browserslist": "> 0.25%, not dead"
 }

@@ -20,7 +20,16 @@ exports.run = async function() {
   });
 
   const testsRoot = path.resolve(__dirname, '.');
-  const files = await glob('**/*.test.cjs', { cwd: testsRoot });
+  const testFileFilter = process.env.TEST_FILE;
+
+  let pattern = '**/*.test.cjs';
+  if (testFileFilter) {
+    // Support partial match: TEST_FILE=tab-state → **/tab-state*.test.cjs
+    pattern = `**/${testFileFilter}*.test.cjs`;
+    console.log(`TEST_FILE="${testFileFilter}" → running only: ${pattern}`);
+  }
+
+  const files = await glob(pattern, { cwd: testsRoot });
 
   for (const file of files) {
     mocha.addFile(path.resolve(testsRoot, file));

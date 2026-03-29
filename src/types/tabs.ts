@@ -143,5 +143,6 @@ export type AssociatedTabInstance = TextEditor | NotebookEditor | Terminal;
 
 export interface OpenTabResult {
   success: boolean;
-  instance: AssociatedTabInstance | null;
+  handle: AssociatedTabInstance | null;
+  tab: Tab;
 }
