@@ -29,6 +29,9 @@ export type TabInfoId = string;
 export interface TabInfoMetaTerminal {
   type: 'terminal';
   terminalName: string;
+  shellPath?: string;
+  cwd?: string;
+  isTransient?: boolean;
 }
 
 export interface TabInfoMetaTextEditor {

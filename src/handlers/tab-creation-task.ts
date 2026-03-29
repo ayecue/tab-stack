@@ -1,5 +1,5 @@
-import { Tab, TabInputText, Uri, window, commands, TabInputTextDiff, TabInputCustom, TabInputNotebook, TabInputNotebookDiff, TabInputWebview, TabInputTerminal } from "vscode";
-import { AssociatedTabInstance, TabInfoBase, TabInfoCustom, TabInfoMetaNotebookEditor, TabInfoMetaTextEditor, TabInfoNotebook, TabInfoNotebookDiff, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
+import { Tab, TabInputText, Uri, window, commands, TabInputTextDiff, TabInputCustom, TabInputNotebook, TabInputNotebookDiff, TabInputWebview, TabInputTerminal, TerminalLocation } from "vscode";
+import { AssociatedTabInstance, TabInfoBase, TabInfoCustom, TabInfoMetaNotebookEditor, TabInfoMetaTerminal, TabInfoMetaTextEditor, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
 import { focusGroup } from "../utils/commands";
 import { getLogger, ScopedLogger } from "../services/logger";
 
@@ -210,6 +210,53 @@ export class TabCreationTaskTabInputNotebookDiff extends TabCreationTask {
 
   getDescription() {
     return `notebook diff tab "${this._tabInfo.label}" with original uri "${this._tabInfo.originalUri}" and modified uri "${this._tabInfo.modifiedUri}", notebookType "${this._tabInfo.notebookType}" in column ${this._tabInfo.viewColumn}`;
+  }
+}
+
+export class TabCreationTaskTabInputTerminal extends TabCreationTask {
+  private _tabInfo: TabInfoTerminal;
+
+  constructor(tabInfo: TabInfoTerminal) {
+    super();
+    this._tabInfo = tabInfo;
+  }
+
+  findRelatedTab(tabs: readonly Tab[]) {
+    const meta = this._tabInfo.meta as TabInfoMetaTerminal;
+    return tabs.find(it =>
+      it.input instanceof TabInputTerminal &&
+      it.group.viewColumn === this._tabInfo.viewColumn
+    ) ?? null;
+  }
+
+  addEditorListener(callback: (handle: AssociatedTabInstance) => void) {
+    return window.onDidOpenTerminal((terminal) => {
+      const meta = this._tabInfo.meta as TabInfoMetaTerminal;
+      if (terminal.name !== meta.terminalName) return;
+      callback(terminal);
+    });
+  }
+
+  async executeCommand() {
+    const meta = this._tabInfo.meta as TabInfoMetaTerminal;
+    window.createTerminal({
+      name: meta.terminalName,
+      shellPath: meta.shellPath,
+      cwd: meta.cwd ? Uri.parse(meta.cwd) : undefined,
+      isTransient: meta.isTransient,
+      location: {
+        viewColumn: this._tabInfo.viewColumn,
+        preserveFocus: false
+      }
+    });
+  }
+
+  getMaxRuntime(): number {
+    return 10000;
+  }
+
+  getDescription() {
+    return `terminal tab "${(this._tabInfo.meta as TabInfoMetaTerminal).terminalName}" in column ${this._tabInfo.viewColumn}`;
   }
 }
 

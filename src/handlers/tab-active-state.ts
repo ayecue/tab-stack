@@ -4,6 +4,7 @@ import {
   EventEmitter,
   NotebookEditor,
   Terminal,
+  TerminalOptions,
   TextEditor,
   window
 } from 'vscode';
@@ -22,6 +23,7 @@ import {
   TabInfo,
   TabInfoId,
   TabInfoMetaNotebookEditor,
+  TabInfoMetaTerminal,
   TabInfoMetaTextEditor,
   TabKind,
   TabState
@@ -99,9 +101,6 @@ export class TabActiveStateHandler implements Disposable {
       window.onDidChangeActiveNotebookEditor((editor) => {
         this.associateNotebookEditorWithTab(editor);
       }),
-      window.onDidChangeActiveTerminal((terminal) => {
-        this.associateTerminalWithTab(terminal);
-      }),
 
       // Listen for selection changes to update selection meta
       window.onDidChangeTextEditorSelection((event) => {
@@ -109,6 +108,11 @@ export class TabActiveStateHandler implements Disposable {
       }),
       window.onDidChangeNotebookEditorSelection((event) => {
         this.updateNotebookEditorSelection(event.notebookEditor);
+      }),
+
+      // Listen for terminal changes
+      window.onDidEndTerminalShellExecution((event) => {
+        this.updateTerminalMeta(event.terminal);
       }),
 
       // Listen to layout changes
@@ -130,6 +134,7 @@ export class TabActiveStateHandler implements Disposable {
 
   private associateTextEditorWithTab(editor: TextEditor) {
     if (this._isStateLocked) return;
+    if (this._associatedInstances.has(editor)) return;
 
     const activeTabGroup = window.tabGroups.activeTabGroup;
     const activeTab = activeTabGroup?.activeTab;
@@ -159,6 +164,7 @@ export class TabActiveStateHandler implements Disposable {
 
   private associateNotebookEditorWithTab(editor: NotebookEditor | undefined) {
     if (this._isStateLocked) return;
+    if (this._associatedInstances.has(editor)) return;
 
     const activeTabGroup = window.tabGroups.activeTabGroup;
     const activeTab = activeTabGroup?.activeTab;
@@ -183,32 +189,6 @@ export class TabActiveStateHandler implements Disposable {
       tabInfo.kind === TabKind.TabInputNotebookDiff
     ) {
       this._associatedInstances.set(editor, tabId);
-    }
-  }
-
-  private associateTerminalWithTab(terminal: Terminal) {
-    if (this._isStateLocked) return;
-
-    const activeTabGroup = window.tabGroups.activeTabGroup;
-    const activeTab = activeTabGroup?.activeTab;
-    if (activeTab == null || activeTabGroup == null) return;
-
-    const tabIndex = activeTabGroup.tabs.indexOf(activeTab);
-    if (tabIndex === -1) return;
-
-    const tabKey = createTabKey(activeTab, activeTabGroup, tabIndex);
-    const tabId = this._associatedTabs.get(tabKey);
-    if (tabId == null) return;
-
-    const tabInfo = this._tabActiveStateStore.getSnapshot().context.tabs[tabId];
-
-    if (tabInfo == null) {
-      console.warn('No tab info found for tab ID:', tabId);
-      return;
-    }
-
-    if (tabInfo.kind === TabKind.TabInputTerminal) {
-      this._associatedInstances.set(terminal, tabId);
     }
   }
 
@@ -270,6 +250,35 @@ export class TabActiveStateHandler implements Disposable {
           0
         )
       } as TabInfoMetaNotebookEditor
+    };
+
+    this._tabActiveStateStore.send({
+      type: 'UPDATE_TAB',
+      payload: updatedTabInfo
+    });
+  }
+
+  private updateTerminalMeta(terminal: Terminal) {
+    if (this._isStateLocked) return;
+
+    const tabId = this._associatedInstances.get(terminal);
+    if (tabId == null) return;
+
+    const tabInfo = this._tabActiveStateStore.getSnapshot().context.tabs[tabId];
+    if (tabInfo == null) {
+      console.warn('No tab info found for tab ID:', tabId);
+      return;
+    }
+
+    const options = terminal.creationOptions as TerminalOptions;
+    const updatedTabInfo: TabInfo = {
+      ...tabInfo,
+      meta: {
+        ...tabInfo.meta,
+        cwd: options.cwd?.toString(),
+        shellPath: options.shellPath,
+        terminalName: terminal.name
+      } as TabInfoMetaTerminal
     };
 
     this._tabActiveStateStore.send({
@@ -448,8 +457,8 @@ export class TabActiveStateHandler implements Disposable {
       case TabKind.TabInputNotebook:
       case TabKind.TabInputNotebookDiff:
       case TabKind.TabInputCustom:
-        return true;
       case TabKind.TabInputTerminal:
+        return true;
       case TabKind.TabInputWebview:
       case TabKind.Unknown:
       default: {
@@ -582,7 +591,20 @@ export class TabActiveStateHandler implements Disposable {
 
           if (tab.isPinned) pinnedTabs.push({ tab, index: nativeTabIndex });
           if (tab.isActive) activeTabs.push({ tab, index: nativeTabIndex });
-          if (result.handle != null) this._associatedInstances.set(result.handle, tab.id);
+          if (result.handle != null) {
+            this._associatedInstances.set(result.handle, tab.id);
+
+            if (tab.kind === TabKind.TabInputTerminal) {
+              const term = result.handle as Terminal;
+              const options = term.creationOptions as TerminalOptions;
+              tab.meta = {
+                cwd: options.cwd?.toString(),
+                shellPath: options.shellPath,
+                terminalName: term.name,
+                type: 'terminal'
+              } as TabInfoMetaTerminal;
+            }
+          }
         })
       )
     )

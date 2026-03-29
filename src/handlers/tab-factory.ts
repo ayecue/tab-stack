@@ -1,7 +1,7 @@
 import { ConfigService } from "../services/config";
-import { OpenTabResult, TabInfo, TabInfoCustom, TabInfoNotebook, TabInfoNotebookDiff, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
+import { OpenTabResult, TabInfo, TabInfoCustom, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
 import { getLogger, ScopedLogger } from "../services/logger";
-import { TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
+import { TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputTerminal, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
 import { TabCreationTaskMediator } from "../mediators/tab-creation-task";
 
 export class TabFactory {
@@ -64,6 +64,7 @@ export class TabFactory {
       case TabKind.TabInputNotebookDiff:
         return new TabCreationTaskMediator(new TabCreationTaskTabInputNotebookDiff(tabInfo as TabInfoNotebookDiff));
       case TabKind.TabInputTerminal:
+        return new TabCreationTaskMediator(new TabCreationTaskTabInputTerminal(tabInfo as TabInfoTerminal));
       case TabKind.TabInputWebview:
       case TabKind.Unknown:
       default:

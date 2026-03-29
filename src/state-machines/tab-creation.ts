@@ -5,7 +5,6 @@ import { TabCreationEvent } from "../types/tab-creation";
 import { AssociatedTabInstance } from "../types/tabs";
 import { schedule } from "non-blocking-schedule";
 import { TabCreationTask } from "../handlers/tab-creation-task";
-import { error } from "console";
 
 export const tabCreationMachine = setup({
   types: {

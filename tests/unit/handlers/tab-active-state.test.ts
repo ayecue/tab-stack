@@ -108,7 +108,7 @@ describe('TabActiveStateHandler', () => {
       expect(result).toBe(false);
     });
 
-    it('returns false for terminals', () => {
+    it('returns true for terminals', () => {
       const tab: any = {
         kind: 'tabInputTerminal',
         label: 'zsh',
@@ -116,7 +116,7 @@ describe('TabActiveStateHandler', () => {
       };
       const result = handler.isTabRecoverable(tab);
       
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
   });
 

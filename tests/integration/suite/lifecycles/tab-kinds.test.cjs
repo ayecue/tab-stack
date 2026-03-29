@@ -178,33 +178,106 @@ suite('Lifecycle: tab kinds', () => {
     assert.ok(totalTabCount() >= 1, `Should have >= 1 tab restored, got ${totalTabCount()}`);
   });
 
-  test('terminal tabs are tracked but not recoverable', async function () {
-    this.timeout(1000 * 30);
+  test('editor terminal tabs are captured and restored on group switch', async function () {
+    this.timeout(1000 * 60);
     await activateExtension();
     await openAndWaitWebview();
     await closeAllTabs();
 
-    // Open a text file so we have a baseline tab
+    // Open a text file alongside the terminal so we have a mixed state
     await openFile('package.json', { viewColumn: vscode.ViewColumn.One });
 
-    // Create a terminal — terminals live in the panel, not in editor tab groups,
-    // so they appear in window.terminals but NOT in window.tabGroups.
-    const terminal = vscode.window.createTerminal('test-terminal');
-    terminal.show(false);
+    // Create a terminal in the editor area (appears as TabInputTerminal in tabGroups)
+    const termName = `test-editor-term-${Date.now()}`;
+    const terminal = vscode.window.createTerminal({
+      name: termName,
+      location: vscode.TerminalLocation.Editor
+    });
 
-    // Verify the terminal exists via the terminals API
-    const terminals = vscode.window.terminals;
-    const found = terminals.find((t) => t.name === 'test-terminal');
-    assert.ok(found, `Should detect terminal via window.terminals, got: ${terminals.map((t) => t.name).join(', ')}`);
+    // Wait for the terminal tab to appear in the editor tab groups
+    await waitUntil(
+      () => {
+        const allTabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+        return allTabs.some((t) => t.label === termName);
+      },
+      'editor terminal tab to appear in tab groups'
+    );
 
-    // Verify that the terminal does NOT appear in editor tab groups
+    // Verify it's tracked as TabInputTerminal
     const detailed = await getDetailedTabState();
     const allTabs = detailed.tabGroups.flatMap((g) => g.tabs);
     const terminalTab = allTabs.find((t) => t.kind === 'TabInputTerminal');
-    assert.ok(!terminalTab, 'Terminal should not appear as an editor tab');
+    assert.ok(terminalTab, `Should have a TabInputTerminal tab, got kinds: ${allTabs.map((t) => t.kind).join(', ')}`);
+    assert.strictEqual(terminalTab.label, termName, 'Terminal tab label should match');
 
-    // Clean up terminal
+    // Wait for the extension sync to pick up the terminal tab
+    await trackSync(async () => {
+      // Trigger a sync by briefly opening another file (nudges debounce)
+      await openFile('README.md', { viewColumn: vscode.ViewColumn.One });
+    });
+
+    // Create group A to capture the terminal + text tabs
+    const gA = `WL-EditorTerm-A-${Date.now()}`;
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: gA
+      });
+    });
+
+    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    const groupA = Object.values(state.groups).find((g) => g.name === gA);
+    assert.ok(groupA, 'Group A should exist');
+    assert.ok(
+      groupA.tabLabels.some((l) => l === termName),
+      `Group A should contain terminal "${termName}", got: ${groupA.tabLabels.join(', ')}`
+    );
+
+    // Create group B to freeze A, then replace tabs
+    const gB = `WL-EditorTerm-B-${Date.now()}`;
+    await trackSync(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'new-group', groupId: gB
+      });
+    });
+
+    // Close everything including the terminal
     terminal.dispose();
+    await closeAllTabs();
+    await openFile('tsconfig.json');
+
+    // Switch back to group A — should restore the terminal editor tab
+    await trackRender(async () => {
+      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
+        type: 'switch-group', groupId: groupA.id
+      });
+    });
+
+    // Wait for restore — the terminal should reappear as an editor tab
+    await waitUntil(
+      () => {
+        const tabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+        return tabs.some((t) => t.label === termName);
+      },
+      'terminal editor tab to be restored after group switch',
+      15000
+    );
+
+    // Verify the restored terminal tab
+    const restoredDetailed = await getDetailedTabState();
+    const restoredTabs = restoredDetailed.tabGroups.flatMap((g) => g.tabs);
+    const restoredTerminal = restoredTabs.find((t) => t.kind === 'TabInputTerminal');
+    assert.ok(restoredTerminal, `Terminal tab should be restored, got kinds: ${restoredTabs.map((t) => t.kind).join(', ')}`);
+    assert.strictEqual(restoredTerminal.label, termName, 'Restored terminal should have the same name');
+
+    // Also verify text tabs were restored
+    assert.ok(
+      restoredTabs.some((t) => t.label.includes('package.json')),
+      `package.json should be restored alongside terminal, got: ${restoredTabs.map((t) => t.label).join(', ')}`
+    );
+
+    // Clean up any terminals
+    const remaining = vscode.window.terminals.filter((t) => t.name === termName);
+    remaining.forEach((t) => t.dispose());
   });
 
   test('mixed tab kinds across multiple columns are tracked', async function () {

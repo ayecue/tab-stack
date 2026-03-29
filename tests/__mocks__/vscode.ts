@@ -31,6 +31,7 @@ const enhancedWindow = {
   ...vscode.window,
   onDidChangeTextEditorSelection: vi.fn(() => ({ dispose: vi.fn() })),
   onDidChangeNotebookEditorSelection: vi.fn(() => ({ dispose: vi.fn() })),
+  onDidEndTerminalShellExecution: vi.fn(() => ({ dispose: vi.fn() })),
 };
 
 const enhanced = {
