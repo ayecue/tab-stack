@@ -8,12 +8,15 @@ import {
   TabRecoveryMapping
 } from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
+import { getLogger, ScopedLogger } from './logger';
 
 export class ConfigService implements Disposable {
   private _onDidChangeConfig: EventEmitter<ConfigChangeEvent>;
   private _configChangeListener?: Disposable;
+  private _log: ScopedLogger;
 
   constructor() {
+    this._log = getLogger().child('ConfigService');
     this._onDidChangeConfig = new EventEmitter<ConfigChangeEvent>();
     this.initializeListeners();
   }
@@ -108,6 +111,23 @@ export class ConfigService implements Disposable {
   getTabRecoveryMappings(): TabRecoveryMapping {
     const config = workspace.getConfiguration('tabStack');
     return config.get<TabRecoveryMapping>('tabRecoveryMappings', {});
+  }
+
+  findRecoveryCommand(label: string): string | null {
+    const mappings = this.getTabRecoveryMappings();
+
+    for (const [pattern, command] of Object.entries(mappings)) {
+      try {
+        const regex = new RegExp(pattern);
+        if (regex.test(label)) {
+          return command;
+        }
+      } catch {
+        this._log.warn(`invalid regex pattern in tab recovery mappings: "${pattern}"`);
+      }
+    }
+
+    return null;
   }
 
   async setTabRecoveryMappings(mappings: TabRecoveryMapping): Promise<void> {

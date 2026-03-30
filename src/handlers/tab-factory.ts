@@ -32,23 +32,7 @@ export class TabFactory {
   }
 
   private findRecoveryCommandForTab(tabInfo: TabInfo): string | null {
-    const mappings = this._configService.getTabRecoveryMappings();
-
-    for (const [pattern, command] of Object.entries(mappings)) {
-      try {
-        const regex = new RegExp(pattern);
-        if (regex.test(tabInfo.label)) {
-          return command;
-        }
-      } catch (error) {
-        this._log.error(
-          `invalid regex pattern "${pattern}" in tab recovery mappings - skipping`,
-          error
-        );
-      }
-    }
-
-    return null;
+    return this._configService.findRecoveryCommand(tabInfo.label);
   }
 
   private _buildTabCreationTask(tabInfo: TabInfo): TabCreationTaskMediator | null {

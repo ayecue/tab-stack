@@ -461,27 +461,8 @@ export class TabActiveStateHandler implements Disposable {
         return true;
       case TabKind.TabInputWebview:
       case TabKind.Unknown:
-      default: {
-        const mappings = this._configService.getTabRecoveryMappings();
-        const regexPatterns = Object.keys(mappings);
-
-        for (let i = 0; i < regexPatterns.length; i++) {
-          const pattern = regexPatterns[i];
-          try {
-            const regex = new RegExp(pattern);
-            if (regex.test(tab.label)) {
-              return true;
-            }
-          } catch (error) {
-            console.error(
-              `Invalid regex pattern in recovery mapping: ${pattern}`,
-              error
-            );
-          }
-        }
-
-        return false;
-      }
+      default:
+        return this._configService.findRecoveryCommand(tab.label) != null;
     }
   }
 

@@ -12,6 +12,7 @@ export class MockConfigService {
   public setMasterWorkspaceFolder = vi.fn();
   public getTabRecoveryMappings = vi.fn();
   public setTabRecoveryMappings = vi.fn();
+  public findRecoveryCommand = vi.fn();
   public onDidChangeConfig = vi.fn(() => ({ dispose: vi.fn() }));
   
   constructor(defaultConfig: Record<string, any> = {}) {
@@ -28,6 +29,16 @@ export class MockConfigService {
     this.getTabRecoveryMappings.mockReturnValue(defaultConfig.tabRecoveryMappings ?? {});
     this.setMasterWorkspaceFolder.mockResolvedValue(undefined);
     this.setTabRecoveryMappings.mockResolvedValue(undefined);
+
+    const mappings = defaultConfig.tabRecoveryMappings ?? {};
+    this.findRecoveryCommand.mockImplementation((label: string) => {
+      for (const [pattern, command] of Object.entries(mappings)) {
+        try {
+          if (new RegExp(pattern).test(label)) return command;
+        } catch { /* skip */ }
+      }
+      return null;
+    });
   }
   
   public setConfig(config: Record<string, any>): void {
