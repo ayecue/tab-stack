@@ -9,7 +9,10 @@ export abstract class TabCreationTask {
   abstract addEditorListener(callback: (handle: AssociatedTabInstance) => void): { dispose: () => void };
   abstract executeCommand(): Promise<void>;
   getMaxRuntime(): number {
-    return 1000; // Default max runtime of 1 second
+    return 1000; // Default max runtime of 1 second, should be always greater than next tick delay
+  }
+  getNextTickDelay(): number {
+    return 0;
   }
 }
 
@@ -252,7 +255,7 @@ export class TabCreationTaskTabInputTerminal extends TabCreationTask {
   }
 
   getMaxRuntime(): number {
-    return 10000;
+    return 5000;
   }
 
   getDescription() {
@@ -263,13 +266,25 @@ export class TabCreationTaskTabInputTerminal extends TabCreationTask {
 export class TabCreationTaskCustomCommand extends TabCreationTask {
   private _tabInfo: TabInfoBase;
   private _command: string;
+  private _args: unknown[];
+  private _nextTickDelay: number;
   private _log: ScopedLogger;
 
-  constructor(tabInfo: TabInfoBase, command: string) {
+  constructor(tabInfo: TabInfoBase, command: string, args: unknown[] = [], nextTickDelay: number = 0) {
     super();
     this._tabInfo = tabInfo;
     this._command = command;
+    this._args = args;
+    this._nextTickDelay = nextTickDelay;
     this._log = getLogger().child('TabCreationTaskCustomCommand');
+  }
+
+  getNextTickDelay(): number {
+    return this._nextTickDelay;
+  }
+
+  getMaxRuntime(): number {
+    return this.getNextTickDelay() + 1000;
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
@@ -299,7 +314,7 @@ export class TabCreationTaskCustomCommand extends TabCreationTask {
   async executeCommand() {
     this._log.debug(`executing recovery command: "${this._command}" for tab "${this._tabInfo.label}"`);
     await focusGroup(this._tabInfo.viewColumn);
-    await commands.executeCommand(this._command);
+    await commands.executeCommand(this._command, ...this._args);
   }
 
   getDescription() {

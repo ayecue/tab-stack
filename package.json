@@ -18,6 +18,7 @@
     "@testing-library/react": "^16.0.1",
     "@types/color-convert": "^2.0.0",
     "@types/glob": "^8.1.0",
+    "@types/handlebars": "^4.0.40",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.12",
     "@types/object-inspect": "^1.13.0",
@@ -386,10 +387,59 @@
             "^Comments$": "workbench.panel.comments.focus",
             "^Interactive Playground$": "workbench.action.showInteractivePlayground"
           },
-          "description": "Mapping of regex patterns to VS Code commands for recovering unknown tab types. Keys are regex patterns to match tab labels, values are command IDs to execute.",
+          "description": "Mapping of identifiers to recovery commands for unknown tab types. Keys serve as identifiers (or as label regex patterns for backward compatibility). Values are either a command ID string (key is the label pattern) or an object with 'command', optional 'match' (regex criteria including 'label'), optional 'args', and optional 'nextTickDelay'.",
           "patternProperties": {
             ".*": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "VS Code command ID to execute. The key is used as a regex pattern matched against the tab label."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "command": {
+                      "type": "string",
+                      "description": "VS Code command ID to execute."
+                    },
+                    "args": {
+                      "type": "array",
+                      "description": "Arguments to pass to the command. String values support ${property} interpolation from the tab info (e.g. ${uri}, ${viewType}, ${label}, ${viewColumn}).",
+                      "items": {}
+                    },
+                    "nextTickDelay": {
+                      "type": "number",
+                      "description": "Milliseconds to wait after command execution before checking for the tab. 0 or omitted for immediate (setImmediate).",
+                      "default": 0
+                    },
+                    "match": {
+                      "type": "object",
+                      "description": "Regex criteria matched against tab properties. All specified fields must match. If 'label' is omitted, the mapping key is used as the label pattern.",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "description": "Regex pattern to match against the tab label. Overrides the mapping key as the label matcher."
+                        },
+                        "kind": {
+                          "type": "string",
+                          "description": "Regex pattern to match against tab kind (e.g. 'tabInputWebview', 'unknown')."
+                        },
+                        "uri": {
+                          "type": "string",
+                          "description": "Regex pattern to match against the tab URI."
+                        },
+                        "viewType": {
+                          "type": "string",
+                          "description": "Regex pattern to match against the tab viewType."
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "command"
+                  ]
+                }
+              ]
             }
           }
         }
@@ -403,6 +453,7 @@
     "debounce": "^2.2.0",
     "deep-object-diff": "^1.1.9",
     "filter-obj": "^6.1.0",
+    "handlebars": "^4.7.9",
     "nanoid": "^5.1.6",
     "non-blocking-schedule": "^0.2.0",
     "object-inspect": "^1.13.4",

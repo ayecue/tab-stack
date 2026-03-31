@@ -10,6 +10,7 @@ import { initializeLogger } from './services/logger';
 import { TabManagerService } from './services/tab-manager';
 import { getEditorLayout } from './utils/commands';
 import { createTestHelper } from './create-test-helper';
+import { TabRecoveryService } from './services/tab-recovery-resolver';
 
 export async function activate(context: ExtensionContext) {
   const logger = initializeLogger();
@@ -19,6 +20,7 @@ export async function activate(context: ExtensionContext) {
 
   const layoutService = new EditorLayoutService();
   const configService = new ConfigService();
+  const tabRecoveryService = new TabRecoveryService(configService);
 
   // Initialize git service with config service
   const gitService = new GitService(configService);
@@ -37,7 +39,8 @@ export async function activate(context: ExtensionContext) {
     context,
     layoutService,
     configService,
-    gitService
+    gitService,
+    tabRecoveryService
   );
 
   await tabManagerService.attachStateHandler();
@@ -62,6 +65,7 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(
     layoutService,
     configService,
+    tabRecoveryService,
     tabManagerService,
     viewManagerProvider,
     ...createCommands(tabManagerService),

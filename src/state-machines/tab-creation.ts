@@ -46,7 +46,14 @@ export const tabCreationMachine = setup({
     }),
     commandRunner: fromCallback<TabCreationEvent, TabCreationTask>(({ sendBack, input }) => {
       input.executeCommand().then(
-        () => schedule(() => sendBack({ type: 'NEXT_TICK' })),
+        () => {
+          const delay = input.getNextTickDelay();
+          if (delay > 0) {
+            setTimeout(() => sendBack({ type: 'NEXT_TICK' }), delay);
+            return;
+          }
+          schedule(() => sendBack({ type: 'NEXT_TICK' }));
+        },
         (error: any) => sendBack({ type: 'COMMAND_FAILED', error })
       );
     }),

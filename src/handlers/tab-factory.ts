@@ -1,18 +1,18 @@
-import { ConfigService } from "../services/config";
 import { OpenTabResult, TabInfo, TabInfoCustom, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
 import { getLogger, ScopedLogger } from "../services/logger";
 import { TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputTerminal, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
 import { TabCreationTaskMediator } from "../mediators/tab-creation-task";
+import { TabRecoveryService } from "../services/tab-recovery-resolver";
 
 export class TabFactory {
-  private _configService: ConfigService;
+  private _recoveryResolver: TabRecoveryService;
   private _log: ScopedLogger;
   private _queue: TabCreationTaskMediator[] = [];
   private _processing: boolean = false;
 
-  constructor(configService: ConfigService) {
+  constructor(recoveryResolver: TabRecoveryService) {
     this._log = getLogger().child('TabFactory');
-    this._configService = configService;
+    this._recoveryResolver = recoveryResolver;
   }
 
   private async _processQueue(): Promise<void> {
@@ -29,10 +29,6 @@ export class TabFactory {
     }
 
     this._processing = false;
-  }
-
-  private findRecoveryCommandForTab(tabInfo: TabInfo): string | null {
-    return this._configService.findRecoveryCommand(tabInfo.label);
   }
 
   private _buildTabCreationTask(tabInfo: TabInfo): TabCreationTaskMediator | null {
@@ -52,12 +48,12 @@ export class TabFactory {
       case TabKind.TabInputWebview:
       case TabKind.Unknown:
       default:
-        const command = this.findRecoveryCommandForTab(tabInfo);
-        if (command == null) {
+        const recovery = this._recoveryResolver.findMatch(tabInfo);
+        if (recovery == null) {
           this._log.warn(`no recovery command found for tab "${tabInfo.label}" of kind "${tabInfo.kind}"`);
           return null;
         }
-        return new TabCreationTaskMediator(new TabCreationTaskCustomCommand(tabInfo, command));
+        return new TabCreationTaskMediator(new TabCreationTaskCustomCommand(tabInfo, recovery.command, recovery.args, recovery.nextTickDelay));
     }
   }
 

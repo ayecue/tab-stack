@@ -15,7 +15,26 @@ export interface GitIntegrationConfig {
   groupPrefix: string;
 }
 
-export type TabRecoveryMapping = Record<string, string>;
+export interface TabRecoveryMatchCriteria {
+  label?: string;
+  kind?: string;
+  uri?: string;
+  viewType?: string;
+}
+
+export type TabRecoveryMappingEntry = string | {
+  command: string;
+  args?: unknown[];
+  nextTickDelay?: number;
+  match?: TabRecoveryMatchCriteria;
+};
+export type TabRecoveryMapping = Record<string, TabRecoveryMappingEntry>;
+
+export interface RecoveryCommandResult {
+  command: string;
+  args: unknown[];
+  nextTickDelay: number;
+}
 
 export interface ConfigChangeEvent {
   masterWorkspaceFolder: string | null;

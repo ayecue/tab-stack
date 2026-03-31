@@ -60,6 +60,7 @@ import {
   GitRepositoryOpenEvent,
   GitService
 } from './git';
+import { TabRecoveryService } from './tab-recovery-resolver';
 
 export class TabManagerService implements ITabManagerService {
   private _rendering: boolean;
@@ -74,6 +75,7 @@ export class TabManagerService implements ITabManagerService {
   private _layoutService: EditorLayoutService;
   private _configService: ConfigService;
   private _gitService: GitService;
+  private _tabRecoveryService: TabRecoveryService;
 
   private _renderCompleteEmitter: EventEmitter<void>;
 
@@ -92,7 +94,8 @@ export class TabManagerService implements ITabManagerService {
     context: ExtensionContext,
     layoutService: EditorLayoutService,
     configService: ConfigService,
-    gitService: GitService
+    gitService: GitService,
+    tabRecoveryService: TabRecoveryService
   ) {
     this._context = context;
     this._nextRenderingItem = null;
@@ -104,6 +107,7 @@ export class TabManagerService implements ITabManagerService {
     this._layoutService = layoutService;
     this._configService = configService;
     this._gitService = gitService;
+    this._tabRecoveryService = tabRecoveryService;
     this._syncViewEmitter = new EventEmitter<
       Omit<ExtensionTabsSyncMessage, 'type'>
     >();
@@ -155,7 +159,7 @@ export class TabManagerService implements ITabManagerService {
     // Create new handlers
     this._activeStateHandler = new TabActiveStateHandler(
       this._layoutService,
-      this._configService
+      this._tabRecoveryService
     );
     this._stateContainerHandler = new TabStateContainerHandler();
     this._collectionHandler = new TabCollectionStateHandler();

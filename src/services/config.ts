@@ -113,23 +113,6 @@ export class ConfigService implements Disposable {
     return config.get<TabRecoveryMapping>('tabRecoveryMappings', {});
   }
 
-  findRecoveryCommand(label: string): string | null {
-    const mappings = this.getTabRecoveryMappings();
-
-    for (const [pattern, command] of Object.entries(mappings)) {
-      try {
-        const regex = new RegExp(pattern);
-        if (regex.test(label)) {
-          return command;
-        }
-      } catch {
-        this._log.warn(`invalid regex pattern in tab recovery mappings: "${pattern}"`);
-      }
-    }
-
-    return null;
-  }
-
   async setTabRecoveryMappings(mappings: TabRecoveryMapping): Promise<void> {
     const config = workspace.getConfiguration('tabStack');
     await config.update('tabRecoveryMappings', mappings, false);

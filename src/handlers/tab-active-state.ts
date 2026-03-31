@@ -32,6 +32,7 @@ import { focusTabInGroup, pinEditor } from '../utils/commands';
 import { createSelectionRange, createTabKey, createTabKeyByViewColumn } from '../utils/tab-utils';
 import { updatedDiff } from 'deep-object-diff';
 import { TabFactory } from './tab-factory';
+import { TabRecoveryService } from '../services/tab-recovery-resolver';
 
 export class TabActiveStateHandler implements Disposable {
   static readonly STATE_UPDATE_DEBOUNCE_DELAY = 10 as const;
@@ -44,8 +45,8 @@ export class TabActiveStateHandler implements Disposable {
   private _stateUpdateEmitter: EventEmitter<TabManagerState>;
   private _storeSubscription: { unsubscribe: () => void } | null;
   private _layoutService: EditorLayoutService;
-  private _configService: ConfigService;
   private _tabFactory: TabFactory;
+  private _recoveryResolver: TabRecoveryService;
 
   private _disposables: Disposable[];
   private _cachedTabState: TabState | null;
@@ -57,20 +58,20 @@ export class TabActiveStateHandler implements Disposable {
 
   constructor(
     layoutService: EditorLayoutService,
-    configService: ConfigService
+    tabRecoveryService: TabRecoveryService
   ) {
     this._tabActiveStateStore = createTabActiveStateStore();
     this._associatedTabs = new Map();
     this._associatedInstances = new Map();
     this._stateUpdateEmitter = new EventEmitter<TabManagerState>();
     this._layoutService = layoutService;
-    this._configService = configService;
     this._disposables = [];
     this._storeSubscription = null;
     this._cachedTabState = null;
     this._isStateLocked = false;
     this._log = getLogger().child('ActiveStateHandler');
-    this._tabFactory = new TabFactory(this._configService);
+    this._recoveryResolver = tabRecoveryService;
+    this._tabFactory = new TabFactory(this._recoveryResolver);
 
     this.triggerStateUpdate = debounce(
       this._triggerStateUpdate.bind(this),
@@ -462,7 +463,7 @@ export class TabActiveStateHandler implements Disposable {
       case TabKind.TabInputWebview:
       case TabKind.Unknown:
       default:
-        return this._configService.findRecoveryCommand(tab.label) != null;
+        return this._recoveryResolver.hasMatch(tab);
     }
   }
 
@@ -623,5 +624,6 @@ export class TabActiveStateHandler implements Disposable {
     this._storeSubscription?.unsubscribe();
     this._disposables.forEach((d) => d.dispose());
     this._stateUpdateEmitter.dispose();
+    this._recoveryResolver.dispose();
   }
 }
