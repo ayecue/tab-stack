@@ -10,6 +10,7 @@ import {
   createMockExtensionContext
 } from '../../mocks';
 import { tabStateFactory, tabStateFileContentFactory } from '../../factories';
+import { MockTabRecoveryService } from '../../mocks/services/TabRecoveryService';
 
 describe('TabManagerService', () => {
   let service: TabManagerService;
@@ -17,6 +18,7 @@ describe('TabManagerService', () => {
   let configService: MockConfigService;
   let layoutService: MockEditorLayoutService;
   let gitService: MockGitService;
+  let tabRecoverService: MockTabRecoveryService;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,6 +39,7 @@ describe('TabManagerService', () => {
 
     layoutService = new MockEditorLayoutService();
     gitService = new MockGitService();
+    tabRecoverService = new MockTabRecoveryService();
 
     // Mock tab state
     vi.spyOn(tabUtils, 'getTabState').mockReturnValue(tabStateFactory.build());
@@ -65,7 +68,8 @@ describe('TabManagerService', () => {
       context,
       layoutService as any,
       configService as any,
-      gitService as any
+      gitService as any,
+      tabRecoverService as any
     );
   });
 

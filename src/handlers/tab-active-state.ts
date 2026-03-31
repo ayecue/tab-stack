@@ -624,6 +624,5 @@ export class TabActiveStateHandler implements Disposable {
     this._storeSubscription?.unsubscribe();
     this._disposables.forEach((d) => d.dispose());
     this._stateUpdateEmitter.dispose();
-    this._recoveryResolver.dispose();
   }
 }

@@ -2,22 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { commands, window } from 'vscode';
 import { TabActiveStateHandler } from '../../../src/handlers/tab-active-state';
 import { MockConfigService, MockEditorLayoutService } from '../../mocks';
+import { MockTabRecoveryService } from '../../mocks/services/TabRecoveryService';
 
 describe('TabActiveStateHandler', () => {
   let handler: TabActiveStateHandler;
-  let configService: MockConfigService;
   let layoutService: MockEditorLayoutService;
+  let tabRecoverService: MockTabRecoveryService;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    configService = new MockConfigService({
-      tabRecoveryMappings: {
-        '^output:': 'workbench.action.output.toggleOutput'
-      }
-    });
-
     layoutService = new MockEditorLayoutService();
+    tabRecoverService = new MockTabRecoveryService();
 
     // Mock VSCode window events
     vi.mocked(window.tabGroups.onDidChangeTabs).mockReturnValue({ dispose: vi.fn() } as any);
@@ -30,7 +26,7 @@ describe('TabActiveStateHandler', () => {
 
     handler = new TabActiveStateHandler(
       layoutService as any,
-      configService as any
+      tabRecoverService as any
     );
   });
 
@@ -86,6 +82,8 @@ describe('TabActiveStateHandler', () => {
     });
 
     it('returns true when recovery mapping exists', () => {
+      tabRecoverService.hasMatch.mockReturnValue(true); // Mock recovery service to return true
+
       const tab: any = {
         kind: 'vscode.tab.custom',
         label: 'output:extension-output-test',
