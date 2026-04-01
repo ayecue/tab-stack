@@ -459,6 +459,7 @@
     "object-inspect": "^1.13.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "vscode-icons-js": "^11.6.1",
     "xstate": "^5.30.0"
   },
   "browserslist": "> 0.25%, not dead"
