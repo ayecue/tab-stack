@@ -1090,8 +1090,16 @@ body {
 
 .item-primary .item-name {
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.section-item.active .item-primary .item-name {
   white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
   overflow-wrap: anywhere;
 }
 
