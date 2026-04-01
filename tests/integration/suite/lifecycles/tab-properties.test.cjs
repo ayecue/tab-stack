@@ -1,17 +1,13 @@
-const { suite, test, afterEach } = require('mocha');
+const { suite, test } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
 const {
-  CMD,
-  activateExtension,
-  openAndWaitWebview,
   openFile,
   openFiles,
   getOpenTabs,
   totalTabCount,
   closeAllTabs,
   trackSync,
-  trackRender,
   getDetailedTabState,
   openFileWithSelection,
   pinActiveEditor,
@@ -19,20 +15,20 @@ const {
   sleep,
   startCapture,
   getCaptured,
-  stopCapture
+  stopCapture,
+  createGroup,
+  addToHistory,
+  switchToGroup,
+  recoverState,
+  getState,
+  lifecycleSetup
 } = require('./helpers.cjs');
 
 suite('Lifecycle: tab properties', () => {
-  afterEach(async () => {
-    await closeAllTabs();
-  });
+  lifecycleSetup();
 
   test('cursor selection is saved and restored on group switch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open a file and set cursor to a specific position (line 5, char 10)
     await openFileWithSelection('package.json', 5, 10, { viewColumn: vscode.ViewColumn.One });
 
@@ -50,33 +46,21 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group A — captures tabs with their cursor positions
     const gA = `WL-Cursor-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B to freeze A
     const gB = `WL-Cursor-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Dispose of all tabs, open new file with a different cursor position
     await closeAllTabs();
     await openFileWithSelection('tsconfig.json', 0, 0);
 
     // Switch back to group A — should restore cursor positions
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for multi-column restore to complete
     await waitUntil(
@@ -103,10 +87,6 @@ suite('Lifecycle: tab properties', () => {
 
   test('active tab is restored on group switch across multiple columns', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open files across 2 columns — make README.md the active tab
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -132,33 +112,21 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group A
     const gA = `WL-Active-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B to freeze A
     const gB = `WL-Active-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Switch away — open different file as active
     await closeAllTabs();
     await openFileWithSelection('build-browser.cjs', 0, 0);
 
     // Switch back to A — should restore README.md as active tab
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for multi-column restore to complete
     await waitUntil(
@@ -174,10 +142,6 @@ suite('Lifecycle: tab properties', () => {
 
   test('pinned tabs are restored on group switch across columns', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open files across 2 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -206,33 +170,21 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group A — captures pinned state
     const gA = `WL-Pinned-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B to freeze A
     const gB = `WL-Pinned-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Switch away
     await closeAllTabs();
     await openFile('build-browser.cjs');
 
     // Switch back to A — should restore pinned state
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for multi-column restore and pin state to be applied
     await waitUntil(
@@ -261,10 +213,6 @@ suite('Lifecycle: tab properties', () => {
 
   test('tab positions are preserved across multiple columns on restore', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open files in a specific order across 2 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -289,13 +237,9 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group A
     const gA = `WL-Position-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Verify state capture has all tabs
@@ -310,18 +254,14 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group B to freeze A
     const gB = `WL-Position-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Switch away
     await closeAllTabs();
     await openFile('build-browser.cjs');
 
     // Verify A's state is preserved before restore
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupABeforeRestore = Object.values(state.groups).find((g) => g.name === gA);
     assert.ok(
       groupABeforeRestore.tabCount >= 5,
@@ -332,11 +272,7 @@ suite('Lifecycle: tab properties', () => {
     await startCapture();
 
     // Switch back to A
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for multi-column restore to complete
     await waitUntil(
@@ -353,7 +289,7 @@ suite('Lifecycle: tab properties', () => {
       .join(' | ');
 
     // Check state AFTER restore — has it degraded?
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupAAfterRestore = Object.values(state.groups).find((g) => g.name === gA);
     const stateAfterInfo = `State after restore: ${groupAAfterRestore?.tabCount} tabs, ${groupAAfterRestore?.columnCount} cols, labels=[${groupAAfterRestore?.tabLabels?.join(', ')}]`;
 
@@ -381,10 +317,6 @@ suite('Lifecycle: tab properties', () => {
 
   test('pinned tabs remain pinned after snapshot recover', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open files across 2 columns and pin them BEFORE creating a group
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -409,23 +341,15 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group — captures the pinned state
     const g = `WL-PinSnap-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: g
-      });
-    });
+    await createGroup(g);
 
     // Let triggerStateUpdate debounce fire so state container has pin data
     await sleep(200);
 
     // Take snapshot
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'add-to-history'
-      });
-    });
+    await addToHistory();
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const historyId = state.historyIds[state.historyIds.length - 1];
 
     // Verify snapshot captured all tabs
@@ -443,11 +367,7 @@ suite('Lifecycle: tab properties', () => {
     await startCapture();
 
     // Recover snapshot — wait for the full render cycle (includes pinning)
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'recover-state', historyId
-      });
-    });
+    await recoverState(historyId);
 
     // Wait for restore to complete
     await waitUntil(
@@ -474,10 +394,6 @@ suite('Lifecycle: tab properties', () => {
 
   test('cursor selection is restored after snapshot recover', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open files and wait for sync
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -490,23 +406,15 @@ suite('Lifecycle: tab properties', () => {
 
     // Create group
     const g = `WL-CursorSnap-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: g
-      });
-    });
+    await createGroup(g);
 
     // Let state container update before snapshot
     await sleep(200);
 
     // Take snapshot
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'add-to-history'
-      });
-    });
+    await addToHistory();
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const historyId = state.historyIds[state.historyIds.length - 1];
 
     // Verify snapshot captured all tabs
@@ -524,11 +432,7 @@ suite('Lifecycle: tab properties', () => {
     await startCapture();
 
     // Recover snapshot
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'recover-state', historyId
-      });
-    });
+    await recoverState(historyId);
 
     // Wait for restore to complete
     await waitUntil(

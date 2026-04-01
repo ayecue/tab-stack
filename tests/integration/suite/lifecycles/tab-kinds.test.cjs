@@ -1,23 +1,23 @@
-const { suite, test, afterEach } = require('mocha');
+const { suite, test } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
 const path = require('path');
 const {
-  CMD,
-  activateExtension,
-  openAndWaitWebview,
   openFile,
   openFiles,
   getOpenTabs,
   totalTabCount,
   closeAllTabs,
   trackSync,
-  trackRender,
   getDetailedTabState,
   waitUntil,
   startCapture,
   getCaptured,
-  stopCapture
+  stopCapture,
+  createGroup,
+  switchToGroup,
+  getState,
+  lifecycleSetup
 } = require('./helpers.cjs');
 
 /**
@@ -36,16 +36,10 @@ async function openDiff(leftPath, rightPath, label, opts = {}) {
 }
 
 suite('Lifecycle: tab kinds', () => {
-  afterEach(async () => {
-    await closeAllTabs();
-  });
+  lifecycleSetup();
 
   test('text editor tabs are captured and restored across multiple columns', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 6 text files across 3 columns
     await trackSync(async () => {
       await openFiles([
@@ -74,35 +68,23 @@ suite('Lifecycle: tab kinds', () => {
 
     // Create group A — captures all 6 text tabs across 3 columns
     const gA = `WL-TextKind-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B immediately to freeze A
     const gB = `WL-TextKind-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Replace with different files
     await closeAllTabs();
     await openFile('build-browser.cjs');
 
     // Switch to A — should restore 6 text tabs across 3 columns
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupAEntry = Object.values(state.groups).find((g) => g.name === gA);
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupAEntry.id
-      });
-    });
+    await switchToGroup(groupAEntry.id);
 
     // Wait for multi-column restore to complete
     await waitUntil(
@@ -118,10 +100,6 @@ suite('Lifecycle: tab kinds', () => {
 
   test('diff editor tabs are captured and restored', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open text files and a diff tab across 2 columns
     await openFile('package.json', { viewColumn: vscode.ViewColumn.One });
     await trackSync(async () => {
@@ -135,32 +113,20 @@ suite('Lifecycle: tab kinds', () => {
 
     // Create group to capture diff state
     const gA = `WL-DiffKind-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
     // Create group B to freeze A
     const gB = `WL-DiffKind-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Replace with different file
     await closeAllTabs();
     await openFile('tsconfig.json');
 
     // Switch back to A
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupAEntry = Object.values(state.groups).find((g) => g.name === gA);
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupAEntry.id
-      });
-    });
+    await switchToGroup(groupAEntry.id);
 
     // Wait for restore to complete
     await waitUntil(
@@ -180,10 +146,6 @@ suite('Lifecycle: tab kinds', () => {
 
   test('editor terminal tabs are captured and restored on group switch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open a text file alongside the terminal so we have a mixed state
     await openFile('package.json', { viewColumn: vscode.ViewColumn.One });
 
@@ -218,13 +180,9 @@ suite('Lifecycle: tab kinds', () => {
 
     // Create group A to capture the terminal + text tabs
     const gA = `WL-EditorTerm-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
     assert.ok(groupA, 'Group A should exist');
     assert.ok(
@@ -234,11 +192,7 @@ suite('Lifecycle: tab kinds', () => {
 
     // Create group B to freeze A, then replace tabs
     const gB = `WL-EditorTerm-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Close everything including the terminal
     terminal.dispose();
@@ -246,11 +200,7 @@ suite('Lifecycle: tab kinds', () => {
     await openFile('tsconfig.json');
 
     // Switch back to group A — should restore the terminal editor tab
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for restore — the terminal should reappear as an editor tab
     await waitUntil(
@@ -282,10 +232,6 @@ suite('Lifecycle: tab kinds', () => {
 
   test('mixed tab kinds across multiple columns are tracked', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open text files in column 1
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -318,14 +264,10 @@ suite('Lifecycle: tab kinds', () => {
 
     // Create group to capture mixed state
     const gA = `WL-MixedKind-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
     // Verify state capture
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupAInfo = Object.values(state.groups).find((g) => g.name === gA);
     assert.ok(
       groupAInfo.tabCount >= 7,
@@ -334,18 +276,14 @@ suite('Lifecycle: tab kinds', () => {
 
     // Create group B to freeze A
     const gB = `WL-MixedKind-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     // Replace with completely different layout
     await closeAllTabs();
     await openFile('copy-assets.cjs');
 
     // Check A's state before restore
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupABeforeRestore = Object.values(state.groups).find((g) => g.name === gA);
     const aStateBeforeRestore = `Group A before restore: ${groupABeforeRestore?.tabCount} tabs, labels=[${groupABeforeRestore?.tabLabels?.join(', ')}]`;
 
@@ -354,11 +292,7 @@ suite('Lifecycle: tab kinds', () => {
 
     // Switch back to A — should restore mixed tab kinds across 3 columns
     const groupAEntry = Object.values(state.groups).find((g) => g.name === gA);
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupAEntry.id
-      });
-    });
+    await switchToGroup(groupAEntry.id);
 
     // Wait for restore to complete
     await waitUntil(
@@ -375,7 +309,7 @@ suite('Lifecycle: tab kinds', () => {
       .join(' | ');
 
     // Check state after restore
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupAAfterRestore = Object.values(state.groups).find((g) => g.name === gA);
     const aStateAfterRestore = `Group A after restore: ${groupAAfterRestore?.tabCount} tabs, labels=[${groupAAfterRestore?.tabLabels?.join(', ')}]`;
 

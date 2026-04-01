@@ -1,12 +1,10 @@
-const { suite, test, afterEach } = require('mocha');
+const { suite, test } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
 const {
   CMD,
-  activateExtension,
-  openAndWaitWebview,
   openFiles,
   getOpenTabs,
   totalTabCount,
@@ -14,7 +12,15 @@ const {
   trackSync,
   trackRender,
   waitUntil,
-  sleep
+  sleep,
+  createGroup,
+  deleteGroup,
+  createAddon,
+  addToHistory,
+  switchToGroup,
+  dispatch,
+  getState,
+  lifecycleSetup
 } = require('./helpers.cjs');
 
 function getTmpFilePath(name) {
@@ -27,16 +33,10 @@ function cleanupTmpFile(filePath) {
 }
 
 suite('Lifecycle: import/export', () => {
-  afterEach(async () => {
-    await closeAllTabs();
-  });
+  lifecycleSetup();
 
   test('export and import a single tab group with real tabs', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -48,13 +48,9 @@ suite('Lifecycle: import/export', () => {
 
     // Create group
     const gName = `WL-Export-Group-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gName
-      });
-    });
+    await createGroup(gName);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const group = Object.values(state.groups).find((g) => g.name === gName);
     assert.ok(group, 'Group should exist');
 
@@ -71,13 +67,9 @@ suite('Lifecycle: import/export', () => {
     assert.ok(exportContent.group.name === gName, `Export group name should be "${gName}"`);
 
     // Delete the original group
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'delete-group', groupId: group.id
-      });
-    });
+    await deleteGroup(group.id);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     assert.ok(!state.groups[group.id], 'Original group should be deleted');
 
     // Import the group back
@@ -86,17 +78,18 @@ suite('Lifecycle: import/export', () => {
     });
 
     // Verify the imported group appears (with a new ID but same name)
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const importedGroup = Object.values(state.groups).find((g) => g.name === gName);
     assert.ok(importedGroup, `Imported group "${gName}" should exist`);
     assert.notStrictEqual(importedGroup.id, group.id, 'Imported group should have a new ID');
 
     // Switch to the imported group to verify tab restoration
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: importedGroup.id
-      });
-    });
+    // (import may have already selected the group, so bare dispatch + wait)
+    await dispatch({ type: 'switch-group', groupId: importedGroup.id });
+    await waitUntil(
+      () => getOpenTabs().flatMap((g) => g.tabLabels).some((l) => l.includes('package.json')),
+      'imported tabs to appear'
+    );
 
     const labels = getOpenTabs().flatMap((g) => g.tabLabels);
     assert.ok(
@@ -114,10 +107,6 @@ suite('Lifecycle: import/export', () => {
 
   test('export and import whole tab stack state', async function () {
     this.timeout(1000 * 90);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Setup: 2 groups with different file sets
     // Group A: 5 files across 2 columns
     await openFiles([
@@ -129,19 +118,11 @@ suite('Lifecycle: import/export', () => {
     ]);
 
     const gA = `WL-StateExport-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
     // Group B: different files
     const gB = `WL-StateExport-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
     await closeAllTabs();
     await openFiles([
@@ -152,24 +133,16 @@ suite('Lifecycle: import/export', () => {
 
     // Create an addon
     const addonName = `WL-StateExport-Addon-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-addon', name: addonName
-      });
-    });
+    await createAddon(addonName);
 
     // Wait for triggerStateUpdate so state container has all tab data
     await sleep(200);
 
     // Take snapshot
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'add-to-history'
-      });
-    });
+    await addToHistory();
 
     // Verify we have groups, addon, history
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupAObj = Object.values(state.groups).find((g) => g.name === gA);
     const groupBObj = Object.values(state.groups).find((g) => g.name === gB);
     assert.ok(groupAObj, 'Group A should exist');
@@ -194,7 +167,7 @@ suite('Lifecycle: import/export', () => {
       await vscode.commands.executeCommand(CMD('__test__resetState'));
     });
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     assert.strictEqual(Object.keys(state.groups).length, 0, 'Groups should be cleared after reset');
     assert.strictEqual(Object.keys(state.addons).length, 0, 'Addons should be cleared after reset');
 
@@ -204,7 +177,7 @@ suite('Lifecycle: import/export', () => {
     });
 
     // Verify groups, addon, and history are restored
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const restoredA = Object.values(state.groups).find((g) => g.name === gA);
     const restoredB = Object.values(state.groups).find((g) => g.name === gB);
     assert.ok(restoredA, `Group A "${gA}" should be restored after import`);
@@ -215,11 +188,7 @@ suite('Lifecycle: import/export', () => {
     );
 
     // Switch to group A to verify tabs
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: restoredA.id
-      });
-    });
+    await switchToGroup(restoredA.id);
 
     // Wait for tabs to be restored after import
     await waitUntil(
@@ -238,8 +207,6 @@ suite('Lifecycle: import/export', () => {
 
   test('import invalid file shows error notification', async function () {
     this.timeout(1000 * 30);
-    await activateExtension();
-    await openAndWaitWebview();
 
     // Write an invalid JSON file
     const invalidPath = getTmpFilePath('invalid-import.json');
@@ -267,8 +234,6 @@ suite('Lifecycle: import/export', () => {
 
   test('import invalid group file shows error notification', async function () {
     this.timeout(1000 * 30);
-    await activateExtension();
-    await openAndWaitWebview();
 
     // Write a valid JSON but wrong format
     const wrongFormatPath = getTmpFilePath('wrong-group.tabstack');
@@ -294,10 +259,6 @@ suite('Lifecycle: import/export', () => {
 
   test('export group preserves tab positions across columns', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 6 files across 3 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -310,13 +271,9 @@ suite('Lifecycle: import/export', () => {
 
     // Create group
     const gName = `WL-ExportPos-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gName
-      });
-    });
+    await createGroup(gName);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const group = Object.values(state.groups).find((g) => g.name === gName);
 
     // Export

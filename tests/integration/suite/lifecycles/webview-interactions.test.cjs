@@ -1,10 +1,7 @@
-const { suite, test, afterEach } = require('mocha');
+const { suite, test } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
 const {
-  CMD,
-  activateExtension,
-  openAndWaitWebview,
   openFile,
   openFiles,
   getOpenTabs,
@@ -16,20 +13,21 @@ const {
   getCaptured,
   stopCapture,
   waitForCapturedSync,
-  waitUntil
+  waitUntil,
+  createGroup,
+  renameGroup,
+  createAddon,
+  applyAddon,
+  dispatch,
+  getState,
+  lifecycleSetup
 } = require('./helpers.cjs');
 
 suite('Lifecycle: webview interactions', () => {
-  afterEach(async () => {
-    await closeAllTabs();
-  });
+  lifecycleSetup();
 
   test('tab-open selects the correct tab via webview dispatch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -42,9 +40,7 @@ suite('Lifecycle: webview interactions', () => {
     });
 
     // Dispatch tab-open on column 1, index 0 (should focus package.json)
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-open', index: 0, columnView: 1
-    });
+    await dispatch({ type: 'tab-open', index: 0, columnView: 1 });
 
     await waitUntil(() => {
       const state = getOpenTabs();
@@ -63,9 +59,7 @@ suite('Lifecycle: webview interactions', () => {
     );
 
     // Now open tab at index 1 in column 1 (should focus README.md)
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-open', index: 1, columnView: 1
-    });
+    await dispatch({ type: 'tab-open', index: 1, columnView: 1 });
 
     await waitUntil(() => {
       const groups = vscode.window.tabGroups.all;
@@ -84,10 +78,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('tab-close removes tab via webview dispatch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -103,9 +93,7 @@ suite('Lifecycle: webview interactions', () => {
     assert.ok(beforeCount >= 5, `Should start with >= 5 tabs, got ${beforeCount}`);
 
     // Close the first tab in column 1 via dispatch
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-close', index: 0, columnView: 1
-    });
+    await dispatch({ type: 'tab-close', index: 0, columnView: 1 });
     await waitUntil(
       () => totalTabCount() === beforeCount - 1,
       'tab count to decrease after close'
@@ -124,10 +112,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('tab-toggle-pin toggles pin state via webview dispatch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -146,9 +130,7 @@ suite('Lifecycle: webview interactions', () => {
     assert.ok(!col1.tabs[0].isPinned, 'First tab should not be pinned initially');
 
     // Toggle pin on first tab in column 1
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-toggle-pin', index: 0, columnView: 1
-    });
+    await dispatch({ type: 'tab-toggle-pin', index: 0, columnView: 1 });
     await waitUntil(() => {
       const groups = vscode.window.tabGroups.all;
       const g1 = groups.find((g) => g.viewColumn === 1);
@@ -165,9 +147,7 @@ suite('Lifecycle: webview interactions', () => {
     );
 
     // Toggle pin again to unpin
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-toggle-pin', index: 0, columnView: 1
-    });
+    await dispatch({ type: 'tab-toggle-pin', index: 0, columnView: 1 });
     await waitUntil(() => {
       const groups = vscode.window.tabGroups.all;
       const g1 = groups.find((g) => g.viewColumn === 1);
@@ -182,10 +162,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('tab-move reorders tabs within same column', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -204,9 +180,7 @@ suite('Lifecycle: webview interactions', () => {
     const secondLabel = col1.tabs[1].label;
 
     // Move tab from index 0 to index 1 within column 1 (swap first two)
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-move', fromIndex: 0, toIndex: 1, fromColumnView: 1, toColumnView: 1
-    });
+    await dispatch({ type: 'tab-move', fromIndex: 0, toIndex: 1, fromColumnView: 1, toColumnView: 1 });
 
     await waitUntil(() => {
       const groups = vscode.window.tabGroups.all;
@@ -228,10 +202,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('tab-move moves tab across columns', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -250,9 +220,7 @@ suite('Lifecycle: webview interactions', () => {
     const col2Count = col2.tabs.length;
 
     // Move first tab from column 1 to column 2 at index 0
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'tab-move', fromIndex: 0, toIndex: 0, fromColumnView: 1, toColumnView: 2
-    });
+    await dispatch({ type: 'tab-move', fromIndex: 0, toIndex: 0, fromColumnView: 1, toColumnView: 2 });
 
     await waitUntil(() => {
       const groups = vscode.window.tabGroups.all;
@@ -284,10 +252,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('sync messages emitted when creating groups', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -303,9 +267,7 @@ suite('Lifecycle: webview interactions', () => {
 
     // Create a new group
     const gName = `WL-SyncGroup-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-group', groupId: gName
-    });
+    await dispatch({ type: 'new-group', groupId: gName });
     await waitForCapturedSync(1);
 
     const captured = await getCaptured(true);
@@ -326,10 +288,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('sync messages emitted when taking snapshots', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -341,22 +299,16 @@ suite('Lifecycle: webview interactions', () => {
 
     // Create a group so the state container is active
     const gName = `WL-Snapshot-Sync-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gName
-      });
-    });
+    await createGroup(gName);
 
     // Record history count before snapshot
-    let stateBefore = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let stateBefore = await getState();
     const historyCountBefore = stateBefore.historyIds.length;
 
     await startCapture();
 
     // Take snapshot
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'add-to-history'
-    });
+    await dispatch({ type: 'add-to-history' });
     await waitForCapturedSync(1);
 
     const captured = await getCaptured(true);
@@ -371,7 +323,7 @@ suite('Lifecycle: webview interactions', () => {
       `Sync should have more history entries than before (${historyCountBefore}), got ${lastSync.histories.length}`);
 
     // Verify the new history entry exists in state
-    let stateAfter = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let stateAfter = await getState();
     assert.strictEqual(stateAfter.historyIds.length, historyCountBefore + 1,
       `Should have exactly one more history entry`);
 
@@ -384,10 +336,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('sync messages emitted when creating/deleting addons', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -401,9 +349,7 @@ suite('Lifecycle: webview interactions', () => {
 
     // Create addon
     const addonName = `WL-SyncAddon-${Date.now()}`;
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'new-addon', name: addonName
-    });
+    await dispatch({ type: 'new-addon', name: addonName });
     await waitForCapturedSync(1);
 
     let captured = await getCaptured(true);
@@ -416,9 +362,7 @@ suite('Lifecycle: webview interactions', () => {
     assert.ok(addonEntry.tabCount >= 3, `Addon should have >= 3 tabs, got ${addonEntry.tabCount}`);
 
     // Now delete the addon
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'delete-addon', addonId: addonEntry.addonId
-    });
+    await dispatch({ type: 'delete-addon', addonId: addonEntry.addonId });
     // After getCaptured(true) cleared the buffer, wait for 1 new sync from delete
     await waitForCapturedSync(1);
 
@@ -433,10 +377,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('rename group via webview dispatch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     await trackSync(async () => {
       await openFiles([
         { file: 'package.json', column: vscode.ViewColumn.One },
@@ -449,25 +389,17 @@ suite('Lifecycle: webview interactions', () => {
 
     // Create group
     const gName = `WL-Rename-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gName
-      });
-    });
+    await createGroup(gName);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const group = Object.values(state.groups).find((g) => g.name === gName);
     assert.ok(group, `Group "${gName}" should exist`);
 
     // Rename via dispatch
     const newName = `WL-Renamed-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'rename-group', groupId: group.id, name: newName
-      });
-    });
+    await renameGroup(group.id, newName);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const renamed = Object.values(state.groups).find((g) => g.id === group.id);
     assert.ok(renamed, 'Group should still exist after rename');
     assert.strictEqual(renamed.name, newName, `Group name should be "${newName}", got "${renamed.name}"`);
@@ -475,10 +407,6 @@ suite('Lifecycle: webview interactions', () => {
 
   test('addon apply merges tabs into current editor', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-    await closeAllTabs();
-
     // Open 5 files across 2 columns
     await trackSync(async () => {
       await openFiles([
@@ -492,13 +420,9 @@ suite('Lifecycle: webview interactions', () => {
 
     // Create addon with these 5 tabs
     const addonName = `WL-Apply-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-addon', name: addonName
-      });
-    });
+    await createAddon(addonName);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const addon = Object.values(state.addons).find((a) => a.name === addonName);
     assert.ok(addon, `Addon "${addonName}" should exist`);
 
@@ -510,11 +434,7 @@ suite('Lifecycle: webview interactions', () => {
     const beforeCount = totalTabCount();
 
     // Apply addon — should ADD its tabs without clearing existing
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'apply-addon', addonId: addon.id
-      });
-    });
+    await applyAddon(addon.id);
 
     await waitUntil(
       () => totalTabCount() > beforeCount,

@@ -1,11 +1,9 @@
-const { suite, test, afterEach } = require('mocha');
+const { suite, test } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
 const {
   CMD,
-  activateExtension,
   sleep,
-  openAndWaitWebview,
   openFile,
   openFiles,
   getOpenTabs,
@@ -16,19 +14,24 @@ const {
   waitUntil,
   startCapture,
   getCaptured,
-  stopCapture
+  stopCapture,
+  createGroup,
+  addToHistory,
+  createAddon,
+  applyAddon,
+  assignQuickSlot,
+  switchToGroup,
+  recoverState,
+  dispatch,
+  getState,
+  lifecycleSetup
 } = require('./helpers.cjs');
 
 suite('Lifecycle: tab state with real editors', () => {
-  afterEach(async () => {
-    await closeAllTabs();
-  });
+  lifecycleSetup();
 
   test('group captures open files and restores them on switch', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-
     // Start from a clean slate
     await closeAllTabs();
 
@@ -47,25 +50,17 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create group A — captures the current tabs, A becomes current
     const gA = `WL-TabState-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
     assert.ok(groupA, 'Group A should be created');
 
     // Create group B immediately — captures same state, B becomes current
     const gB = `WL-TabState-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupB = Object.values(state.groups).find((g) => g.name === gB);
     assert.ok(groupB, 'Group B should be created');
 
@@ -81,11 +76,7 @@ suite('Lifecycle: tab state with real editors', () => {
     assert.ok(tabsOnB >= 7, `Group B should have at least 7 tabs, got ${tabsOnB}`);
 
     // Switch to group A — should restore the original 5 files across 2 columns
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for all tabs to be restored and stale tabs to be removed
     await waitUntil(
@@ -125,9 +116,6 @@ suite('Lifecycle: tab state with real editors', () => {
 
   test('switching groups closes old tabs and opens new ones', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-
     await closeAllTabs();
 
     // Open 5 files across 2 columns for group A
@@ -141,24 +129,16 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create group A
     const gA = `WL-CloseOpen-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B immediately — B becomes current, freezes A
     const gB = `WL-CloseOpen-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupB = Object.values(state.groups).find((g) => g.name === gB);
 
     // Now close everything and open different files — updates B, not A
@@ -172,11 +152,7 @@ suite('Lifecycle: tab state with real editors', () => {
     ]);
 
     // Switch to A — should restore package.json, README.md, tsconfig, vitest, CHANGELOG
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for multi-column restore to complete
     await waitUntil(
@@ -195,11 +171,7 @@ suite('Lifecycle: tab state with real editors', () => {
     );
 
     // Switch to B — should restore build-browser, build-node, LICENSE, copy-assets, build-webview
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupB.id
-      });
-    });
+    await switchToGroup(groupB.id);
 
     await waitUntil(
       () => getOpenTabs().flatMap((g) => g.tabLabels).some((l) => l.includes('build-browser')),
@@ -223,9 +195,6 @@ suite('Lifecycle: tab state with real editors', () => {
 
   test('snapshot captures real tabs and recover restores them', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-
     await closeAllTabs();
 
     // Open 5 real files in a single column
@@ -239,20 +208,12 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create a group — captures 5 files, becomes current
     const group = `WL-SnapTabs-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: group
-      });
-    });
+    await createGroup(group);
 
     // Take a snapshot of the current state
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'add-to-history'
-      });
-    });
+    await addToHistory();
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     assert.ok(state.historyIds.length > 0, 'Should have at least one history entry');
     const historyId = state.historyIds[state.historyIds.length - 1];
 
@@ -267,11 +228,7 @@ suite('Lifecycle: tab state with real editors', () => {
     assert.ok(tabsAfterChange >= 1, 'Should have at least 1 tab');
 
     // Recover the snapshot — should restore 5 files
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'recover-state', historyId
-      });
-    });
+    await recoverState(historyId);
 
     // Wait until recovered files appear (including multi-column tabs)
     await waitUntil(
@@ -301,9 +258,6 @@ suite('Lifecycle: tab state with real editors', () => {
 
   test('addon apply opens the addon tabs into current editor', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-
     await closeAllTabs();
 
     // Open 5 files across 2 columns for the addon
@@ -317,21 +271,13 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create a group so we can take a snapshot of the current state
     const group = `WL-AddonTabs-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: group
-      });
-    });
+    await createGroup(group);
 
     // Create addon from current state (5 files across 2 columns)
     const addonName = `WL-AddonTabs-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-addon', name: addonName
-      });
-    });
+    await createAddon(addonName);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const addon = Object.values(state.addons).find((a) => a.name === addonName);
     assert.ok(addon, 'Addon should be created');
 
@@ -350,11 +296,7 @@ suite('Lifecycle: tab state with real editors', () => {
     );
 
     // Apply the addon — should add the addon's tabs (addon bypasses render, triggers sync)
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'apply-addon', addonId: addon.id
-      });
-    });
+    await applyAddon(addon.id);
 
     await waitUntil(
       () => getOpenTabs().flatMap((gr) => gr.tabLabels).some((l) => l.includes('package.json')),
@@ -374,9 +316,6 @@ suite('Lifecycle: tab state with real editors', () => {
 
   test('quick slot switch restores correct tabs', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-
     await closeAllTabs();
 
     // Open 5 files across 2 columns for group A
@@ -390,24 +329,16 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create group A
     const gA = `WL-QSTabs-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B immediately — B becomes current, freezes A
     const gB = `WL-QSTabs-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupB = Object.values(state.groups).find((g) => g.name === gB);
 
     // Close all, open different files — updates B, not A
@@ -420,14 +351,8 @@ suite('Lifecycle: tab state with real editors', () => {
     ]);
 
     // Assign quick slots
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '1', groupId: groupA.id
-    });
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'assign-quick-slot', slot: '2', groupId: groupB.id
-      });
-    });
+    await dispatch({ type: 'assign-quick-slot', slot: '1', groupId: groupA.id });
+    await assignQuickSlot('2', groupB.id);
 
     // Apply quick slot 1 (group A) — should restore 5 files across 2 columns
     await trackRender(async () => {
@@ -470,19 +395,12 @@ suite('Lifecycle: tab state with real editors', () => {
     );
 
     // Clean up
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '1', groupId: null
-    });
-    await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-      type: 'assign-quick-slot', slot: '2', groupId: null
-    });
+    await dispatch({ type: 'assign-quick-slot', slot: '1', groupId: null });
+    await dispatch({ type: 'assign-quick-slot', slot: '2', groupId: null });
   });
 
   test('group switch with multi-file set verifies tab count', async function () {
     this.timeout(1000 * 60);
-    await activateExtension();
-    await openAndWaitWebview();
-
     await closeAllTabs();
 
     // Open 6 files across 3 columns for group A
@@ -501,24 +419,16 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create group A
     const gA = `WL-MultiFile-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Create group B immediately — B becomes current, freezes A
     const gB = `WL-MultiFile-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupB = Object.values(state.groups).find((g) => g.name === gB);
 
     // Close all and open 2 files in 1 column — updates B, not A
@@ -533,11 +443,7 @@ suite('Lifecycle: tab state with real editors', () => {
     assert.ok(countInA > countInB, `Group A (${countInA}) should have more tabs than B (${countInB})`);
 
     // Switch to A — should restore 6 tabs across 3 columns
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     await waitUntil(
       () => {
@@ -562,9 +468,6 @@ suite('Lifecycle: tab state with real editors', () => {
 
   test('clearAllTabs command closes all open editors', async function () {
     this.timeout(1000 * 30);
-    await activateExtension();
-    await openAndWaitWebview();
-
     // Open 5 files across 2 columns
     await openFiles([
       { file: 'package.json', column: vscode.ViewColumn.One },
@@ -586,9 +489,6 @@ suite('Lifecycle: tab state with real editors', () => {
 
   test('rapid group switch with real tabs does not lose state', async function () {
     this.timeout(1000 * 90);
-    await activateExtension();
-    await openAndWaitWebview();
-
     await closeAllTabs();
 
     // Open 5 files across 2 columns for group A
@@ -602,13 +502,9 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create group A
     const gA = `WL-Rapid-A-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gA
-      });
-    });
+    await createGroup(gA);
 
-    let state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    let state = await getState();
     const groupA = Object.values(state.groups).find((g) => g.name === gA);
 
     // Verify state capture has all 5 tabs
@@ -619,13 +515,9 @@ suite('Lifecycle: tab state with real editors', () => {
 
     // Create group B immediately — B becomes current, freezes A
     const gB = `WL-Rapid-B-${Date.now()}`;
-    await trackSync(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'new-group', groupId: gB
-      });
-    });
+    await createGroup(gB);
 
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupB = Object.values(state.groups).find((g) => g.name === gB);
 
     // Close all and open different files — updates B, not A
@@ -638,36 +530,20 @@ suite('Lifecycle: tab state with real editors', () => {
     ]);
 
     // First do a clean switch to A then B to ensure both states are rendered
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupB.id
-      });
-    });
+    await switchToGroup(groupB.id);
 
     // Rapidly switch back and forth 3 times
     for (let i = 0; i < 3; i++) {
-      await trackRender(async () => {
-        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-          type: 'switch-group', groupId: groupA.id
-        });
-      });
+      await switchToGroup(groupA.id);
       await sleep(600);
-      await trackRender(async () => {
-        await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-          type: 'switch-group', groupId: groupB.id
-        });
-      });
+      await switchToGroup(groupB.id);
       await sleep(600);
     }
 
     // Should end on group B
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     assert.strictEqual(state.selectedGroupId, groupB.id, 'Should end on group B');
 
     // Check A's stored state BEFORE final switch — has it degraded from rapid switching?
@@ -678,11 +554,7 @@ suite('Lifecycle: tab state with real editors', () => {
     await startCapture();
 
     // Switch to A one final time — verify package.json is restored
-    await trackRender(async () => {
-      await vscode.commands.executeCommand(CMD('__test__webviewDispatch'), {
-        type: 'switch-group', groupId: groupA.id
-      });
-    });
+    await switchToGroup(groupA.id);
 
     // Wait for multi-column restore to complete
     await waitUntil(
@@ -699,7 +571,7 @@ suite('Lifecycle: tab state with real editors', () => {
       .join(' | ');
 
     // Check state AFTER restore — compare with before
-    state = await vscode.commands.executeCommand(CMD('__test__getState'));
+    state = await getState();
     const groupAAfterFinal = Object.values(state.groups).find((g) => g.name === gA);
     const aStateAfterFinal = `Group A after final switch: ${groupAAfterFinal?.tabCount} tabs, labels=[${groupAAfterFinal?.tabLabels?.join(', ')}]`;
 

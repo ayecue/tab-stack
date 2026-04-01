@@ -362,7 +362,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
           return Promise.resolve(true);
         }
 
-        const maxWaitTime = maxTimeParam ? Number(maxTimeParam) : 10000;
+        const maxWaitTime = maxTimeParam ? Number(maxTimeParam) : 1000;
         const endTime = Date.now() + maxWaitTime;
 
         return new Promise<boolean>((resolve) => {

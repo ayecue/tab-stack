@@ -1,53 +1,7 @@
 const assert = require('assert');
 const vscode = require('vscode');
 const path = require('path');
-
-const EXTENSION_ID = 'ayecue.tab-stack';
-const POLL_INTERVAL = 100;
-const POLL_TIMEOUT = 10000;
-
-function CMD(name) {
-  return `tabStack.${name}`;
-}
-
-async function activateExtension() {
-  const ext = vscode.extensions.getExtension(EXTENSION_ID);
-  assert.ok(ext, 'Extension should be discoverable');
-  if (!ext.isActive) {
-    await ext.activate();
-  }
-  assert.strictEqual(ext.isActive, true, 'Extension should be active');
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Poll until `predicate()` returns a truthy value, then return it.
- * @template T
- * @param {() => T | Promise<T>} predicate
- * @param {string} description
- * @param {number} [timeout]
- * @returns {Promise<T>}
- */
-async function waitUntil(predicate, description, timeout = POLL_TIMEOUT) {
-  const start = Date.now();
-  while (Date.now() - start < timeout) {
-    const result = await predicate();
-    if (result) return result;
-    await sleep(POLL_INTERVAL);
-  }
-  throw new Error(`Timed out waiting for: ${description}`);
-}
-
-async function openAndWaitWebview() {
-  await vscode.commands.executeCommand(CMD('__test__openView'));
-  await waitUntil(
-    () => vscode.commands.executeCommand(CMD('__test__webviewReady')),
-    'webview to become ready'
-  );
-}
+const { CMD, waitUntil, sleep } = require('./core.cjs');
 
 /**
  * Open a workspace file as an editor tab and wait for it to appear.
@@ -124,44 +78,8 @@ async function openFiles(entries) {
     () => totalTabCount() >= entries.length,
     `all ${entries.length} tabs to appear`
   );
-  // Wait for extension's debounced sync to complete so internal state is up-to-date.
-  // Without this, creating a group immediately after openFiles may capture stale state.
-  const result = await vscode.commands.executeCommand(CMD('__test__waitForSync'), String(fromTime));
-  if (!result) throw new Error('openFiles: sync timed out after tabs appeared');
-  // Also wait for the second debounce (triggerStateUpdate, 10ms) to update state container
+  await vscode.commands.executeCommand(CMD('__test__waitForSync'), String(fromTime));
   await sleep(200);
-}
-
-/**
- * Wrap an operation that triggers a render event. Captures the current render
- * timestamp, runs the callback, then waits for a render after that timestamp.
- *
- * Usage:
- *   await trackRender(async () => {
- *     await vscode.commands.executeCommand(CMD('switchGroup'), groupId);
- *   });
- */
-async function trackRender(callback) {
-  const fromTime = await vscode.commands.executeCommand(CMD('__test__getLastRenderTime'));
-  await callback();
-  const result = await vscode.commands.executeCommand(CMD('__test__waitForRender'), String(fromTime));
-  if (!result) throw new Error('trackRender timed out waiting for render event');
-}
-
-/**
- * Wrap an operation that triggers a sync event. Captures the current sync
- * timestamp, runs the callback, then waits for a sync after that timestamp.
- *
- * Usage:
- *   await trackSync(async () => {
- *     await vscode.commands.executeCommand(CMD('newGroup'));
- *   });
- */
-async function trackSync(callback) {
-  const fromTime = await vscode.commands.executeCommand(CMD('__test__getLastSyncTime'));
-  await callback();
-  const result = await vscode.commands.executeCommand(CMD('__test__waitForSync'), String(fromTime));
-  if (!result) throw new Error('trackSync timed out waiting for sync event');
 }
 
 /**
@@ -210,58 +128,13 @@ async function pinActiveEditor() {
   );
 }
 
-/**
- * Start capturing sync/notification messages.
- */
-async function startCapture() {
-  await vscode.commands.executeCommand(CMD('__test__startCapture'));
-}
-
-/**
- * Get captured sync/notification messages.
- */
-async function getCaptured(clear = true) {
-  return vscode.commands.executeCommand(CMD('__test__getCapturedMessages'), clear);
-}
-
-/**
- * Stop capture and dispose subscriptions.
- */
-async function stopCapture() {
-  await vscode.commands.executeCommand(CMD('__test__stopCapture'));
-}
-
-/**
- * Wait for captured sync messages to have at least `count` entries.
- */
-async function waitForCapturedSync(count = 1) {
-  await waitUntil(
-    async () => {
-      const captured = await getCaptured(false);
-      return captured.sync.length >= count;
-    },
-    `at least ${count} captured sync message(s)`
-  );
-}
-
 module.exports = {
-  CMD,
-  activateExtension,
-  sleep,
-  openAndWaitWebview,
   openFile,
   openFiles,
+  openFileWithSelection,
   getOpenTabs,
   totalTabCount,
   closeAllTabs,
-  trackRender,
-  trackSync,
   getDetailedTabState,
-  openFileWithSelection,
-  pinActiveEditor,
-  startCapture,
-  getCaptured,
-  stopCapture,
-  waitUntil,
-  waitForCapturedSync
+  pinActiveEditor
 };
