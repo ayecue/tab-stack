@@ -42,3 +42,11 @@ export interface ConfigChangeEvent {
   storageType?: StorageType;
   tabRecoveryMappings?: TabRecoveryMapping;
 }
+
+export interface TabKindColorRule {
+  kind: string;
+  color: string;
+  pattern?: string;
+}
+
+export type TabKindColors = TabKindColorRule[];

@@ -1,11 +1,11 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState
 } from 'react';
 
+import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
 import { AddonItem } from './addon-item';
 
@@ -15,9 +15,17 @@ export const AddonsCollection: React.FC = () => {
   const [newAddonName, setNewAddonName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [editingAddonId, setEditingAddonId] = useState<string | null>(null);
+
+  const filterAddon = useCallback(
+    (addon: (typeof state.addons)[number], term: string) =>
+      addon.name.toLowerCase().includes(term),
+    []
+  );
+
+  const { searchTerm, setSearchTerm, filteredItems: filteredAddons, clearSearch } =
+    useCollectionSearch({ items: state.addons, filterFn: filterAddon });
 
   useEffect(() => {
     if (isCreating && inputRef.current) {
@@ -85,16 +93,6 @@ export const AddonsCollection: React.FC = () => {
     [submitCreate, cancelCreate]
   );
 
-  const filteredAddons = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return state.addons;
-    }
-    const term = searchTerm.trim().toLowerCase();
-    return state.addons.filter((addon) =>
-      addon.name.toLowerCase().includes(term)
-    );
-  }, [state.addons, searchTerm]);
-
   return (
     <div className="collections-section addons-collection">
       <div className="section-toolbar">
@@ -127,7 +125,7 @@ export const AddonsCollection: React.FC = () => {
               <button
                 type="button"
                 className="clear-search"
-                onClick={() => setSearchTerm('')}
+                onClick={clearSearch}
                 aria-label="Clear add-ons search"
               >
                 <i className="codicon codicon-close" aria-hidden="true" />

@@ -774,6 +774,7 @@ export class TabManagerService implements ITabManagerService {
       gitIntegration,
       historyMaxEntries: this._configService.getHistoryMaxEntries(),
       storageType: this._configService.getStorageType(),
+      tabKindColors: this._configService.getTabKindColors(),
       rendering: this._rendering
     });
   }

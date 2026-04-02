@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 
+import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
 import { HistoryItem } from './history-item';
 
@@ -13,23 +14,24 @@ const formatTimestamp = (value: string): string => {
 
 export const HistoryCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredHistory = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return state.histories;
-    }
-
-    const term = searchTerm.trim().toLowerCase();
-    return state.histories.filter((history) => {
+  const filterHistory = useCallback(
+    (
+      history: (typeof state.histories)[number],
+      term: string
+    ) => {
       const timestamp = formatTimestamp(history.historyId).toLowerCase();
       return (
         history.name.toLowerCase().includes(term) ||
         history.historyId.toLowerCase().includes(term) ||
         timestamp.includes(term)
       );
-    });
-  }, [state.histories, searchTerm]);
+    },
+    []
+  );
+
+  const { searchTerm, setSearchTerm, filteredItems: filteredHistory, clearSearch } =
+    useCollectionSearch({ items: state.histories, filterFn: filterHistory });
 
   return (
     <div className="collections-section history-collection">
@@ -61,7 +63,7 @@ export const HistoryCollection: React.FC = () => {
               <button
                 type="button"
                 className="clear-search"
-                onClick={() => setSearchTerm('')}
+                onClick={clearSearch}
                 aria-label="Clear snapshot search"
               >
                 <i className="codicon codicon-close" aria-hidden="true" />

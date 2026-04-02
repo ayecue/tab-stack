@@ -1,7 +1,9 @@
 import React from 'react';
 
 import { type TabInfo, TabKind } from '../../types/tabs';
-import { FileIcon } from './file-icon';
+import { useTabContext } from '../hooks/use-tab-context';
+import { resolveTabKindColor } from '../lib/resolve-tab-kind-color';
+import { TabKindIcon } from './tab-kind-icon';
 
 interface TabItemProps {
   tab: TabInfo;
@@ -44,16 +46,13 @@ export const TabItem: React.FC<TabItemProps> = ({
     onTogglePin();
   };
 
-  // Extract file extension
-  const getFileExtension = (filename: string): string => {
-    const parts = filename.split('.');
-    return parts.length > 1 ? parts[parts.length - 1] : '';
-  };
-
   const fileName = tab.label;
-  const extension = getFileExtension(fileName);
   const isUnrecoverable = !tab.isRecoverable;
   const kindSlug = tab.kind.toLowerCase();
+
+  const { state } = useTabContext();
+  const resolvedColor = resolveTabKindColor(state.tabKindColors, tab.kind, fileName);
+
   const activeClass = [
     tab.isActive ? 'active' : '',
     tab.isPinned ? 'pinned' : '',
@@ -101,11 +100,15 @@ export const TabItem: React.FC<TabItemProps> = ({
     >
       <div className="tab-item-main">
         <span className="tab-icon" aria-hidden="true">
-          <FileIcon fileName={fileName} extension={extension} />
+          <TabKindIcon kind={tab.kind} fileName={fileName} color={resolvedColor} />
         </span>
         <div className="tab-item-text">
           <div className="tab-item-title">
-            <span className={tabNameClassName} title={fileName}>
+            <span
+              className={tabNameClassName}
+              title={fileName}
+              style={resolvedColor ? { color: resolvedColor } : undefined}
+            >
               {fileName}
             </span>
             {isUnrecoverable && (

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { TabProvider, useTabContext } from '../hooks/use-tab-context';
 import { CollectionsPanel } from './collections-panel';
+import { ErrorBoundary } from './error-boundary';
 import { Header } from './header';
 import { SettingsPanel } from './settings-panel';
 import { TabList } from './tab-list';
@@ -143,8 +144,10 @@ const TabManagerContent: React.FC = () => {
 
 export const TabManager: React.FC = () => {
   return (
-    <TabProvider>
-      <TabManagerContent />
-    </TabProvider>
+    <ErrorBoundary>
+      <TabProvider>
+        <TabManagerContent />
+      </TabProvider>
+    </ErrorBoundary>
   );
 };

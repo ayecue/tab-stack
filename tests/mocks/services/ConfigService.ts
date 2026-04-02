@@ -12,6 +12,7 @@ export class MockConfigService {
   public setMasterWorkspaceFolder = vi.fn();
   public getTabRecoveryMappings = vi.fn();
   public setTabRecoveryMappings = vi.fn();
+  public getTabKindColors = vi.fn();
   public onDidChangeConfig = vi.fn(() => ({ dispose: vi.fn() }));
   
   constructor(defaultConfig: Record<string, any> = {}) {
@@ -26,6 +27,7 @@ export class MockConfigService {
     });
     this.getAvailableWorkspaceFolders.mockReturnValue(defaultConfig.availableWorkspaceFolders ?? []);
     this.getTabRecoveryMappings.mockReturnValue(defaultConfig.tabRecoveryMappings ?? {});
+    this.getTabKindColors.mockReturnValue(defaultConfig.tabKindColors ?? []);
     this.setMasterWorkspaceFolder.mockResolvedValue(undefined);
     this.setTabRecoveryMappings.mockResolvedValue(undefined);
   }

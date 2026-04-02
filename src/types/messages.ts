@@ -1,7 +1,8 @@
 import {
   GitIntegrationConfig,
   GitIntegrationMode,
-  StorageType
+  StorageType,
+  TabKindColors
 } from './config';
 import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
 import { TabState } from './tabs';
@@ -55,6 +56,7 @@ export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
   gitIntegration: GitIntegrationConfig;
   historyMaxEntries: number;
   storageType: StorageType;
+  tabKindColors: TabKindColors;
   rendering: boolean;
 }
 

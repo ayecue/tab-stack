@@ -6,6 +6,7 @@ import React, {
   useState
 } from 'react';
 
+import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
 import { GroupItem } from './group-item';
 
@@ -15,9 +16,17 @@ export const GroupsCollection: React.FC = () => {
   const [newGroupName, setNewGroupName] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+
+  const filterGroup = useCallback(
+    (group: (typeof state.groups)[number], term: string) =>
+      group.name.toLowerCase().includes(term),
+    []
+  );
+
+  const { searchTerm, setSearchTerm, filteredItems: filteredGroups, clearSearch } =
+    useCollectionSearch({ items: state.groups, filterFn: filterGroup });
   const quickSlotOptions = useMemo(
     () => Array.from({ length: 9 }, (_, index) => (index + 1).toString()),
     []
@@ -111,16 +120,6 @@ export const GroupsCollection: React.FC = () => {
     [submitCreate, cancelCreate]
   );
 
-  const filteredGroups = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return state.groups;
-    }
-    const term = searchTerm.trim().toLowerCase();
-    return state.groups.filter((group) =>
-      group.name.toLowerCase().includes(term)
-    );
-  }, [state.groups, searchTerm]);
-
   return (
     <div className="collections-section groups-collection">
       <div className="section-toolbar">
@@ -171,7 +170,7 @@ export const GroupsCollection: React.FC = () => {
               <button
                 type="button"
                 className="clear-search"
-                onClick={() => setSearchTerm('')}
+                onClick={clearSearch}
                 aria-label="Clear group search"
               >
                 <i className="codicon codicon-close" aria-hidden="true" />

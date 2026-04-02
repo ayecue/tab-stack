@@ -7,7 +7,7 @@ import React, {
   useSyncExternalStore
 } from 'react';
 
-import { GitIntegrationConfig, StorageType } from '../../types/config';
+import { GitIntegrationConfig, StorageType, TabKindColors } from '../../types/config';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
 import {
@@ -58,6 +58,7 @@ interface TabState {
   gitIntegration?: GitIntegrationConfig;
   historyMaxEntries?: number;
   storageType?: StorageType;
+  tabKindColors: TabKindColors;
 }
 
 interface TabContextValue {

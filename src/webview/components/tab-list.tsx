@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 
 import { TabInfo, TabKind } from '../../types/tabs';
 import { useTabContext } from '../hooks/use-tab-context';
+import { calculateDropIndex } from '../lib/calculate-drop-index';
 import { TabItem } from './tab-item';
 
 interface TabListProps {
@@ -191,22 +192,14 @@ export const TabList: React.FC<TabListProps> = ({
       }
 
       const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
-      let finalToIndex = dropTarget.index;
+      const finalToIndex = calculateDropIndex(
+        fromIndex,
+        fromViewColumn,
+        dropTarget.index,
+        dropTarget.viewColumn
+      );
 
-      // If moving within the same column and the source is before the target,
-      // we need to adjust because removing the source will shift indices
-      if (
-        fromViewColumn === dropTarget.viewColumn &&
-        fromIndex < finalToIndex
-      ) {
-        finalToIndex--;
-      }
-
-      // Don't do anything if dropping in the same position
-      if (
-        fromIndex === finalToIndex &&
-        fromViewColumn === dropTarget.viewColumn
-      ) {
+      if (finalToIndex === null) {
         setDraggedTab(null);
         setDropTarget(null);
         return;
@@ -267,13 +260,14 @@ export const TabList: React.FC<TabListProps> = ({
       }
 
       const { index: fromIndex, viewColumn: fromViewColumn } = draggedTab;
-      let finalToIndex = index;
+      const finalToIndex = calculateDropIndex(
+        fromIndex,
+        fromViewColumn,
+        index,
+        viewColumn
+      );
 
-      if (fromViewColumn === viewColumn && fromIndex < finalToIndex) {
-        finalToIndex--;
-      }
-
-      if (fromIndex === finalToIndex && fromViewColumn === viewColumn) {
+      if (finalToIndex === null) {
         setDraggedTab(null);
         setDropTarget(null);
         return;

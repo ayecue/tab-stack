@@ -617,6 +617,33 @@ body {
   height: 16px;
 }
 
+.kind-icon-terminal {
+  color: var(--vscode-terminal-ansiBrightBlue, #3b8eea);
+  font-size: 16px;
+}
+
+.kind-icon-webview {
+  color: var(--vscode-terminal-ansiCyan, #2aa198);
+  font-size: 16px;
+}
+
+.kind-icon-custom {
+  color: var(--vscode-terminal-ansiMagenta, #c586c0);
+  font-size: 16px;
+}
+
+.kind-icon-unknown {
+  color: var(--vscode-terminal-ansiBrightRed, #ff6161);
+  font-size: 16px;
+}
+
+.tab-item.active .kind-icon-terminal,
+.tab-item.active .kind-icon-webview,
+.tab-item.active .kind-icon-custom,
+.tab-item.active .kind-icon-unknown {
+  color: inherit;
+}
+
 .tab-item-text {
   display: flex;
   flex-direction: column;

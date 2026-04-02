@@ -5,6 +5,7 @@ import {
   GitIntegrationConfig,
   GitIntegrationMode,
   StorageType,
+  TabKindColors,
   TabRecoveryMapping
 } from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
@@ -111,6 +112,11 @@ export class ConfigService implements Disposable {
   getTabRecoveryMappings(): TabRecoveryMapping {
     const config = workspace.getConfiguration('tabStack');
     return config.get<TabRecoveryMapping>('tabRecoveryMappings', {});
+  }
+
+  getTabKindColors(): TabKindColors {
+    const config = workspace.getConfiguration('tabStack.appearance');
+    return config.get<TabKindColors>('tabKindColors', []);
   }
 
   async setTabRecoveryMappings(mappings: TabRecoveryMapping): Promise<void> {
