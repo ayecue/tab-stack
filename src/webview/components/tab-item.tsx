@@ -1,8 +1,6 @@
 import React from 'react';
 
 import { type TabInfo, TabKind } from '../../types/tabs';
-import { useTabContext } from '../hooks/use-tab-context';
-import { resolveTabKindColor } from '../lib/resolve-tab-kind-color';
 import { TabKindIcon } from './tab-kind-icon';
 
 interface TabItemProps {
@@ -19,9 +17,10 @@ interface TabItemProps {
   isDragging?: boolean;
   isDraggedOver?: boolean;
   dropPosition?: 'before' | 'after';
+  resolvedColor?: string;
 }
 
-export const TabItem: React.FC<TabItemProps> = ({
+export const TabItem: React.FC<TabItemProps> = React.memo(({
   tab,
   onOpen,
   onClose,
@@ -34,7 +33,8 @@ export const TabItem: React.FC<TabItemProps> = ({
   isColumnActive,
   isDragging,
   isDraggedOver,
-  dropPosition
+  dropPosition,
+  resolvedColor
 }) => {
   const handleClose = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -49,9 +49,6 @@ export const TabItem: React.FC<TabItemProps> = ({
   const fileName = tab.label;
   const isUnrecoverable = !tab.isRecoverable;
   const kindSlug = tab.kind.toLowerCase();
-
-  const { state } = useTabContext();
-  const resolvedColor = resolveTabKindColor(state.tabKindColors, tab.kind, fileName);
 
   const activeClass = [
     tab.isActive ? 'active' : '',
@@ -146,4 +143,4 @@ export const TabItem: React.FC<TabItemProps> = ({
       </div>
     </li>
   );
-};
+});

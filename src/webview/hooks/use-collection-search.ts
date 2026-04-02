@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface UseCollectionSearchOptions<T> {
   items: T[];
@@ -41,6 +41,14 @@ export function useCollectionSearch<T>({
       clearTimeout(timerRef.current);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const filteredItems = useMemo(() => {
     const trimmed = debouncedTerm.trim();

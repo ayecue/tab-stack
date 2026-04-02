@@ -3,6 +3,7 @@ import React, {
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState,
   useSyncExternalStore
 } from 'react';
@@ -119,12 +120,12 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     return () => document.removeEventListener('keydown', handleKeydown);
   }, [store, messagingService]);
 
-  const contextValue: TabContextValue = {
+  const contextValue: TabContextValue = useMemo(() => ({
     state,
     messagingService,
     messenger,
     store
-  };
+  }), [state, messagingService, messenger, store]);
 
   return (
     <TabContext.Provider value={contextValue}>{children}</TabContext.Provider>

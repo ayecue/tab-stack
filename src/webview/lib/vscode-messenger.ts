@@ -47,11 +47,20 @@ export class VSCodeMessenger extends EventEmitter {
     this.initialize();
   }
 
+  private boundHandleMessage = this.handleMessage.bind(this);
+
   private initialize(): void {
-    window.addEventListener('message', this.handleMessage.bind(this));
+    window.addEventListener('message', this.boundHandleMessage);
 
     this.isConnected = true;
     this.log('VSCodeMessenger initialized');
+  }
+
+  disconnect(): void {
+    window.removeEventListener('message', this.boundHandleMessage);
+    this.removeAllListeners();
+    this.isConnected = false;
+    this.log('VSCodeMessenger disconnected');
   }
 
   private log(...args: any[]): void {
@@ -98,12 +107,6 @@ export class VSCodeMessenger extends EventEmitter {
   updateConfig(newConfig: Partial<MessagingConfig>): void {
     this.config = { ...this.config, ...newConfig };
     this.log('Configuration updated:', this.config);
-  }
-
-  disconnect(): void {
-    this.isConnected = false;
-
-    this.log('VSCodeMessenger disconnected');
   }
 }
 

@@ -1,5 +1,25 @@
 import { TabKindColorRule } from '../../types/config';
 
+const regexCache = new WeakMap<TabKindColorRule, RegExp | null>();
+
+function getCompiledRegex(rule: TabKindColorRule): RegExp | null {
+  let cached = regexCache.get(rule);
+  if (cached !== undefined) {
+    return cached;
+  }
+  try {
+    cached = new RegExp(rule.pattern!, 'i');
+  } catch (e) {
+    console.warn(
+      `[resolveTabKindColor] Invalid regex pattern "${rule.pattern}" for kind "${rule.kind}":`,
+      e
+    );
+    cached = null;
+  }
+  regexCache.set(rule, cached);
+  return cached;
+}
+
 /**
  * Resolves the color for a tab by finding the first matching rule.
  *
@@ -22,13 +42,8 @@ export function resolveTabKindColor(
     }
 
     if (rule.pattern) {
-      try {
-        const regex = new RegExp(rule.pattern, 'i');
-        if (!regex.test(label)) {
-          continue;
-        }
-      } catch {
-        // Invalid regex — skip this rule
+      const regex = getCompiledRegex(rule);
+      if (!regex || !regex.test(label)) {
         continue;
       }
     }

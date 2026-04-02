@@ -366,6 +366,38 @@
           "default": "file",
           "description": "Storage method for tab state persistence."
         },
+        "tabStack.appearance.tabKindColors": {
+          "type": "array",
+          "default": [
+            { "kind": "tabInputText", "color": "#2472c8" },
+            { "kind": "tabInputTextDiff", "color": "#f44747" },
+            { "kind": "tabInputCustom", "color": "#c586c0" },
+            { "kind": "tabInputWebview", "color": "#2aa198" },
+            { "kind": "tabInputNotebook", "color": "#16825d" },
+            { "kind": "tabInputNotebookDiff", "color": "#c19c00" },
+            { "kind": "tabInputTerminal", "color": "#3b8eea" },
+            { "kind": "unknown", "color": "#ff6161" }
+          ],
+          "description": "Color rules for tab kind labels and icons. Each rule matches by tab kind and optionally by a label regex pattern. The first matching rule wins.",
+          "items": {
+            "type": "object",
+            "required": ["kind", "color"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "Tab kind identifier (e.g. 'tabInputText', 'tabInputWebview', 'unknown')."
+              },
+              "color": {
+                "type": "string",
+                "description": "CSS color value (e.g. '#ff6161', 'rgb(255, 97, 97)')."
+              },
+              "pattern": {
+                "type": "string",
+                "description": "Optional regex pattern matched against the tab label. When omitted, the rule matches all tabs of the specified kind."
+              }
+            }
+          }
+        },
         "tabStack.tabRecoveryMappings": {
           "type": "object",
           "default": {

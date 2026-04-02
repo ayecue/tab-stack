@@ -1,6 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { TabProvider, useTabContext } from '../hooks/use-tab-context';
+import { useTabActions } from '../hooks/use-tab-actions';
 import { CollectionsPanel } from './collections-panel';
 import { ErrorBoundary } from './error-boundary';
 import { Header } from './header';
@@ -18,67 +19,22 @@ const TabManagerContent: React.FC = () => {
     type: 'all' as FilterType
   });
 
-  const totals = useMemo(() => {
-    const tabGroups = state.payload?.tabGroups ?? {};
-    const groupValues = Object.values(tabGroups);
-    const openTabs = groupValues.reduce(
-      (count, group) => count + group.tabs.length,
-      0
-    );
-    const pinnedTabs = groupValues.reduce(
-      (count, group) => count + group.tabs.filter((tab) => tab.isPinned).length,
-      0
-    );
-
-    return {
-      openTabs,
-      pinnedTabs,
-      groups: state.groups.length,
-      histories: state.histories.length
-    };
-  }, [state]);
-
-  const lastSnapshotId = useMemo(() => {
-    if (state.histories.length === 0) {
-      return null;
-    }
-    return state.histories[0].historyId;
-  }, [state.histories]);
-
-  const handleCloseAllTabs = useCallback(() => {
-    const tabGroups = state.payload?.tabGroups;
-    if (!tabGroups) {
-      return;
-    }
-    messagingService.clearAllTabs();
-  }, [messagingService, state.payload?.tabGroups]);
-
-  const handleSaveGroup = useCallback(() => {
-    const name = `Group ${new Date().toLocaleTimeString()}`;
-    if (name) {
-      messagingService.createGroup(name.trim());
-    }
-  }, [messagingService]);
-
-  const handleSnapshot = useCallback(() => {
-    messagingService.addToHistory();
-  }, [messagingService]);
-
-  const handleRestoreSnapshot = useCallback(() => {
-    if (!lastSnapshotId) {
-      return;
-    }
-    messagingService.recoverState(lastSnapshotId);
-  }, [messagingService, lastSnapshotId]);
-
-  const handleCreateAddon = useCallback(() => {
-    const name = `Addon ${new Date().toLocaleTimeString()}`;
-    if (name) {
-      messagingService.createAddon(name.trim());
-    }
-  }, [messagingService]);
-
-  const hasTabs = totals.openTabs > 0;
+  const {
+    totals,
+    lastSnapshotId,
+    hasTabs,
+    handleCloseAllTabs,
+    handleSaveGroup,
+    handleSnapshot,
+    handleRestoreSnapshot,
+    handleCreateAddon
+  } = useTabActions({
+    messagingService,
+    tabGroups: state.payload?.tabGroups,
+    groupsLength: state.groups.length,
+    histories: state.histories,
+    rendering: state.rendering
+  });
 
   return (
     <div className="tab-manager">

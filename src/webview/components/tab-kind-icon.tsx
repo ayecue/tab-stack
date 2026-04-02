@@ -23,7 +23,7 @@ const FILE_KINDS = new Set<TabKind>([
   TabKind.TabInputNotebookDiff,
 ]);
 
-export const TabKindIcon: React.FC<TabKindIconProps> = ({ kind, fileName, color }) => {
+export const TabKindIcon: React.FC<TabKindIconProps> = React.memo(({ kind, fileName, color }) => {
   if (FILE_KINDS.has(kind)) {
     const extension = fileName.includes('.') ? fileName.split('.').pop() ?? '' : '';
     return <FileIcon fileName={fileName} extension={extension} />;
@@ -48,4 +48,4 @@ export const TabKindIcon: React.FC<TabKindIconProps> = ({ kind, fileName, color 
       style={color ? { color } : undefined}
     />
   );
-};
+});

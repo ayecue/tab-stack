@@ -159,16 +159,25 @@ export const setupStoreMessengerSync = (
   );
 
   // Subscribe to store events and trigger messaging actions
-  store.subscribe((snapshot) => {
+  let errorTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  const subscription = store.subscribe((snapshot) => {
     // Auto-clear error after 3 seconds
     if (snapshot.context.error) {
-      setTimeout(() => {
+      if (errorTimeoutId) {
+        clearTimeout(errorTimeoutId);
+      }
+      errorTimeoutId = setTimeout(() => {
+        errorTimeoutId = null;
         store.send({ type: 'clearError' });
       }, 3000);
     }
   });
 
   return () => {
+    if (errorTimeoutId) {
+      clearTimeout(errorTimeoutId);
+    }
+    subscription.unsubscribe();
     messenger.removeAllListeners(ExtensionMessageType.Sync);
     messenger.removeAllListeners(ExtensionMessageType.Notification);
   };

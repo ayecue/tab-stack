@@ -1,22 +1,33 @@
 import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState
+  useCallback
 } from 'react';
 
+import { useCollectionCreate } from '../hooks/use-collection-create';
+import { useCollectionRename } from '../hooks/use-collection-rename';
 import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
 import { AddonItem } from './addon-item';
 
 export const AddonsCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
-  const [isCreating, setIsCreating] = useState(false);
-  const [newAddonName, setNewAddonName] = useState('');
-  const [localError, setLocalError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [editingAddonId, setEditingAddonId] = useState<string | null>(null);
+
+  const isDuplicateAddon = useCallback(
+    (name: string, id: string) =>
+      state.addons.some((a) => a.name === name && a.addonId !== id),
+    [state.addons]
+  );
+
+  const rename = useCollectionRename({
+    onRename: (id, newName) => messagingService.renameAddon(id, newName),
+    entityLabel: 'Add-on',
+    isDuplicate: isDuplicateAddon
+  });
+
+  const create = useCollectionCreate({
+    onCreate: (name) => messagingService.createAddon(name),
+    entityLabel: 'Add-on',
+    onStart: rename.cancelRename
+  });
 
   const filterAddon = useCallback(
     (addon: (typeof state.addons)[number], term: string) =>
@@ -27,91 +38,10 @@ export const AddonsCollection: React.FC = () => {
   const { searchTerm, setSearchTerm, filteredItems: filteredAddons, clearSearch } =
     useCollectionSearch({ items: state.addons, filterFn: filterAddon });
 
-  useEffect(() => {
-    if (isCreating && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isCreating]);
-
-  const startCreate = useCallback(() => {
-    setEditingAddonId(null);
-    setIsCreating(true);
-    setNewAddonName('');
-    setLocalError(null);
-  }, []);
-
-  const cancelCreate = useCallback(() => {
-    setIsCreating(false);
-    setNewAddonName('');
-    setLocalError(null);
-    setIsSaving(false);
-  }, []);
-
-  const cancelRename = useCallback(() => {
-    setEditingAddonId(null);
-  }, []);
-
-  const submitCreate = useCallback(async () => {
-    const normalized = newAddonName.trim();
-    if (!normalized) {
-      setLocalError('Name is required');
-      inputRef.current?.focus();
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      messagingService.createAddon(normalized);
-      cancelCreate();
-    } catch (error) {
-      console.error('Failed to create add-on', error);
-      setLocalError('Unable to save add-on');
-      setIsSaving(false);
-    }
-  }, [messagingService, newAddonName, cancelCreate]);
-
-  const startRename = useCallback(
-    (addonId: string, _currentName: string) => {
-      cancelCreate();
-      setEditingAddonId(addonId);
-    },
-    [cancelCreate]
-  );
-
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        void submitCreate();
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        cancelCreate();
-      }
-    },
-    [submitCreate, cancelCreate]
-  );
-
   return (
     <div className="collections-section addons-collection">
       <div className="section-toolbar">
         <div className="section-toolbar-heading">
-          <h3>Add-ons</h3>
-          <div className="section-toolbar-actions">
-            <button
-              type="button"
-              className="section-action"
-              onClick={startCreate}
-              disabled={isCreating}
-              aria-label="Create new add-on from current tabs"
-              title="Create new add-on from current tabs"
-            >
-              <i className="codicon codicon-add" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-        <div className="section-toolbar-search">
           <div className="section-search">
             <i className="codicon codicon-search" aria-hidden="true" />
             <input
@@ -132,32 +62,44 @@ export const AddonsCollection: React.FC = () => {
               </button>
             )}
           </div>
+          <div className="section-toolbar-actions">
+            <button
+              type="button"
+              className="section-action"
+              onClick={create.startCreate}
+              disabled={create.isCreating}
+              aria-label="Create new add-on from current tabs"
+              title="Create new add-on from current tabs"
+            >
+              <i className="codicon codicon-add" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {isCreating && (
+      {create.isCreating && (
         <div className="section-inline-form">
           <input
-            ref={inputRef}
+            ref={create.inputRef}
             type="text"
             placeholder="Add-on name"
-            value={newAddonName}
+            value={create.name}
             onChange={(event) => {
-              setNewAddonName(event.target.value);
-              if (localError) {
-                setLocalError(null);
+              create.setName(event.target.value);
+              if (create.error) {
+                create.clearError();
               }
             }}
-            onKeyDown={handleKeyDown}
+            onKeyDown={create.handleKeyDown}
             aria-label="New add-on name"
-            disabled={isSaving}
+            disabled={create.isSaving}
           />
           <div className="inline-form-actions">
             <button
               type="button"
               className="action-save"
-              onClick={() => void submitCreate()}
-              disabled={isSaving}
+              onClick={() => void create.submitCreate()}
+              disabled={create.isSaving}
             >
               <i className="codicon codicon-check" aria-hidden="true" />
               <span>Save</span>
@@ -165,32 +107,43 @@ export const AddonsCollection: React.FC = () => {
             <button
               type="button"
               className="action-cancel"
-              onClick={cancelCreate}
-              disabled={isSaving}
+              onClick={create.cancelCreate}
+              disabled={create.isSaving}
             >
               <i className="codicon codicon-close" aria-hidden="true" />
               <span>Cancel</span>
             </button>
           </div>
-          {localError && <span className="form-error">{localError}</span>}
+          {create.error && <span className="form-error">{create.error}</span>}
         </div>
       )}
 
-      {state.addons.length === 0 && !isCreating ? (
+      {state.addons.length === 0 && !create.isCreating ? (
         <p className="section-empty">No add-ons saved yet.</p>
       ) : (
         <ul className="section-list" role="list">
           {filteredAddons.map((addon) => {
             const { addonId, name, tabCount, columnCount } = addon;
-            const isEditing = editingAddonId === addonId;
+            const isEditing = rename.editingId === addonId;
             return (
               <AddonItem
                 key={addonId}
                 addonId={addonId}
                 name={name}
                 isEditing={isEditing}
-                onStartRename={startRename}
-                onCancelRename={cancelRename}
+                onStartRename={(id, currentName) => {
+                  create.cancelCreate();
+                  rename.startRename(id, currentName);
+                }}
+                onCancelRename={rename.cancelRename}
+                renameValue={rename.renameValue}
+                onRenameValueChange={rename.setRenameValue}
+                renameError={rename.renameError}
+                onClearRenameError={rename.clearRenameError}
+                isRenaming={rename.isRenaming}
+                renameInputRef={rename.renameInputRef}
+                onSubmitRename={rename.submitRename}
+                onRenameKeyDown={rename.handleRenameKeyDown}
                 tabCount={tabCount}
                 columnCount={columnCount}
               />
@@ -199,7 +152,7 @@ export const AddonsCollection: React.FC = () => {
 
           {filteredAddons.length === 0 &&
             state.addons.length > 0 &&
-            !isCreating && (
+            !create.isCreating && (
               <li className="section-empty" aria-live="polite">
                 No add-ons match that search.
               </li>

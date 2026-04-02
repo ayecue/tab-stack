@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { getIconForFile } from 'vscode-icons-js';
 
 const ICONS_CDN_BASE =
@@ -9,10 +9,10 @@ interface FileIconProps {
   extension: string;
 }
 
-export const FileIcon: React.FC<FileIconProps> = ({ fileName }) => {
+export const FileIcon: React.FC<FileIconProps> = React.memo(({ fileName }) => {
   const [hasError, setHasError] = useState(false);
 
-  const iconFileName = getIconForFile(fileName);
+  const iconFileName = useMemo(() => getIconForFile(fileName), [fileName]);
 
   if (!iconFileName || hasError) {
     return (
@@ -28,4 +28,4 @@ export const FileIcon: React.FC<FileIconProps> = ({ fileName }) => {
       onError={() => setHasError(true)}
     />
   );
-};
+});

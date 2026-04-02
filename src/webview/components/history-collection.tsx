@@ -37,19 +37,6 @@ export const HistoryCollection: React.FC = () => {
     <div className="collections-section history-collection">
       <div className="section-toolbar">
         <div className="section-toolbar-heading">
-          <h3>Snapshots</h3>
-          <button
-            type="button"
-            className="section-action"
-            onClick={() => {
-              messagingService.addToHistory();
-            }}
-            aria-label="Capture new snapshot"
-          >
-            <i className="codicon codicon-device-camera" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="section-toolbar-search">
           <div className="section-search">
             <i className="codicon codicon-search" aria-hidden="true" />
             <input
@@ -70,6 +57,16 @@ export const HistoryCollection: React.FC = () => {
               </button>
             )}
           </div>
+          <button
+            type="button"
+            className="section-action"
+            onClick={() => {
+              messagingService.addToHistory();
+            }}
+            aria-label="Capture new snapshot"
+          >
+            <i className="codicon codicon-device-camera" aria-hidden="true" />
+          </button>
         </div>
       </div>
 

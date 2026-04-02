@@ -213,18 +213,6 @@ body {
   color: var(--vscode-errorForeground, #f14c4c);
 }
 
-.toggle-group {
-  display: flex;
-  align-items: stretch;
-  gap: 2px;
-  padding: 1px;
-  border-radius: 4px;
-  background: var(--vscode-input-background);
-  border: 1px solid var(--vscode-input-border, transparent);
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .toggle-group button {
   display: inline-flex;
   align-items: center;
@@ -248,8 +236,8 @@ body {
 .tab-toolbar-search {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  margin-bottom: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .tab-toolbar-search .search-input {
@@ -303,49 +291,31 @@ body {
 .tab-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-.tab-toolbar-top {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tab-toolbar-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tab-toolbar-controls {
+.tab-toolbar-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 100%;
+  gap: 6px;
 }
 
-.tab-toolbar-controls .action-group {
+.tab-toolbar-row .action-group {
   display: inline-flex;
-  gap: 3px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
-.tab-toolbar-filters {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.tab-toolbar-filters .filter-group {
+.tab-toolbar-row .filter-group {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  flex-shrink: 0;
 }
 
-.tab-toolbar-filters .filter-group .type-select {
+.tab-toolbar-row .filter-group .type-select {
   height: 22px;
   border-radius: 3px;
   border: 1px solid var(--vscode-input-border, transparent);
@@ -353,37 +323,35 @@ body {
   color: var(--vscode-input-foreground, var(--vscode-foreground));
   font-size: 11px;
   padding: 0 6px;
-  min-width: 90px;
+  min-width: 72px;
   cursor: pointer;
 }
 
-.tab-toolbar-filters .filter-group .type-select:hover {
+.tab-toolbar-row .filter-group .type-select:hover {
   border-color: var(--vscode-focusBorder);
 }
 
-.tab-toolbar-filters .filter-group .type-select:focus {
+.tab-toolbar-row .filter-group .type-select:focus {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 0;
 }
 
 .toolbar-stats {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
+  gap: 4px;
+  margin-left: auto;
 }
 
 .toggle-group {
-  display: flex;
+  display: inline-flex;
   align-items: stretch;
   gap: 2px;
   padding: 1px;
   border-radius: 4px;
   background: var(--vscode-input-background);
   border: 1px solid var(--vscode-input-border, transparent);
-  width: 100%;
-  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .toolbar-stat {
@@ -794,7 +762,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: none;
   border: none;
   color: var(--vscode-descriptionForeground);
@@ -831,8 +799,8 @@ body {
   gap: 3px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.05);
-  padding: 6px;
-  margin: 4px 10px 0 10px;
+  padding: 4px;
+  margin: 2px 8px 0 8px;
   border-top: 1px solid var(--vscode-panel-border);
 }
 
@@ -852,12 +820,12 @@ body {
 }
 
 .collections-panel-body {
-  max-height: 360px;
+  max-height: 280px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px;
+  padding: 8px;
   animation: slideDown 0.15s ease;
 }
 
@@ -870,35 +838,21 @@ body {
 .section-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.section-toolbar h3 {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 4px;
 }
 
 .section-toolbar-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  width: 100%;
-}
-
-.section-toolbar-search {
-  width: 100%;
-}
-
-.section-toolbar-search .section-search {
+  gap: 4px;
   width: 100%;
 }
 
 .section-toolbar-actions {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 

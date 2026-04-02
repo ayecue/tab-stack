@@ -2,6 +2,7 @@ import React, {
   cloneElement,
   isValidElement,
   useEffect,
+  useId,
   useRef,
   useState
 } from 'react';
@@ -24,6 +25,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     left: number;
   } | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  const tooltipId = useId();
 
   const showTooltip = (event: React.MouseEvent) => {
     // Capture the target element immediately before the event is recycled
@@ -64,6 +66,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   // Clone the child element and add mouse event handlers
   const childElement = isValidElement(children)
     ? cloneElement(children as React.ReactElement<any>, {
+        'aria-describedby': isVisible ? tooltipId : undefined,
         onMouseEnter: (e: React.MouseEvent) => {
           showTooltip(e);
           const originalOnMouseEnter = (children as any)?.props?.onMouseEnter;
@@ -80,6 +83,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const tooltipElement =
     isVisible && position ? (
       <div
+        id={tooltipId}
+        role="tooltip"
         className="custom-tooltip"
         style={{
           top: `${position.top}px`,

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
@@ -15,6 +15,18 @@ interface GroupItemProps {
   onStartRename: (groupId: string, currentName: string) => void;
   isEditing: boolean;
   onCancelRename: () => void;
+  renameValue: string;
+  onRenameValueChange: (value: string) => void;
+  renameError: string | null;
+  onClearRenameError: () => void;
+  isRenaming: boolean;
+  renameInputRef: React.RefObject<HTMLInputElement | null>;
+  onSubmitRename: (id: string, currentName: string) => void;
+  onRenameKeyDown: (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+    currentName: string
+  ) => void;
   tabCount: number;
   columnCount: number;
 }
@@ -29,26 +41,19 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   onStartRename,
   isEditing,
   onCancelRename,
+  renameValue,
+  onRenameValueChange,
+  renameError,
+  onClearRenameError,
+  isRenaming,
+  renameInputRef,
+  onSubmitRename,
+  onRenameKeyDown,
   tabCount,
   columnCount
 }) => {
-  const { state, messagingService } = useTabContext();
-  const renameInputRef = useRef<HTMLInputElement | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
+  const { messagingService } = useTabContext();
   const slotControlId = `slot-${index}`;
-
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditing && renameInputRef.current) {
-      setRenameValue(name);
-      setRenameError(null);
-      setIsRenaming(false);
-      renameInputRef.current.focus();
-      renameInputRef.current.select();
-    }
-  }, [isEditing, name]);
 
   const handleSlotChange = useCallback(
     (rawValue: string) => {
@@ -80,64 +85,6 @@ export const GroupItem: React.FC<GroupItemProps> = ({
       messagingService.assignQuickSlot(nextSlot, groupId);
     },
     [messagingService, groupId, assignedSlot]
-  );
-
-  const submitRename = useCallback(async () => {
-    const normalized = renameValue.trim();
-
-    if (!normalized) {
-      setRenameError('Group name is required');
-      renameInputRef.current?.focus();
-      return;
-    }
-
-    if (normalized === name) {
-      onCancelRename();
-      return;
-    }
-
-    if (
-      state.groups.some((g) => g.name === normalized && g.groupId !== groupId)
-    ) {
-      setRenameError('A group with this name already exists');
-      renameInputRef.current?.focus();
-      renameInputRef.current?.select();
-      return;
-    }
-
-    try {
-      setIsRenaming(true);
-      messagingService.renameGroup(groupId, normalized);
-      onCancelRename();
-    } catch (error) {
-      console.error('Failed to rename group', error);
-      setRenameError('Unable to rename group');
-      setIsRenaming(false);
-      renameInputRef.current?.focus();
-    }
-  }, [
-    messagingService,
-    groupId,
-    renameValue,
-    onCancelRename,
-    state.groups,
-    name
-  ]);
-
-  const handleRenameKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        void submitRename();
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        onCancelRename();
-      }
-    },
-    [submitRename, onCancelRename]
   );
 
   const handleItemClick = useCallback(() => {
@@ -184,12 +131,12 @@ export const GroupItem: React.FC<GroupItemProps> = ({
                   value={renameValue}
                   onClick={(event) => event.stopPropagation()}
                   onChange={(event) => {
-                    setRenameValue(event.target.value);
+                    onRenameValueChange(event.target.value);
                     if (renameError) {
-                      setRenameError(null);
+                      onClearRenameError();
                     }
                   }}
-                  onKeyDown={handleRenameKeyDown}
+                  onKeyDown={(event) => onRenameKeyDown(event, groupId, name)}
                   aria-label="Rename group"
                   disabled={isRenaming}
                 />
@@ -199,7 +146,7 @@ export const GroupItem: React.FC<GroupItemProps> = ({
                     className="action-save"
                     onClick={(event) => {
                       event.stopPropagation();
-                      void submitRename();
+                      onSubmitRename(groupId, name);
                     }}
                     disabled={isRenaming}
                     aria-label="Save group name"

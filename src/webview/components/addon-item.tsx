@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
@@ -10,6 +10,18 @@ interface AddonItemProps {
   isEditing: boolean;
   onStartRename: (addonId: string, currentName: string) => void;
   onCancelRename: () => void;
+  renameValue: string;
+  onRenameValueChange: (value: string) => void;
+  renameError: string | null;
+  onClearRenameError: () => void;
+  isRenaming: boolean;
+  renameInputRef: React.RefObject<HTMLInputElement | null>;
+  onSubmitRename: (id: string, currentName: string) => void;
+  onRenameKeyDown: (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+    currentName: string
+  ) => void;
   tabCount: number;
   columnCount: number;
 }
@@ -20,83 +32,18 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   isEditing,
   onStartRename,
   onCancelRename,
+  renameValue,
+  onRenameValueChange,
+  renameError,
+  onClearRenameError,
+  isRenaming,
+  renameInputRef,
+  onSubmitRename,
+  onRenameKeyDown,
   tabCount,
   columnCount
 }) => {
-  const { state, messagingService } = useTabContext();
-  const renameInputRef = useRef<HTMLInputElement | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
-
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditing && renameInputRef.current) {
-      setRenameValue(name);
-      setRenameError(null);
-      setIsRenaming(false);
-      renameInputRef.current.focus();
-      renameInputRef.current.select();
-    }
-  }, [isEditing, name]);
-
-  const submitRename = useCallback(async () => {
-    const normalized = renameValue.trim();
-
-    if (!normalized) {
-      setRenameError('Add-on name is required');
-      renameInputRef.current?.focus();
-      return;
-    }
-
-    if (normalized === name) {
-      onCancelRename();
-      return;
-    }
-
-    if (
-      state.addons.some((a) => a.name === normalized && a.addonId !== addonId)
-    ) {
-      setRenameError('An add-on with this name already exists');
-      renameInputRef.current?.focus();
-      renameInputRef.current?.select();
-      return;
-    }
-
-    try {
-      setIsRenaming(true);
-      messagingService.renameAddon(addonId, normalized);
-      onCancelRename();
-    } catch (error) {
-      console.error('Failed to rename add-on', error);
-      setRenameError('Unable to rename add-on');
-      setIsRenaming(false);
-      renameInputRef.current?.focus();
-    }
-  }, [
-    messagingService,
-    addonId,
-    renameValue,
-    onCancelRename,
-    state.addons,
-    name
-  ]);
-
-  const handleRenameKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        void submitRename();
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        onCancelRename();
-      }
-    },
-    [submitRename, onCancelRename]
-  );
+  const { messagingService } = useTabContext();
 
   const handleDelete = useCallback(
     (event: React.MouseEvent) => {
@@ -155,12 +102,12 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                   value={renameValue}
                   onClick={(event) => event.stopPropagation()}
                   onChange={(event) => {
-                    setRenameValue(event.target.value);
+                    onRenameValueChange(event.target.value);
                     if (renameError) {
-                      setRenameError(null);
+                      onClearRenameError();
                     }
                   }}
-                  onKeyDown={handleRenameKeyDown}
+                  onKeyDown={(event) => onRenameKeyDown(event, addonId, name)}
                   aria-label="Rename add-on"
                   disabled={isRenaming}
                 />
@@ -170,7 +117,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                     className="action-save"
                     onClick={(event) => {
                       event.stopPropagation();
-                      void submitRename();
+                      onSubmitRename(addonId, name);
                     }}
                     disabled={isRenaming}
                     aria-label="Save add-on name"
