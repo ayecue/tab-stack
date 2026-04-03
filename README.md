@@ -155,6 +155,49 @@ Key options:
 - **History**
 	- `tabStack.history.maxEntries` - Maximum number of snapshots to retain (default 10)
 
+- **Appearance**
+	- `tabStack.appearance.tabKindColors` - Color rules for tab kind labels and icons. Each rule matches by tab kind and optionally by a label regex pattern. The first matching rule wins.
+
+	Example (default):
+	```json
+	[
+	  { "kind": "tabInputText", "color": "#2472c8" },
+	  { "kind": "tabInputTextDiff", "color": "#f44747" },
+	  { "kind": "tabInputCustom", "color": "#c586c0" },
+	  { "kind": "tabInputWebview", "color": "#2aa198" },
+	  { "kind": "tabInputNotebook", "color": "#16825d" },
+	  { "kind": "tabInputNotebookDiff", "color": "#c19c00" },
+	  { "kind": "tabInputTerminal", "color": "#3b8eea" },
+	  { "kind": "unknown", "pattern": "^Settings$", "color": "#8F38E5" },
+	  { "kind": "unknown", "pattern": "^Extensions$", "color": "#c586c0" },
+	  { "kind": "unknown", "pattern": "^Welcome$", "color": "#F5276C" },
+	  { "kind": "tabInputWebview", "pattern": "^Release Notes: [0-9.]+$", "color": "#82E8E8" }
+	]
+	```
+
+- **Tab recovery mappings**
+	- `tabStack.tabRecoveryMappings` - Mapping of identifiers to recovery commands for tab types that VS Code cannot reopen automatically (e.g. Settings, Extensions, Keyboard Shortcuts). When Tab Stack detects a saved tab that matches a mapping, it executes the specified command to recreate the tab during restore.
+
+	Values can be a simple command ID string (the key is used as a label regex) or an object with:
+	- `command` - VS Code command ID to execute
+	- `match` (optional) - Regex criteria matched against tab properties (`label`, `kind`, `uri`, `viewType`). All specified fields must match. If `label` is omitted inside `match`, the mapping key is used as the label pattern
+	- `args` (optional) - Arguments to pass to the command. Supports `{{property}}` interpolation from the tab info (e.g. `{{viewColumn}}`, `{{label}}`). Non-string values (booleans, numbers, objects) are passed as-is
+	- `nextTickDelay` (optional) - Milliseconds to wait after command execution before checking for the tab (default `0`)
+
+	Example (default):
+	```json
+	{
+	  "^Settings$": {
+	    "command": "workbench.action.openSettings2",
+	    "args": [{ "openToSide": false }]
+	  },
+	  "^Keyboard Shortcuts$": "workbench.action.openGlobalKeybindings",
+	  "^Extensions$": "workbench.view.extensions",
+	  "^Welcome$": "workbench.action.openWalkthrough",
+	  "^Release Notes: [0-9.]+$": "update.showCurrentReleaseNotes"
+	}
+	```
+
 ---
 
 ## Notes & limitations
