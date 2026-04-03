@@ -429,23 +429,18 @@
         "tabStack.tabRecoveryMappings": {
           "type": "object",
           "default": {
-            "^Settings$": "workbench.action.openSettings",
+            "^Settings$": {
+              "command": "workbench.action.openSettings2",
+              "args": [
+                {
+                  "openToSide": false
+                }
+              ]
+            },
             "^Keyboard Shortcuts$": "workbench.action.openGlobalKeybindings",
             "^Extensions$": "workbench.view.extensions",
-            "^Output$": "workbench.action.output.toggleOutput",
-            "^Problems$": "workbench.actions.view.problems",
-            "^Debug Console$": "workbench.debug.action.toggleRepl",
-            "^Terminal$": "workbench.action.terminal.toggleTerminal",
-            "^Search$": "workbench.action.findInFiles",
-            "^Source Control$": "workbench.view.scm",
-            "^Explorer$": "workbench.view.explorer",
-            "^Run and Debug$": "workbench.view.debug",
-            "^Testing$": "workbench.view.testing",
             "^Welcome$": "workbench.action.openWalkthrough",
-            "^Release Notes$": "update.showCurrentReleaseNotes",
-            "^Ports$": "workbench.panel.ports.focus",
-            "^Comments$": "workbench.panel.comments.focus",
-            "^Interactive Playground$": "workbench.action.showInteractivePlayground"
+            "^Release Notes: [0-9.]+$": "update.showCurrentReleaseNotes"
           },
           "description": "Mapping of identifiers to recovery commands for unknown tab types. Keys serve as identifiers (or as label regex patterns for backward compatibility). Values are either a command ID string (key is the label pattern) or an object with 'command', optional 'match' (regex criteria including 'label'), optional 'args', and optional 'nextTickDelay'.",
           "patternProperties": {

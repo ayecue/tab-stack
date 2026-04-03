@@ -13,4 +13,5 @@ export interface CompiledMapping {
 
 export type CompiledArgTemplate =
   | { type: 'literal'; value: unknown }
-  | { type: 'template'; render: Handlebars.TemplateDelegate };
+  | { type: 'template'; render: Handlebars.TemplateDelegate }
+  | { type: 'object'; entries: [string, CompiledArgTemplate][] };

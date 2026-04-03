@@ -2,6 +2,7 @@ import { Tab, TabInputText, Uri, window, commands, TabInputTextDiff, TabInputCus
 import { AssociatedTabInstance, TabInfoBase, TabInfoCustom, TabInfoMetaNotebookEditor, TabInfoMetaTerminal, TabInfoMetaTextEditor, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
 import { focusGroup } from "../utils/commands";
 import { getLogger, ScopedLogger } from "../services/logger";
+import { delayNextTick } from "../utils/delay";
 
 export abstract class TabCreationTask {
   abstract getDescription(): string;

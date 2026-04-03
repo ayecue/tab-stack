@@ -98,15 +98,24 @@ export class TabRecoveryService implements Disposable {
   }
 
   private _compileArg(arg: unknown): CompiledArgTemplate {
-    if (typeof arg !== 'string') {
-      throw new Error(`invalid recovery mapping argument: expected string, got ${typeof arg}`);
-    }
-
-    if (!arg.includes('{{')) {
+    if (arg == null || typeof arg === 'number' || typeof arg === 'boolean') {
       return { type: 'literal', value: arg };
     }
 
-    return { type: 'template', render: Handlebars.compile(arg, { noEscape: true }) };
+    if (typeof arg === 'string') {
+      if (!arg.includes('{{')) {
+        return { type: 'literal', value: arg };
+      }
+      return { type: 'template', render: Handlebars.compile(arg, { noEscape: true }) };
+    }
+
+    if (typeof arg === 'object' && !Array.isArray(arg)) {
+      const entries: [string, CompiledArgTemplate][] = Object.entries(arg as Record<string, unknown>)
+        .map(([key, val]) => [key, this._compileArg(val)] as [string, CompiledArgTemplate]);
+      return { type: 'object', entries };
+    }
+
+    throw new Error(`invalid recovery mapping argument: unsupported type ${typeof arg}`);
   }
 
   findMatch(tabInfo: TabInfo): RecoveryCommandResult | null {
@@ -161,8 +170,21 @@ export class TabRecoveryService implements Disposable {
     switch (template.type) {
       case 'literal':
         return template.value;
-      case 'template':
-        return template.render(tabInfo);
+      case 'template': {
+        const rendered = template.render(tabInfo);
+        if (rendered === 'true') return true;
+        if (rendered === 'false') return false;
+        const num = Number(rendered);
+        if (rendered !== '' && !Number.isNaN(num)) return num;
+        return rendered;
+      }
+      case 'object': {
+        const result: Record<string, unknown> = {};
+        for (const [key, valTemplate] of template.entries) {
+          result[key] = this._resolveArg(valTemplate, tabInfo);
+        }
+        return result;
+      }
     }
   }
 
