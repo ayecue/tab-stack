@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 
 import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
+import { Tooltip } from './common/tooltip';
 import { HistoryItem } from './history-item';
 
 const formatTimestamp = (value: string): string => {
@@ -47,26 +48,30 @@ export const HistoryCollection: React.FC = () => {
               aria-label="Search snapshots"
             />
             {searchTerm && (
-              <button
-                type="button"
-                className="clear-search"
-                onClick={clearSearch}
-                aria-label="Clear snapshot search"
-              >
-                <i className="codicon codicon-close" aria-hidden="true" />
-              </button>
+              <Tooltip content="Clear snapshot search">
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={clearSearch}
+                  aria-label="Clear snapshot search"
+                >
+                  <i className="codicon codicon-close" aria-hidden="true" />
+                </button>
+              </Tooltip>
             )}
           </div>
-          <button
-            type="button"
-            className="section-action"
-            onClick={() => {
-              messagingService.addToHistory();
-            }}
-            aria-label="Capture new snapshot"
-          >
-            <i className="codicon codicon-device-camera" aria-hidden="true" />
-          </button>
+          <Tooltip content="Capture new snapshot">
+            <button
+              type="button"
+              className="section-action"
+              onClick={() => {
+                messagingService.addToHistory();
+              }}
+              aria-label="Capture new snapshot"
+            >
+              <i className="codicon codicon-device-camera" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

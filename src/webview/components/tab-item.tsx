@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { type TabInfo, TabKind } from '../../types/tabs';
+import { Tooltip } from './common/tooltip';
 import { TabKindIcon } from './tab-kind-icon';
 
 interface TabItemProps {
@@ -101,45 +102,49 @@ export const TabItem: React.FC<TabItemProps> = React.memo(({
         </span>
         <div className="tab-item-text">
           <div className="tab-item-title">
-            <span
-              className={tabNameClassName}
-              title={fileName}
-              style={resolvedColor ? { color: resolvedColor } : undefined}
-            >
-              {fileName}
-            </span>
-            {isUnrecoverable && (
+            <Tooltip content={fileName}>
               <span
-                className="tab-kind-indicator"
-                role="img"
-                aria-label={unrecoverableMessage}
-                title={unrecoverableMessage}
-              />
+                className={tabNameClassName}
+                style={resolvedColor ? { color: resolvedColor } : undefined}
+              >
+                {fileName}
+              </span>
+            </Tooltip>
+            {isUnrecoverable && (
+              <Tooltip content={unrecoverableMessage}>
+                <span
+                  className="tab-kind-indicator"
+                  role="img"
+                  aria-label={unrecoverableMessage}
+                />
+              </Tooltip>
             )}
           </div>
         </div>
       </div>
       <div className="tab-item-actions">
-        <button
-          className={`pin-btn${tab.isPinned ? ' active' : ''}`}
-          onClick={handleTogglePin}
-          title={tab.isPinned ? 'Unpin tab' : 'Pin tab'}
-          aria-label={tab.isPinned ? 'Unpin tab' : 'Pin tab'}
-          aria-pressed={tab.isPinned}
-        >
-          <i
-            className={`codicon codicon-pin${tab.isPinned ? ' pinned' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
-        <button
-          className="close-btn"
-          onClick={handleClose}
-          title="Close tab"
-          aria-label="Close tab"
-        >
-          <i className="codicon codicon-close" aria-hidden="true" />
-        </button>
+        <Tooltip content={tab.isPinned ? 'Unpin tab' : 'Pin tab'}>
+          <button
+            className={`pin-btn${tab.isPinned ? ' active' : ''}`}
+            onClick={handleTogglePin}
+            aria-label={tab.isPinned ? 'Unpin tab' : 'Pin tab'}
+            aria-pressed={tab.isPinned}
+          >
+            <i
+              className={`codicon codicon-pin${tab.isPinned ? ' pinned' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+        </Tooltip>
+        <Tooltip content="Close tab">
+          <button
+            className="close-btn"
+            onClick={handleClose}
+            aria-label="Close tab"
+          >
+            <i className="codicon codicon-close" aria-hidden="true" />
+          </button>
+        </Tooltip>
       </div>
     </li>
   );

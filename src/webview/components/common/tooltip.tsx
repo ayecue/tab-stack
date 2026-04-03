@@ -1,105 +1,63 @@
-import React, {
-  cloneElement,
-  isValidElement,
-  useEffect,
-  useId,
-  useRef,
-  useState
-} from 'react';
-import { createPortal } from 'react-dom';
+import React, { cloneElement, isValidElement } from 'react';
+
+import { useTooltip } from '../../hooks/use-tooltip';
+import type { Placement } from '@floating-ui/react';
 
 interface TooltipProps {
   content: React.ReactNode;
   children: React.ReactNode;
   delay?: number;
+  placement?: Placement;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,
-  delay = 200
+  delay = 200,
+  placement = 'top'
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const tooltipId = useId();
+  const { triggerProps, renderTooltip } = useTooltip({
+    content,
+    delay,
+    placement
+  });
 
-  const showTooltip = (event: React.MouseEvent) => {
-    // Capture the target element immediately before the event is recycled
-    const target = event.currentTarget as HTMLElement;
-
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = window.setTimeout(() => {
-      if (target) {
-        const rect = target.getBoundingClientRect();
-        setPosition({
-          top: rect.top,
-          left: rect.left + rect.width / 2
-        });
-        setIsVisible(true);
-      }
-    }, delay);
-  };
-
-  const hideTooltip = () => {
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-    }
-    setIsVisible(false);
-    setPosition(null);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Clone the child element and add mouse event handlers
   const childElement = isValidElement(children)
     ? cloneElement(children as React.ReactElement<any>, {
-        'aria-describedby': isVisible ? tooltipId : undefined,
+        ref: triggerProps.ref,
+        'aria-describedby': triggerProps['aria-describedby'],
         onMouseEnter: (e: React.MouseEvent) => {
-          showTooltip(e);
+          triggerProps.onMouseEnter(e);
           const originalOnMouseEnter = (children as any)?.props?.onMouseEnter;
           if (originalOnMouseEnter) originalOnMouseEnter(e);
         },
         onMouseLeave: (e: React.MouseEvent) => {
-          hideTooltip();
+          triggerProps.onMouseLeave(e);
           const originalOnMouseLeave = (children as any)?.props?.onMouseLeave;
           if (originalOnMouseLeave) originalOnMouseLeave(e);
+        },
+        onMouseMove: (e: React.MouseEvent) => {
+          triggerProps.onMouseMove(e);
+          const originalOnMouseMove = (children as any)?.props?.onMouseMove;
+          if (originalOnMouseMove) originalOnMouseMove(e);
+        },
+        onFocus: (e: React.FocusEvent) => {
+          triggerProps.onFocus(e);
+          const originalOnFocus = (children as any)?.props?.onFocus;
+          if (originalOnFocus) originalOnFocus(e);
+        },
+        onBlur: (e: React.FocusEvent) => {
+          triggerProps.onBlur(e);
+          const originalOnBlur = (children as any)?.props?.onBlur;
+          if (originalOnBlur) originalOnBlur(e);
         }
       })
     : children;
 
-  const tooltipElement =
-    isVisible && position ? (
-      <div
-        id={tooltipId}
-        role="tooltip"
-        className="custom-tooltip"
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          position: 'fixed'
-        }}
-      >
-        <div className="custom-tooltip-content">{content}</div>
-      </div>
-    ) : null;
-
   return (
     <>
       {childElement}
-      {tooltipElement && createPortal(tooltipElement, document.body)}
+      {renderTooltip()}
     </>
   );
 };

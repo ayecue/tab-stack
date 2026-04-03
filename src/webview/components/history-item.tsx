@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { useTooltip } from '../hooks/use-tooltip';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
 import { Tooltip } from './common/tooltip';
 
@@ -41,20 +42,23 @@ export const HistoryItem: React.FC<HistoryItemProps> = ({
     [handleRestore]
   );
 
+  const { triggerProps, renderTooltip } = useTooltip({
+    content: (
+      <CollectionTooltipContent
+        tabCount={tabCount}
+        columnCount={columnCount}
+      />
+    )
+  });
+
   return (
-    <Tooltip
-      content={
-        <CollectionTooltipContent
-          tabCount={tabCount}
-          columnCount={columnCount}
-        />
-      }
-    >
+    <>
       <li
         className="section-item"
         tabIndex={0}
         onClick={handleRestore}
         onKeyDown={handleKeyDown}
+        {...triggerProps}
       >
         <div className="item-row">
           <div className="item-primary">
@@ -66,17 +70,19 @@ export const HistoryItem: React.FC<HistoryItemProps> = ({
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              className="danger"
-              onClick={handleDelete}
-              title="Delete snapshot"
-            >
-              <i className="codicon codicon-trash" aria-hidden="true" />
-            </button>
+            <Tooltip content="Delete snapshot">
+              <button
+                type="button"
+                className="danger"
+                onClick={handleDelete}
+              >
+                <i className="codicon codicon-trash" aria-hidden="true" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </li>
-    </Tooltip>
+      {renderTooltip()}
+    </>
   );
 };

@@ -4,6 +4,8 @@ import React, {
   useMemo
 } from 'react';
 
+import { Tooltip } from './common/tooltip';
+
 import { useCollectionCreate } from '../hooks/use-collection-create';
 import { useCollectionRename } from '../hooks/use-collection-rename';
 import { useCollectionSearch } from '../hooks/use-collection-search';
@@ -86,45 +88,52 @@ export const GroupsCollection: React.FC = () => {
               aria-label="Search saved groups"
             />
             {searchTerm && (
-              <button
-                type="button"
-                className="clear-search"
-                onClick={clearSearch}
-                aria-label="Clear group search"
-              >
-                <i className="codicon codicon-close" aria-hidden="true" />
-              </button>
+              <Tooltip content="Clear group search">
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={clearSearch}
+                  aria-label="Clear group search"
+                >
+                  <i className="codicon codicon-close" aria-hidden="true" />
+                </button>
+              </Tooltip>
             )}
           </div>
           <div className="section-toolbar-actions">
             {state.selectedGroup && (
+              <Tooltip content="Clear selection">
+                <button
+                  type="button"
+                  className="section-action secondary"
+                  onClick={() => messagingService.switchToGroup(null)}
+                  aria-label="Clear selection"
+                >
+                  <i className="codicon codicon-close" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
+            <Tooltip content="Import group">
               <button
                 type="button"
-                className="section-action secondary"
-                onClick={() => messagingService.switchToGroup(null)}
-                aria-label="Clear selection"
+                className="section-action"
+                onClick={() => messagingService.importGroup()}
+                aria-label="Import group from file"
               >
-                <i className="codicon codicon-close" aria-hidden="true" />
+                <i className="codicon codicon-cloud-download" aria-hidden="true" />
               </button>
-            )}
-            <button
-              type="button"
-              className="section-action"
-              onClick={() => messagingService.importGroup()}
-              aria-label="Import group from file"
-              title="Import group"
-            >
-              <i className="codicon codicon-cloud-download" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="section-action"
-              onClick={create.startCreate}
-              disabled={create.isCreating}
-              aria-label="Create new group"
-            >
-              <i className="codicon codicon-add" aria-hidden="true" />
-            </button>
+            </Tooltip>
+            <Tooltip content="Create new group">
+              <button
+                type="button"
+                className="section-action"
+                onClick={create.startCreate}
+                disabled={create.isCreating}
+                aria-label="Create new group"
+              >
+                <i className="codicon codicon-add" aria-hidden="true" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>

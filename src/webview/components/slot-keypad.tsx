@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Tooltip } from './common/tooltip';
+
 interface SlotKeypadProps {
   assignedSlot: string | undefined;
   occupiedSlots: Record<string, string>;
@@ -110,22 +112,23 @@ export const SlotKeypad: React.FC<SlotKeypadProps> = ({
       className={`slot-keypad-container${isOpen ? ' open' : ''}`}
       ref={containerRef}
     >
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`slot-keypad-trigger${assignedSlot ? ' has-slot' : ''}`}
-        onClick={handleToggle}
-        disabled={disabled}
-        title={assignedSlot ? `Slot ${assignedSlot}` : 'Assign slot'}
-        aria-expanded={isOpen}
-        aria-haspopup="grid"
-      >
+      <Tooltip content={assignedSlot ? `Slot ${assignedSlot}` : 'Assign slot'}>
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`slot-keypad-trigger${assignedSlot ? ' has-slot' : ''}`}
+          onClick={handleToggle}
+          disabled={disabled}
+          aria-expanded={isOpen}
+          aria-haspopup="grid"
+        >
         {assignedSlot ? (
           <span className="slot-keypad-badge">{assignedSlot}</span>
         ) : (
           <i className="codicon codicon-bookmark" aria-hidden="true" />
         )}
-      </button>
+        </button>
+      </Tooltip>
 
       {isOpen && (
         <div
@@ -140,25 +143,28 @@ export const SlotKeypad: React.FC<SlotKeypadProps> = ({
             {SLOTS.map((slot) => {
               const status = getSlotStatus(slot);
               return (
-                <button
-                  key={slot}
-                  type="button"
-                  className={`slot-key ${status}`}
-                  onClick={(event) => handleSlotClick(event, slot)}
-                  title={
+                <Tooltip
+                  content={
                     status === 'assigned'
-                      ? `Slot ${slot} (current – click to unassign)`
+                      ? `Slot ${slot} (current \u2013 click to unassign)`
                       : status === 'occupied'
                         ? `Slot ${slot} (in use)`
                         : `Assign slot ${slot}`
                   }
-                  aria-label={`Slot ${slot}`}
                 >
+                  <button
+                    key={slot}
+                    type="button"
+                    className={`slot-key ${status}`}
+                    onClick={(event) => handleSlotClick(event, slot)}
+                    aria-label={`Slot ${slot}`}
+                  >
                   <span className="slot-key-number">{slot}</span>
                   {status === 'occupied' && (
                     <span className="slot-key-dot" aria-hidden="true" />
                   )}
                 </button>
+                </Tooltip>
               );
             })}
           </div>

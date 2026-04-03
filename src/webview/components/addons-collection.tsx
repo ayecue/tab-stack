@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 
 import { useCollectionCreate } from '../hooks/use-collection-create';
+import { Tooltip } from './common/tooltip';
 import { useCollectionRename } from '../hooks/use-collection-rename';
 import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
@@ -52,27 +53,30 @@ export const AddonsCollection: React.FC = () => {
               aria-label="Search saved add-ons"
             />
             {searchTerm && (
-              <button
-                type="button"
-                className="clear-search"
-                onClick={clearSearch}
-                aria-label="Clear add-ons search"
-              >
-                <i className="codicon codicon-close" aria-hidden="true" />
-              </button>
+              <Tooltip content="Clear add-ons search">
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={clearSearch}
+                  aria-label="Clear add-ons search"
+                >
+                  <i className="codicon codicon-close" aria-hidden="true" />
+                </button>
+              </Tooltip>
             )}
           </div>
           <div className="section-toolbar-actions">
-            <button
-              type="button"
-              className="section-action"
-              onClick={create.startCreate}
-              disabled={create.isCreating}
-              aria-label="Create new add-on from current tabs"
-              title="Create new add-on from current tabs"
-            >
-              <i className="codicon codicon-add" aria-hidden="true" />
-            </button>
+            <Tooltip content="Create new add-on from current tabs">
+              <button
+                type="button"
+                className="section-action"
+                onClick={create.startCreate}
+                disabled={create.isCreating}
+                aria-label="Create new add-on from current tabs"
+              >
+                <i className="codicon codicon-add" aria-hidden="true" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>

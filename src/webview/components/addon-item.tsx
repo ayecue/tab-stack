@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 
 import { useTabContext } from '../hooks/use-tab-context';
+import { useTooltip } from '../hooks/use-tooltip';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
 import { Tooltip } from './common/tooltip';
 
@@ -77,20 +78,23 @@ export const AddonItem: React.FC<AddonItemProps> = ({
     [isEditing, messagingService, addonId]
   );
 
+  const { triggerProps, renderTooltip } = useTooltip({
+    content: (
+      <CollectionTooltipContent
+        tabCount={tabCount}
+        columnCount={columnCount}
+      />
+    )
+  });
+
   return (
-    <Tooltip
-      content={
-        <CollectionTooltipContent
-          tabCount={tabCount}
-          columnCount={columnCount}
-        />
-      }
-    >
+    <>
       <li
         className={`section-item${isEditing ? ' editing' : ''}`}
         tabIndex={0}
         onClick={handleItemClick}
         onKeyDown={handleItemKeyDown}
+        {...triggerProps}
       >
         <div className="item-row">
           <div className="item-primary">
@@ -112,30 +116,34 @@ export const AddonItem: React.FC<AddonItemProps> = ({
                   disabled={isRenaming}
                 />
                 <div className="inline-form-actions">
-                  <button
-                    type="button"
-                    className="action-save"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSubmitRename(addonId, name);
-                    }}
-                    disabled={isRenaming}
-                    aria-label="Save add-on name"
-                  >
-                    <i className="codicon codicon-check" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-cancel"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onCancelRename();
-                    }}
-                    disabled={isRenaming}
-                    aria-label="Cancel rename"
-                  >
-                    <i className="codicon codicon-close" aria-hidden="true" />
-                  </button>
+                  <Tooltip content="Save add-on name">
+                    <button
+                      type="button"
+                      className="action-save"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onSubmitRename(addonId, name);
+                      }}
+                      disabled={isRenaming}
+                      aria-label="Save add-on name"
+                    >
+                      <i className="codicon codicon-check" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Cancel rename">
+                    <button
+                      type="button"
+                      className="action-cancel"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onCancelRename();
+                      }}
+                      disabled={isRenaming}
+                      aria-label="Cancel rename"
+                    >
+                      <i className="codicon codicon-close" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
                 </div>
               </>
             ) : (
@@ -153,39 +161,43 @@ export const AddonItem: React.FC<AddonItemProps> = ({
             onKeyDown={(event) => event.stopPropagation()}
           >
             {!isEditing && (
+              <Tooltip content="Rename add-on">
+                <button
+                  type="button"
+                  className="neutral"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onStartRename(addonId, name);
+                  }}
+                >
+                  <i className="codicon codicon-edit" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
+            <Tooltip content="Apply add-on">
               <button
                 type="button"
                 className="neutral"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onStartRename(addonId, name);
-                }}
-                title="Rename add-on"
+                onClick={handleApply}
+                disabled={isEditing}
               >
-                <i className="codicon codicon-edit" aria-hidden="true" />
+                <i className="codicon codicon-arrow-right" aria-hidden="true" />
               </button>
-            )}
-            <button
-              type="button"
-              className="neutral"
-              onClick={handleApply}
-              disabled={isEditing}
-              title="Apply add-on"
-            >
-              <i className="codicon codicon-arrow-right" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="danger"
-              onClick={handleDelete}
-              disabled={isEditing}
-              title="Delete add-on"
-            >
-              <i className="codicon codicon-trash" aria-hidden="true" />
-            </button>
+            </Tooltip>
+            <Tooltip content="Delete add-on">
+              <button
+                type="button"
+                className="danger"
+                onClick={handleDelete}
+                disabled={isEditing}
+              >
+                <i className="codicon codicon-trash" aria-hidden="true" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       </li>
-    </Tooltip>
+      {renderTooltip()}
+    </>
   );
 };

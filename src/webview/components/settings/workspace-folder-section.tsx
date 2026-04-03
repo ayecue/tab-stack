@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 
 import { useTabContext } from '../../hooks/use-tab-context';
+import { Tooltip } from '../common/tooltip';
 
 export const WorkspaceFolderSection: React.FC = () => {
   const { state, messagingService } = useTabContext();
@@ -46,15 +47,16 @@ export const WorkspaceFolderSection: React.FC = () => {
             </select>
 
             {state.masterWorkspaceFolder && (
-              <button
-                className="button secondary small"
-                onClick={handleClear}
-                title="Clear and use default folder"
-                type="button"
-              >
-                <i className="codicon codicon-close" aria-hidden="true" />
-                Clear Selection
-              </button>
+              <Tooltip content="Clear and use default folder">
+                <button
+                  className="button secondary small"
+                  onClick={handleClear}
+                  type="button"
+                >
+                  <i className="codicon codicon-close" aria-hidden="true" />
+                  Clear Selection
+                </button>
+              </Tooltip>
             )}
           </div>
 

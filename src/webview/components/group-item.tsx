@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
+import { useTooltip } from '../hooks/use-tooltip';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
 import { Tooltip } from './common/tooltip';
 import { SlotKeypad } from './slot-keypad';
@@ -104,20 +105,23 @@ export const GroupItem: React.FC<GroupItemProps> = ({
     [isSelected, groupId, messagingService]
   );
 
+  const { triggerProps, renderTooltip } = useTooltip({
+    content: (
+      <CollectionTooltipContent
+        tabCount={tabCount}
+        columnCount={columnCount}
+      />
+    )
+  });
+
   return (
-    <Tooltip
-      content={
-        <CollectionTooltipContent
-          tabCount={tabCount}
-          columnCount={columnCount}
-        />
-      }
-    >
+    <>
       <li
         className={`section-item${isSelected ? ' active' : ''}${isEditing ? ' editing' : ''}`}
         tabIndex={0}
         onClick={handleItemClick}
         onKeyDown={handleItemKeyDown}
+        {...triggerProps}
       >
         <div className="item-row">
           <div className="item-primary">
@@ -139,30 +143,34 @@ export const GroupItem: React.FC<GroupItemProps> = ({
                   disabled={isRenaming}
                 />
                 <div className="inline-form-actions">
-                  <button
-                    type="button"
-                    className="action-save"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSubmitRename(groupId, name);
-                    }}
-                    disabled={isRenaming}
-                    aria-label="Save group name"
-                  >
-                    <i className="codicon codicon-check" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-cancel"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onCancelRename();
-                    }}
-                    disabled={isRenaming}
-                    aria-label="Cancel rename"
-                  >
-                    <i className="codicon codicon-close" aria-hidden="true" />
-                  </button>
+                  <Tooltip content="Save group name">
+                    <button
+                      type="button"
+                      className="action-save"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onSubmitRename(groupId, name);
+                      }}
+                      disabled={isRenaming}
+                      aria-label="Save group name"
+                    >
+                      <i className="codicon codicon-check" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Cancel rename">
+                    <button
+                      type="button"
+                      className="action-cancel"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onCancelRename();
+                      }}
+                      disabled={isRenaming}
+                      aria-label="Cancel rename"
+                    >
+                      <i className="codicon codicon-close" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
                 </div>
               </>
             ) : (
@@ -188,46 +196,50 @@ export const GroupItem: React.FC<GroupItemProps> = ({
               onSlotChange={handleSlotChange}
             />
             {!isEditing && (
-              <button
-                type="button"
-                className="neutral"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  messagingService.exportGroup(groupId);
-                }}
-                title="Export group"
-              >
-                <i className="codicon codicon-cloud-upload" aria-hidden="true" />
-              </button>
+              <Tooltip content="Export group">
+                <button
+                  type="button"
+                  className="neutral"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    messagingService.exportGroup(groupId);
+                  }}
+                >
+                  <i className="codicon codicon-cloud-upload" aria-hidden="true" />
+                </button>
+              </Tooltip>
             )}
             {!isEditing && (
+              <Tooltip content="Rename group">
+                <button
+                  type="button"
+                  className="neutral"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onStartRename(groupId, name);
+                  }}
+                >
+                  <i className="codicon codicon-edit" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
+            <Tooltip content="Delete group">
               <button
                 type="button"
-                className="neutral"
+                className="danger"
                 onClick={(event) => {
                   event.stopPropagation();
-                  onStartRename(groupId, name);
+                  messagingService.deleteGroup(groupId);
                 }}
-                title="Rename group"
+                disabled={isEditing}
               >
-                <i className="codicon codicon-edit" aria-hidden="true" />
+                <i className="codicon codicon-trash" aria-hidden="true" />
               </button>
-            )}
-            <button
-              type="button"
-              className="danger"
-              onClick={(event) => {
-                event.stopPropagation();
-                messagingService.deleteGroup(groupId);
-              }}
-              disabled={isEditing}
-              title="Delete group"
-            >
-              <i className="codicon codicon-trash" aria-hidden="true" />
-            </button>
+            </Tooltip>
           </div>
         </div>
       </li>
-    </Tooltip>
+      {renderTooltip()}
+    </>
   );
 };

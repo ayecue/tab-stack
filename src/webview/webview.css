@@ -1647,22 +1647,18 @@ body {
 
 /* Custom Tooltip */
 .custom-tooltip {
-  position: fixed;
   z-index: 10000;
   pointer-events: none;
-  transform: translate(-50%, -100%);
-  margin-top: -12px;
   animation: tooltipFadeIn 0.2s ease-out;
+  width: max-content;
 }
 
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -95%);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -100%);
   }
 }
 
@@ -1670,7 +1666,7 @@ body {
   background: var(--vscode-editorHoverWidget-background);
   border: 1px solid var(--vscode-editorHoverWidget-border);
   border-radius: 5px;
-  padding: 10px 12px;
+  padding: 4px 8px;
   font-size: 12px;
   line-height: 1.6;
   color: var(--vscode-editorHoverWidget-foreground);
@@ -1679,7 +1675,34 @@ body {
     0 0 0 1px rgba(0, 0, 0, 0.1);
   white-space: pre-line;
   max-width: 350px;
-  min-width: 200px;
+}
+
+.custom-tooltip-arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--vscode-editorHoverWidget-background);
+  transform: rotate(45deg);
+}
+
+.custom-tooltip-arrow--top {
+  border-bottom: 1px solid var(--vscode-editorHoverWidget-border);
+  border-right: 1px solid var(--vscode-editorHoverWidget-border);
+}
+
+.custom-tooltip-arrow--bottom {
+  border-top: 1px solid var(--vscode-editorHoverWidget-border);
+  border-left: 1px solid var(--vscode-editorHoverWidget-border);
+}
+
+.custom-tooltip-arrow--left {
+  border-top: 1px solid var(--vscode-editorHoverWidget-border);
+  border-right: 1px solid var(--vscode-editorHoverWidget-border);
+}
+
+.custom-tooltip-arrow--right {
+  border-bottom: 1px solid var(--vscode-editorHoverWidget-border);
+  border-left: 1px solid var(--vscode-editorHoverWidget-border);
 }
 
 .custom-tooltip-content strong {

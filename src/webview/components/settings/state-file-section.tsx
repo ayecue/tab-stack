@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { useTabContext } from '../../hooks/use-tab-context';
+import { Tooltip } from '../common/tooltip';
 
 export const StateFileSection: React.FC = () => {
   const { messagingService } = useTabContext();
@@ -15,25 +16,27 @@ export const StateFileSection: React.FC = () => {
         Import or export the full tab manager state as a JSON file.
       </p>
       <div className="form-row button-row">
-        <button
-          className="button secondary"
-          type="button"
-          onClick={() => messagingService.exportStateFile()}
-          title="Export current state to a JSON file"
-        >
-          <i className="codicon codicon-export" aria-hidden="true" />
-          Export state file
-        </button>
+        <Tooltip content="Export current state to a JSON file">
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => messagingService.exportStateFile()}
+          >
+            <i className="codicon codicon-export" aria-hidden="true" />
+            Export state file
+          </button>
+        </Tooltip>
 
-        <button
-          className="button secondary"
-          type="button"
-          onClick={() => messagingService.importStateFile()}
-          title="Import state from a JSON file"
-        >
-          <i className="codicon codicon-import" aria-hidden="true" />
-          Import state file
-        </button>
+        <Tooltip content="Import state from a JSON file">
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => messagingService.importStateFile()}
+          >
+            <i className="codicon codicon-import" aria-hidden="true" />
+            Import state file
+          </button>
+        </Tooltip>
       </div>
     </div>
   );
