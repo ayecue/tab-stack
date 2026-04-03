@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 03-04-2026
+
+### Added
+
+- **Terminal support**: Terminal tabs can now be saved and restored
+- **Group import/export**: Save groups as `.tabstack` files and import them across workspaces or machines
+- **URI handler**: Trigger Tab Stack commands from outside VS Code via `vscode://ayecue.tab-stack/<path>` URIs (e.g. `/switch-group`, `/snapshot`, `/quick-slot`, `/import-group`, `/export-group`)
+- **Tab recovery mappings**: New `tabStack.tabRecoveryMappings` setting to configure how non-recoverable tab types (e.g. Settings, Extensions) are restored, with support for command arguments and `{{property}}` interpolation
+- **Tab kind colors**: New `tabStack.appearance.tabKindColors` setting to customize colors for tab kind labels and icons, with optional regex pattern matching against tab labels
+- **Quick slot keypad**: Visual keypad UI for assigning groups to quick slots 1–9
+- **Tooltips**: New tooltip system with consistent positioning and arrow indicators across all UI elements
+
+### Improved
+
+- **File icons**: Switched to VS Code's native icon theme for consistent file type icons
+- **Settings panel**: Uses full available width; split into dedicated sections for better readability
+- **UI performance**: Optimized component architecture with better separation of concerns
+- **Tab tracking**: More reliable tab restoration with improved recovery and group handling
+- **Word wrapping**: Fixed layout issues in the sidebar when the panel is narrow
+
 ## [1.2.7] - 16-11-2025
 
 ### Fix
