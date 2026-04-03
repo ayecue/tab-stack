@@ -400,7 +400,23 @@
             },
             {
               "kind": "unknown",
-              "color": "#ff6161"
+              "pattern": "^Settings$",
+              "color": "#8F38E5"
+            },
+            {
+              "kind": "unknown",
+              "pattern": "^Extensions$",
+              "color": "#c586c0"
+            },
+            {
+              "kind": "unknown",
+              "pattern": "^Welcome$",
+              "color": "#F5276C"
+            },
+            {
+              "kind": "tabInputWebview",
+              "pattern": "^Release Notes: [0-9.]+$",
+              "color": "#82E8E8"
             }
           ],
           "description": "Color rules for tab kind labels and icons. Each rule matches by tab kind and optionally by a label regex pattern. The first matching rule wins.",

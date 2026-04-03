@@ -20,6 +20,8 @@ function getCompiledRegex(rule: TabKindColorRule): RegExp | null {
   return cached;
 }
 
+const DEFAULT_COLOR: string = "#cccccc"; // fallback color if no rules match and we want to ensure a color is returned
+
 /**
  * Resolves the color for a tab by finding the first matching rule.
  *
@@ -33,10 +35,12 @@ export function resolveTabKindColor(
   rules: TabKindColorRule[],
   kind: string,
   label: string
-): string | undefined {
+): string {
   const kindLower = kind.toLowerCase();
 
-  for (const rule of rules) {
+  for (let i = rules.length - 1; i >= 0; i--) {
+    console.log(`[resolveTabKindColor] Checking rule ${i}: kind="${rules[i].kind}", pattern="${rules[i].pattern}", color="${rules[i].color}" against tab kind="${kind}", label="${label}"`);
+    const rule = rules[i];
     if (rule.kind.toLowerCase() !== kindLower) {
       continue;
     }
@@ -51,5 +55,5 @@ export function resolveTabKindColor(
     return rule.color;
   }
 
-  return undefined;
+  return DEFAULT_COLOR;
 }
