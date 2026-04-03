@@ -39,10 +39,6 @@ export const GroupsCollection: React.FC = () => {
 
   const { searchTerm, setSearchTerm, filteredItems: filteredGroups, clearSearch } =
     useCollectionSearch({ items: state.groups, filterFn: filterGroup });
-  const quickSlotOptions = useMemo(
-    () => Array.from({ length: 9 }, (_, index) => (index + 1).toString()),
-    []
-  );
 
   const slotByGroup = useMemo(() => {
     const mapping: Record<string, string> = {};
@@ -52,6 +48,16 @@ export const GroupsCollection: React.FC = () => {
         return;
       }
       mapping[groupId] = slotIndex.toString();
+    });
+    return mapping;
+  }, [state.quickSlots]);
+
+  const occupiedSlots = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    Object.entries(state.quickSlots ?? {}).forEach(([slot, groupId]) => {
+      if (groupId) {
+        mapping[slot] = groupId;
+      }
     });
     return mapping;
   }, [state.quickSlots]);
@@ -182,7 +188,7 @@ export const GroupsCollection: React.FC = () => {
                 index={index}
                 isSelected={isSelected}
                 assignedSlot={assignedSlot}
-                quickSlotOptions={quickSlotOptions}
+                occupiedSlots={occupiedSlots}
                 onStartRename={(id, currentName) => {
                   create.cancelCreate();
                   rename.startRename(id, currentName);

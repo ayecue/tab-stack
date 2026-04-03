@@ -754,7 +754,7 @@ body {
   border: 1px solid var(--vscode-panel-border);
   border-radius: 4px;
   background: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.03));
-  overflow: hidden;
+  overflow: visible;
 }
 
 .collections-panel-toggle {
@@ -1091,33 +1091,170 @@ body {
   padding: 4px 0;
 }
 
-.slot-selector {
+.slot-keypad-container {
+  position: relative;
   display: inline-flex;
   align-items: center;
 }
 
-.slot-selector select {
-  height: 20px;
+.slot-keypad-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border-radius: 3px;
   border: 1px solid var(--vscode-input-border, transparent);
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground, var(--vscode-foreground));
-  font-size: 11px;
-  padding: 0 6px;
-  min-width: 70px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--vscode-descriptionForeground);
   cursor: pointer;
+  font-size: 12px;
+  padding: 0;
 }
 
-.slot-selector select:hover {
+.slot-keypad-trigger:hover:not(:disabled) {
   border-color: var(--vscode-focusBorder);
+  color: var(--vscode-foreground);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.slot-selector select:focus {
-  outline: 1px solid var(--vscode-focusBorder);
-  outline-offset: 0;
+.slot-keypad-trigger:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
-.item-actions button {
+.slot-keypad-trigger.has-slot {
+  border-color: var(--vscode-focusBorder);
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.slot-keypad-badge {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.slot-keypad-popover {
+  position: fixed;
+  z-index: 100;
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  animation: keypadIn 0.1s ease;
+}
+
+@keyframes keypadIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.slot-keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.slot-key {
+  position: relative;
+  width: 28px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid var(--vscode-input-border, rgba(255, 255, 255, 0.08));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 0;
+  transition: background 80ms ease, border-color 80ms ease, transform 60ms ease;
+}
+
+.slot-key:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--vscode-focusBorder);
+  transform: translateY(-1px);
+}
+
+.slot-key:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.slot-key.assigned {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+  font-weight: 700;
+}
+
+.slot-key.assigned:hover {
+  opacity: 0.9;
+}
+
+.slot-key.occupied {
+  border-color: rgba(255, 204, 0, 0.35);
+  background: rgba(255, 204, 0, 0.08);
+}
+
+.slot-key.occupied:hover {
+  border-color: rgba(255, 204, 0, 0.6);
+  background: rgba(255, 204, 0, 0.15);
+}
+
+.slot-key-number {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.slot-key-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--vscode-editorWarning-foreground, #ffcc00);
+}
+
+.slot-keypad-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.slot-keypad-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--vscode-foreground);
+}
+
+.slot-keypad-clear i {
+  font-size: 10px;
+}
+
+.item-actions > button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1130,12 +1267,12 @@ body {
   color: var(--vscode-descriptionForeground);
 }
 
-.item-actions button:hover:not(:disabled) {
+.item-actions > button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
   color: var(--vscode-foreground);
 }
 
-.item-actions button:disabled {
+.item-actions > button:disabled {
   opacity: 0.5;
   cursor: default;
 }

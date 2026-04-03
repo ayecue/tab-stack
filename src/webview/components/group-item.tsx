@@ -4,6 +4,7 @@ import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
 import { Tooltip } from './common/tooltip';
+import { SlotKeypad } from './slot-keypad';
 
 interface GroupItemProps {
   groupId: string;
@@ -11,7 +12,7 @@ interface GroupItemProps {
   index: number;
   isSelected: boolean;
   assignedSlot: string | undefined;
-  quickSlotOptions: string[];
+  occupiedSlots: Record<string, string>;
   onStartRename: (groupId: string, currentName: string) => void;
   isEditing: boolean;
   onCancelRename: () => void;
@@ -37,7 +38,7 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   index,
   isSelected,
   assignedSlot,
-  quickSlotOptions,
+  occupiedSlots,
   onStartRename,
   isEditing,
   onCancelRename,
@@ -53,20 +54,17 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   columnCount
 }) => {
   const { messagingService } = useTabContext();
-  const slotControlId = `slot-${index}`;
 
   const handleSlotChange = useCallback(
-    (rawValue: string) => {
-      const value = rawValue.trim();
-
-      if (!value) {
+    (rawValue: string | null) => {
+      if (rawValue === null) {
         if (assignedSlot) {
-          messagingService.assignQuickSlot(null, groupId);
+          messagingService.assignQuickSlot(assignedSlot as QuickSlotIndex, null);
         }
         return;
       }
 
-      const nextSlotNumber = Number(value);
+      const nextSlotNumber = Number(rawValue.trim());
 
       if (
         !Number.isInteger(nextSlotNumber) ||
@@ -182,25 +180,13 @@ export const GroupItem: React.FC<GroupItemProps> = ({
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            <div className="slot-selector">
-              <select
-                id={slotControlId}
-                value={assignedSlot ? assignedSlot.toString() : ''}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) => {
-                  event.stopPropagation();
-                  handleSlotChange(event.target.value);
-                }}
-                disabled={isEditing}
-              >
-                <option value="">No slot</option>
-                {quickSlotOptions.map((slot) => (
-                  <option key={slot} value={slot}>
-                    Slot {slot}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SlotKeypad
+              assignedSlot={assignedSlot}
+              occupiedSlots={occupiedSlots}
+              groupId={groupId}
+              disabled={isEditing}
+              onSlotChange={handleSlotChange}
+            />
             {!isEditing && (
               <button
                 type="button"

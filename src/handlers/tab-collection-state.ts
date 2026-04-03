@@ -206,9 +206,23 @@ export class TabCollectionStateHandler implements Disposable {
     }
 
     const snapshot = this._tabCollectionStateStore.getSnapshot();
+
     if (!snapshot.context.groups[groupId]) {
       return;
     }
+
+    if (snapshot.context.quickSlots[slot] === groupId) {
+      return;
+    }
+
+    Object.entries(snapshot.context.quickSlots).forEach(([assignedSlot, assignedGroupId]) => {
+      if (assignedGroupId !== groupId) return;
+
+      this._tabCollectionStateStore.send({
+        type: 'CLEAR_QUICK_SLOT',
+        slot: assignedSlot as QuickSlotIndex
+      });
+    });
 
     this._tabCollectionStateStore.send({
       type: 'SET_QUICK_SLOT',
