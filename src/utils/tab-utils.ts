@@ -86,9 +86,8 @@ export function isTabInfoEqual(tabA: TabInfo, tabB: TabInfo): boolean {
       );
     }
     case TabKind.TabInputTerminal:
-      return true;
     default:
-      return false;
+      return true;
   }
 }
 
