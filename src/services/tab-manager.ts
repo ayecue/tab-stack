@@ -23,7 +23,10 @@ import { GitIntegrationMode } from '../types/config';
 import {
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionTabStateSyncMessage,
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage,
+  CollectionTabSummary
 } from '../types/messages';
 import {
   createEmptyStateContainer,
@@ -35,7 +38,6 @@ import {
   TabStackGroupFile,
   TabStateFileContent
 } from '../types/tab-manager';
-import { TabInfoText, TabKind } from '../types/tabs';
 import {
   closeAllEditors,
   focusTabInGroup,
@@ -80,8 +82,16 @@ export class TabManagerService implements ITabManagerService {
 
   private _renderCompleteEmitter: EventEmitter<void>;
 
-  private _syncViewEmitter: EventEmitter<
-    Omit<ExtensionTabsSyncMessage, 'type'>
+  private _tabStateSyncEmitter: EventEmitter<
+    Omit<ExtensionTabStateSyncMessage, 'type'>
+  >;
+
+  private _collectionsSyncEmitter: EventEmitter<
+    Omit<ExtensionCollectionsSyncMessage, 'type'>
+  >;
+
+  private _configSyncEmitter: EventEmitter<
+    Omit<ExtensionConfigSyncMessage, 'type'>
   >;
 
   private _notifyViewEmitter: EventEmitter<
@@ -109,8 +119,14 @@ export class TabManagerService implements ITabManagerService {
     this._configService = configService;
     this._gitService = gitService;
     this._tabRecoveryService = tabRecoveryService;
-    this._syncViewEmitter = new EventEmitter<
-      Omit<ExtensionTabsSyncMessage, 'type'>
+    this._tabStateSyncEmitter = new EventEmitter<
+      Omit<ExtensionTabStateSyncMessage, 'type'>
+    >();
+    this._collectionsSyncEmitter = new EventEmitter<
+      Omit<ExtensionCollectionsSyncMessage, 'type'>
+    >();
+    this._configSyncEmitter = new EventEmitter<
+      Omit<ExtensionConfigSyncMessage, 'type'>
     >();
     this._notifyViewEmitter = new EventEmitter<
       Omit<ExtensionNotificationMessage, 'type'>
@@ -138,8 +154,16 @@ export class TabManagerService implements ITabManagerService {
     };
   }
 
-  get onDidSyncTabs() {
-    return this._syncViewEmitter.event;
+  get onDidSyncTabState() {
+    return this._tabStateSyncEmitter.event;
+  }
+
+  get onDidSyncCollections() {
+    return this._collectionsSyncEmitter.event;
+  }
+
+  get onDidSyncConfig() {
+    return this._configSyncEmitter.event;
   }
 
   get onDidNotify() {
@@ -230,17 +254,19 @@ export class TabManagerService implements ITabManagerService {
         }
 
         void this.save();
-        this.triggerSync();
+        this.triggerTabStateSync();
       }
     );
 
     this._collectionHandler.onDidChangeState(() => {
       void this.save();
-      this.triggerSync();
+      this.triggerCollectionsSync();
     });
 
     void this.save();
-    this.triggerSync();
+    this.triggerTabStateSync();
+    this.triggerCollectionsSync();
+    this.triggerConfigSync();
   }
 
   private async save(): Promise<void> {
@@ -623,7 +649,9 @@ export class TabManagerService implements ITabManagerService {
       return;
     }
 
-    this.triggerSync();
+    this.triggerTabStateSync();
+    this.triggerCollectionsSync();
+    this.triggerConfigSync();
   }
 
   async exportGroup(groupId: string, exportUri: string): Promise<void> {
@@ -721,106 +749,141 @@ export class TabManagerService implements ITabManagerService {
     );
   }
 
-  triggerSync() {
+  triggerTabStateSync() {
     if (
-      !this._collectionHandler ||
       !this._stateContainerHandler ||
-      !this._activeStateHandler
+      !this._collectionHandler
     )
       return;
     if (this._stateContainerHandler.currentStateContainer == null) return;
 
     const groups = this._collectionHandler.groups;
-    const history = this._collectionHandler.history;
-    const addons = this._collectionHandler.addons;
-    const quickSlots = this._collectionHandler.quickSlots;
-    const groupValues = Object.values(groups);
 
-    groupValues.sort((a, b) => {
-      const timeA = a.lastSelectedAt || 0;
-      const timeB = b.lastSelectedAt || 0;
-      return timeB - timeA;
-    });
-
-    const historyValues = Object.values(history);
-    const addonValues = Object.values(addons);
-
-    addonValues.sort((a, b) => {
-      const timeA = a.createdAt || 0;
-      const timeB = b.createdAt || 0;
-      return timeB - timeA;
-    });
-
-    historyValues.sort((a, b) => {
-      const timeA = a.createdAt || 0;
-      const timeB = b.createdAt || 0;
-      return timeB - timeA;
-    });
-
-    const masterWorkspaceFolder =
-      this._configService.getMasterWorkspaceFolder();
-    const gitIntegration = this._configService.getGitIntegrationConfig();
-    const availableWorkspaceFolders = this._configService
-      .getAvailableWorkspaceFolders()
-      .map((folder) => ({
-        name: folder.name,
-        path: folder.uri.toString()
-      }));
-
-    this._syncViewEmitter.fire({
+    this._tabStateSyncEmitter.fire({
       tabState:
         this._stateContainerHandler.currentStateContainer.state.tabState,
-      histories: historyValues.map((entry) => {
-        const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
-        const tabCount = tabGroupsArray.reduce(
-          (sum, group) => sum + group.tabs.length,
-          0
-        );
-        return {
-          historyId: entry.id,
-          name: entry.name,
-          tabCount,
-          columnCount: tabGroupsArray.length
-        };
-      }),
-      groups: groupValues.map((group) => {
-        const tabGroupsArray = Object.values(group.state.tabState.tabGroups);
-        const tabCount = tabGroupsArray.reduce(
-          (sum, tabGroup) => sum + tabGroup.tabs.length,
-          0
-        );
-        return {
-          groupId: group.id,
-          name: group.name,
-          tabCount,
-          columnCount: tabGroupsArray.length
-        };
-      }),
-      addons: addonValues.map((addon) => {
-        const tabGroupsArray = Object.values(addon.state.tabState.tabGroups);
-        const tabCount = tabGroupsArray.reduce(
-          (sum, group) => sum + group.tabs.length,
-          0
-        );
-        return {
-          addonId: addon.id,
-          name: addon.name,
-          tabCount,
-          columnCount: tabGroupsArray.length
-        };
-      }),
       selectedGroup:
         this._stateContainerHandler.currentStateContainer.id in groups
           ? this._stateContainerHandler.currentStateContainer.id
           : null,
-      quickSlots,
-      masterWorkspaceFolder,
-      availableWorkspaceFolders,
-      gitIntegration,
+      rendering: this._rendering
+    });
+  }
+
+  triggerCollectionsSync() {
+    if (
+      !this._collectionHandler ||
+      !this._stateContainerHandler
+    )
+      return;
+
+    const groups = this._collectionHandler.groups;
+
+    this._collectionsSyncEmitter.fire({
+      groups: this.buildGroupSummaries(),
+      histories: this.buildHistorySummaries(),
+      addons: this.buildAddonSummaries(),
+      selectedGroup:
+        this._stateContainerHandler.currentStateContainer?.id in groups
+          ? this._stateContainerHandler.currentStateContainer?.id
+          : null,
+      quickSlots: this._collectionHandler.quickSlots
+    });
+  }
+
+  triggerConfigSync() {
+    if (!this._configService) return;
+
+    this._configSyncEmitter.fire({
+      masterWorkspaceFolder:
+        this._configService.getMasterWorkspaceFolder(),
+      availableWorkspaceFolders: this._configService
+        .getAvailableWorkspaceFolders()
+        .map((folder) => ({
+          name: folder.name,
+          path: folder.uri.toString()
+        })),
+      gitIntegration: this._configService.getGitIntegrationConfig(),
       historyMaxEntries: this._configService.getHistoryMaxEntries(),
       storageType: this._configService.getStorageType(),
-      tabKindColors: this._configService.getTabKindColors(),
-      rendering: this._rendering
+      tabKindColors: this._configService.getTabKindColors()
+    });
+  }
+
+  private buildTabSummaries(container: StateContainer): CollectionTabSummary[] {
+    const tabGroups = Object.values(container.state.tabState.tabGroups);
+
+    return tabGroups.reduce<CollectionTabSummary[]>((result, group) => {
+      const groupTabs = group.tabs.map((tab) => ({
+        label: tab.label,
+        kind: tab.kind,
+        uri: 'uri' in tab ? tab.uri : undefined
+      }));
+      result.push(...groupTabs);
+      return result;
+    }, []);
+  }
+
+  private buildGroupSummaries() {
+    const groups = this._collectionHandler!.groups;
+    const groupValues = Object.values(groups);
+
+    return groupValues.map((group) => {
+      const tabGroupsArray = Object.values(group.state.tabState.tabGroups);
+      const tabCount = tabGroupsArray.reduce(
+        (sum, tabGroup) => sum + tabGroup.tabs.length,
+        0
+      );
+      return {
+        groupId: group.id,
+        name: group.name,
+        tabCount,
+        columnCount: tabGroupsArray.length,
+        layout: group.state.layout,
+        tabs: this.buildTabSummaries(group)
+      };
+    });
+  }
+
+  private buildHistorySummaries() {
+    const history = this._collectionHandler!.history;
+    const historyValues = Object.values(history);
+
+    return historyValues.map((entry) => {
+      const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
+      const tabCount = tabGroupsArray.reduce(
+        (sum, group) => sum + group.tabs.length,
+        0
+      );
+      return {
+        historyId: entry.id,
+        name: entry.name,
+        tabCount,
+        columnCount: tabGroupsArray.length,
+        layout: entry.state.layout,
+        tabs: this.buildTabSummaries(entry)
+      };
+    });
+  }
+
+  private buildAddonSummaries() {
+    const addons = this._collectionHandler!.addons;
+    const addonValues = Object.values(addons);
+
+    return addonValues.map((addon) => {
+      const tabGroupsArray = Object.values(addon.state.tabState.tabGroups);
+      const tabCount = tabGroupsArray.reduce(
+        (sum, group) => sum + group.tabs.length,
+        0
+      );
+      return {
+        addonId: addon.id,
+        name: addon.name,
+        tabCount,
+        columnCount: tabGroupsArray.length,
+        layout: addon.state.layout,
+        tabs: this.buildTabSummaries(addon)
+      };
     });
   }
 
@@ -1115,7 +1178,9 @@ export class TabManagerService implements ITabManagerService {
   dispose() {
     this._disposables.forEach((d) => d.dispose());
     this._disposables = [];
-    this._syncViewEmitter.dispose();
+    this._tabStateSyncEmitter.dispose();
+    this._collectionsSyncEmitter.dispose();
+    this._configSyncEmitter.dispose();
     this._notifyViewEmitter.dispose();
     this._renderCompleteEmitter.dispose();
 

@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react';
 
+import { Layout } from '../../types/commands';
+import { CollectionTabSummary } from '../../types/messages';
 import { useTabContext } from '../hooks/use-tab-context';
 import { useTooltip } from '../hooks/use-tooltip';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
@@ -25,6 +27,8 @@ interface AddonItemProps {
   ) => void;
   tabCount: number;
   columnCount: number;
+  layout?: Layout;
+  tabs?: CollectionTabSummary[];
 }
 
 export const AddonItem: React.FC<AddonItemProps> = ({
@@ -42,7 +46,9 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   onSubmitRename,
   onRenameKeyDown,
   tabCount,
-  columnCount
+  columnCount,
+  layout,
+  tabs
 }) => {
   const { messagingService } = useTabContext();
 
@@ -83,6 +89,8 @@ export const AddonItem: React.FC<AddonItemProps> = ({
       <CollectionTooltipContent
         tabCount={tabCount}
         columnCount={columnCount}
+        layout={layout}
+        tabs={tabs}
       />
     )
   });

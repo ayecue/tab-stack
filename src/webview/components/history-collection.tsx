@@ -82,7 +82,7 @@ export const HistoryCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredHistory.map((history) => {
-            const { historyId, name, tabCount, columnCount } = history;
+            const { historyId, name, tabCount, columnCount, layout, tabs } = history;
             return (
               <HistoryItem
                 key={historyId}
@@ -90,6 +90,8 @@ export const HistoryCollection: React.FC = () => {
                 name={name}
                 tabCount={tabCount}
                 columnCount={columnCount}
+                layout={layout}
+                tabs={tabs}
               />
             );
           })}

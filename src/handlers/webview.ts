@@ -11,13 +11,17 @@ import {
 import {
   ExtensionMessageType,
   ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionTabStateSyncMessage,
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage
 } from '../types/messages';
 
 export class WebviewHandler implements Disposable {
   static readonly DEBOUNCE_DELAY = 10 as const;
 
-  sendSync: (payload: Omit<ExtensionTabsSyncMessage, 'type'>) => Promise<void>;
+  sendTabStateSync: (payload: Omit<ExtensionTabStateSyncMessage, 'type'>) => void;
+  sendCollectionsSync: (payload: Omit<ExtensionCollectionsSyncMessage, 'type'>) => void;
+  sendConfigSync: (payload: Omit<ExtensionConfigSyncMessage, 'type'>) => void;
 
   private _view: WebviewView;
   private _context: ExtensionContext;
@@ -27,8 +31,16 @@ export class WebviewHandler implements Disposable {
     this._view = view;
     this._context = context;
     this._messageEmitter = new EventEmitter<any>();
-    this.sendSync = debounce(
-      this._sendSync.bind(this),
+    this.sendTabStateSync = debounce(
+      this._sendTabStateSync.bind(this),
+      WebviewHandler.DEBOUNCE_DELAY
+    );
+    this.sendCollectionsSync = debounce(
+      this._sendCollectionsSync.bind(this),
+      WebviewHandler.DEBOUNCE_DELAY
+    );
+    this.sendConfigSync = debounce(
+      this._sendConfigSync.bind(this),
       WebviewHandler.DEBOUNCE_DELAY
     );
   }
@@ -85,15 +97,37 @@ export class WebviewHandler implements Disposable {
     } satisfies ExtensionNotificationMessage);
   }
 
-  private _sendSync(payload: Omit<ExtensionTabsSyncMessage, 'type'>) {
+  private _sendTabStateSync(payload: Omit<ExtensionTabStateSyncMessage, 'type'>) {
     if (!this._view) {
       return;
     }
 
     this._view.webview.postMessage({
-      type: ExtensionMessageType.Sync,
+      type: ExtensionMessageType.TabStateSync,
       ...payload
-    } satisfies ExtensionTabsSyncMessage);
+    } satisfies ExtensionTabStateSyncMessage);
+  }
+
+  private _sendCollectionsSync(payload: Omit<ExtensionCollectionsSyncMessage, 'type'>) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      type: ExtensionMessageType.CollectionsSync,
+      ...payload
+    } satisfies ExtensionCollectionsSyncMessage);
+  }
+
+  private _sendConfigSync(payload: Omit<ExtensionConfigSyncMessage, 'type'>) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      type: ExtensionMessageType.ConfigSync,
+      ...payload
+    } satisfies ExtensionConfigSyncMessage);
   }
 
   dispose() {

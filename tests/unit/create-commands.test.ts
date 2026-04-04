@@ -74,7 +74,9 @@ describe('createCommands', () => {
       stateContainer: null,
       previousStateContainer: null
     },
-    triggerSync: vi.fn(),
+    triggerTabStateSync: vi.fn(),
+    triggerCollectionsSync: vi.fn(),
+    triggerConfigSync: vi.fn(),
     quickSwitch: vi.fn(),
     switchToGroup: vi.fn(),
     createGroup: vi.fn(),

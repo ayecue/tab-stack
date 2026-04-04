@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 
 import { GitIntegrationConfig, StorageType, TabKindColors } from '../../types/config';
+import { GroupSummary, HistorySummary, AddonSummary } from '../../types/messages';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
 import {
@@ -34,24 +35,9 @@ interface TabState {
   rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groups: Array<{
-    groupId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  histories: Array<{
-    historyId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  addons: Array<{
-    addonId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
+  groups: GroupSummary[];
+  histories: HistorySummary[];
+  addons: AddonSummary[];
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;

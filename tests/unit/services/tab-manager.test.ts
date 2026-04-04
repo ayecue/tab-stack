@@ -579,29 +579,55 @@ describe('TabManagerService', () => {
       await service.attachStateHandler();
     });
 
-    it('triggers sync after changes', () => {
-      const syncSpy = vi.fn();
-      service.onDidSyncTabs(syncSpy);
-      
-      service.createGroup('Test');
-      service.triggerSync();
-      
-      expect(syncSpy).toHaveBeenCalled();
+    it('triggers tab state sync', () => {
+      const tabStateSpy = vi.fn();
+      service.onDidSyncTabState(tabStateSpy);
+
+      service.triggerTabStateSync();
+
+      expect(tabStateSpy).toHaveBeenCalledTimes(1);
+      const data = tabStateSpy.mock.calls[0][0];
+      expect(data).toHaveProperty('tabState');
+      expect(data).toHaveProperty('selectedGroup');
+      expect(data).toHaveProperty('rendering');
     });
 
-    it('provides sync data', async () => {
-      service.createGroup('Group1');
-      service.createAddon('Addon1');
-      await service.takeSnapshot();
-      
-      const syncSpy = vi.fn();
-      service.onDidSyncTabs(syncSpy);
-      service.triggerSync();
-      
-      const syncData = syncSpy.mock.calls[0][0];
-      expect(syncData.groups.length).toBeGreaterThanOrEqual(0);
-      expect(syncData).toHaveProperty('addons');
-      expect(syncData).toHaveProperty('histories');
+    it('triggers collections sync with enriched data', () => {
+      service.createGroup('EnrichedGroup');
+      const collectionsSpy = vi.fn();
+      service.onDidSyncCollections(collectionsSpy);
+
+      service.triggerCollectionsSync();
+
+      expect(collectionsSpy).toHaveBeenCalledTimes(1);
+      const data = collectionsSpy.mock.calls[0][0];
+      expect(data).toHaveProperty('groups');
+      expect(data).toHaveProperty('histories');
+      expect(data).toHaveProperty('addons');
+      expect(data).toHaveProperty('selectedGroup');
+      expect(data).toHaveProperty('quickSlots');
+
+      // Enriched data should include layout and tabs
+      if (data.groups.length > 0) {
+        expect(data.groups[0]).toHaveProperty('layout');
+        expect(data.groups[0]).toHaveProperty('tabs');
+      }
+    });
+
+    it('triggers config sync', () => {
+      const configSpy = vi.fn();
+      service.onDidSyncConfig(configSpy);
+
+      service.triggerConfigSync();
+
+      expect(configSpy).toHaveBeenCalledTimes(1);
+      const data = configSpy.mock.calls[0][0];
+      expect(data).toHaveProperty('masterWorkspaceFolder');
+      expect(data).toHaveProperty('availableWorkspaceFolders');
+      expect(data).toHaveProperty('gitIntegration');
+      expect(data).toHaveProperty('historyMaxEntries');
+      expect(data).toHaveProperty('storageType');
+      expect(data).toHaveProperty('tabKindColors');
     });
   });
 

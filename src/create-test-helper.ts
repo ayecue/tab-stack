@@ -16,13 +16,13 @@ import {
 import { ViewManagerProvider } from './providers/view-manager';
 import { EXTENSION_NAME } from './types/extension';
 import {
-  ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionCollectionsSyncMessage,
+  ExtensionNotificationMessage
 } from './types/messages';
 import { TabManagerService } from './services/tab-manager';
 import { getLogger } from './services/logger';
 
-type CapturedSync = Omit<ExtensionTabsSyncMessage, 'type'>;
+type CapturedSync = Omit<ExtensionCollectionsSyncMessage, 'type'>;
 type CapturedNotify = Omit<ExtensionNotificationMessage, 'type'>;
 
 function getTabInputKind(input: unknown): string {
@@ -119,7 +119,7 @@ class RuntimeTracker implements Disposable {
 
   private attach() {
     this._subscriptions.push(
-      this._tabManagerService.onDidSyncTabs(() => {
+      this._tabManagerService.onDidSyncCollections(() => {
         this._lastSync++;
       }),
 
@@ -127,7 +127,7 @@ class RuntimeTracker implements Disposable {
         this._lastRender++;
       }),
 
-      this._tabManagerService.onDidSyncTabs((p) => this._syncMessages.push(p)),
+      this._tabManagerService.onDidSyncCollections((p) => this._syncMessages.push(p)),
       this._tabManagerService.onDidNotify((p) => this._notifications.push(p)),
     );
   }

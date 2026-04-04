@@ -1,11 +1,17 @@
 import { createStore } from '@xstate/store';
 
+import { Layout } from '../../types/commands';
 import { GitIntegrationConfig, StorageType, TabKindColors } from '../../types/config';
 import {
   ExtensionMessageType,
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionTabStateSyncMessage,
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage,
+  GroupSummary,
+  HistorySummary,
+  AddonSummary
 } from '../../types/messages';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
@@ -23,24 +29,9 @@ export interface TabStoreContext {
   rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groups: Array<{
-    groupId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  histories: Array<{
-    historyId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  addons: Array<{
-    addonId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
+  groups: GroupSummary[];
+  histories: HistorySummary[];
+  addons: AddonSummary[];
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
@@ -51,7 +42,9 @@ export interface TabStoreContext {
   tabKindColors: TabKindColors;
 }
 
-type SyncEvent = { type: 'sync'; data: ExtensionTabsSyncMessage };
+type TabStateSyncEvent = { type: 'tabStateSync'; data: ExtensionTabStateSyncMessage };
+type CollectionsSyncEvent = { type: 'collectionsSync'; data: ExtensionCollectionsSyncMessage };
+type ConfigSyncEvent = { type: 'configSync'; data: ExtensionConfigSyncMessage };
 type NotificationEvent = {
   type: 'notification';
   data: ExtensionNotificationMessage;
@@ -60,7 +53,9 @@ type RequestRefreshEvent = { type: 'requestRefresh' };
 type ClearErrorEvent = { type: 'clearError' };
 
 export type TabStoreEvents =
-  | SyncEvent
+  | TabStateSyncEvent
+  | CollectionsSyncEvent
+  | ConfigSyncEvent
   | NotificationEvent
   | RequestRefreshEvent
   | ClearErrorEvent;
@@ -86,24 +81,35 @@ export const createTabStore = () => {
       tabKindColors: []
     } as TabStoreContext,
     on: {
-      sync: (context, event: SyncEvent) => ({
+      tabStateSync: (context, event: TabStateSyncEvent) => ({
         ...context,
         payload: event.data.tabState,
         loading: false,
         rendering: event.data.rendering,
         error: null,
         connectionStatus: ConnectionStatus.Connected,
+        selectedGroup: event.data.selectedGroup
+      }),
+
+      collectionsSync: (context, event: CollectionsSyncEvent) => ({
+        ...context,
         groups: event.data.groups,
         histories: event.data.histories,
         addons: event.data.addons,
         selectedGroup: event.data.selectedGroup,
         quickSlots: event.data.quickSlots,
+        connectionStatus: ConnectionStatus.Connected
+      }),
+
+      configSync: (context, event: ConfigSyncEvent) => ({
+        ...context,
         masterWorkspaceFolder: event.data.masterWorkspaceFolder,
         availableWorkspaceFolders: event.data.availableWorkspaceFolders,
         gitIntegration: event.data.gitIntegration,
         historyMaxEntries: event.data.historyMaxEntries,
         storageType: event.data.storageType,
-        tabKindColors: event.data.tabKindColors ?? []
+        tabKindColors: event.data.tabKindColors ?? [],
+        connectionStatus: ConnectionStatus.Connected
       }),
 
       notification: (context, event: NotificationEvent) => {
@@ -147,9 +153,26 @@ export const setupStoreMessengerSync = (
   messenger: VSCodeMessenger
 ) => {
   // Listen to messenger events and update store
-  messenger.on(ExtensionMessageType.Sync, (event: ExtensionTabsSyncMessage) => {
-    store.send({ type: 'sync', data: event });
-  });
+  messenger.on(
+    ExtensionMessageType.TabStateSync,
+    (event: ExtensionTabStateSyncMessage) => {
+      store.send({ type: 'tabStateSync', data: event });
+    }
+  );
+
+  messenger.on(
+    ExtensionMessageType.CollectionsSync,
+    (event: ExtensionCollectionsSyncMessage) => {
+      store.send({ type: 'collectionsSync', data: event });
+    }
+  );
+
+  messenger.on(
+    ExtensionMessageType.ConfigSync,
+    (event: ExtensionConfigSyncMessage) => {
+      store.send({ type: 'configSync', data: event });
+    }
+  );
 
   messenger.on(
     ExtensionMessageType.Notification,
@@ -178,7 +201,9 @@ export const setupStoreMessengerSync = (
       clearTimeout(errorTimeoutId);
     }
     subscription.unsubscribe();
-    messenger.removeAllListeners(ExtensionMessageType.Sync);
+    messenger.removeAllListeners(ExtensionMessageType.TabStateSync);
+    messenger.removeAllListeners(ExtensionMessageType.CollectionsSync);
+    messenger.removeAllListeners(ExtensionMessageType.ConfigSync);
     messenger.removeAllListeners(ExtensionMessageType.Notification);
   };
 };

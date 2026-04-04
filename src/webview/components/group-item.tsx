@@ -1,5 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
+import { Layout } from '../../types/commands';
+import { CollectionTabSummary } from '../../types/messages';
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
 import { useTooltip } from '../hooks/use-tooltip';
@@ -31,6 +33,8 @@ interface GroupItemProps {
   ) => void;
   tabCount: number;
   columnCount: number;
+  layout?: Layout;
+  tabs?: CollectionTabSummary[];
 }
 
 export const GroupItem: React.FC<GroupItemProps> = ({
@@ -52,7 +56,9 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   onSubmitRename,
   onRenameKeyDown,
   tabCount,
-  columnCount
+  columnCount,
+  layout,
+  tabs
 }) => {
   const { messagingService } = useTabContext();
 
@@ -110,6 +116,8 @@ export const GroupItem: React.FC<GroupItemProps> = ({
       <CollectionTooltipContent
         tabCount={tabCount}
         columnCount={columnCount}
+        layout={layout}
+        tabs={tabs}
       />
     )
   });

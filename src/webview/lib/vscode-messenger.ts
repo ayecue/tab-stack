@@ -74,7 +74,9 @@ export class VSCodeMessenger extends EventEmitter {
       this.log('Received message:', event);
 
       switch (event.data.type) {
-        case ExtensionMessageType.Sync:
+        case ExtensionMessageType.TabStateSync:
+        case ExtensionMessageType.CollectionsSync:
+        case ExtensionMessageType.ConfigSync:
         case ExtensionMessageType.Notification:
           this.emit(event.data.type, event.data);
           break;

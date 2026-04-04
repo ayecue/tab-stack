@@ -1,3 +1,4 @@
+import { Layout } from './commands';
 import {
   GitIntegrationConfig,
   GitIntegrationMode,
@@ -5,10 +6,12 @@ import {
   TabKindColors
 } from './config';
 import { QuickSlotAssignments, QuickSlotIndex } from './tab-manager';
-import { TabState } from './tabs';
+import { TabKind, TabState } from './tabs';
 
 export enum ExtensionMessageType {
-  Sync = 'sync',
+  TabStateSync = 'tab-state-sync',
+  CollectionsSync = 'collections-sync',
+  ConfigSync = 'config-sync',
   Notification = 'notification'
 }
 
@@ -28,36 +31,56 @@ export interface ExtensionNotificationMessage extends BaseExtensionMessage {
   message: string;
 }
 
-export interface ExtensionTabsSyncMessage extends BaseExtensionMessage {
-  type: ExtensionMessageType.Sync;
+export interface CollectionTabSummary {
+  label: string;
+  kind: TabKind;
+  uri?: string;
+}
+
+export interface CollectionSummaryBase {
+  name: string;
+  tabCount: number;
+  columnCount: number;
+  layout: Layout;
+  tabs: CollectionTabSummary[];
+}
+
+export interface GroupSummary extends CollectionSummaryBase {
+  groupId: string;
+}
+
+export interface HistorySummary extends CollectionSummaryBase {
+  historyId: string;
+}
+
+export interface AddonSummary extends CollectionSummaryBase {
+  addonId: string;
+}
+
+export interface ExtensionTabStateSyncMessage extends BaseExtensionMessage {
+  type: ExtensionMessageType.TabStateSync;
   tabState: TabState;
-  histories: Array<{
-    historyId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  groups: Array<{
-    groupId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  addons: Array<{
-    addonId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
+  selectedGroup: string | null;
+  rendering: boolean;
+}
+
+export interface ExtensionCollectionsSyncMessage extends BaseExtensionMessage {
+  type: ExtensionMessageType.CollectionsSync;
+  groups: GroupSummary[];
+  histories: HistorySummary[];
+  addons: AddonSummary[];
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
+}
+
+export interface ExtensionConfigSyncMessage extends BaseExtensionMessage {
+  type: ExtensionMessageType.ConfigSync;
   masterWorkspaceFolder: string | null;
   availableWorkspaceFolders: Array<{ name: string; path: string }>;
   gitIntegration: GitIntegrationConfig;
   historyMaxEntries: number;
   storageType: StorageType;
   tabKindColors: TabKindColors;
-  rendering: boolean;
 }
 
 export enum WebviewMessageType {

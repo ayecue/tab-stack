@@ -354,7 +354,9 @@ export function createCommands(
   const refreshCommand = commands.registerCommand(
     `${EXTENSION_NAME}.refresh`,
     async () => {
-      tabManagerService.triggerSync();
+      tabManagerService.triggerTabStateSync();
+      tabManagerService.triggerCollectionsSync();
+      tabManagerService.triggerConfigSync();
     }
   );
 

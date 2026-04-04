@@ -123,19 +123,19 @@ export class MessageHandler implements Disposable {
         if (mode != null) await tabManager.config.setGitIntegrationMode(mode);
         if (groupPrefix != null)
           await tabManager.config.setGitIntegrationGroupPrefix(groupPrefix);
-        tabManager.triggerSync();
+        tabManager.triggerConfigSync();
         break;
       }
       case WebviewMessageType.UpdateHistoryMaxEntries: {
         const { maxEntries } = data as WebviewUpdateHistoryMaxEntriesMessage;
         await tabManager.config.setHistoryMaxEntries(maxEntries);
-        tabManager.triggerSync();
+        tabManager.triggerConfigSync();
         break;
       }
       case WebviewMessageType.UpdateStorageType: {
         const { storageType } = data as WebviewUpdateStorageTypeMessage;
         await tabManager.config.setStorageType(storageType);
-        tabManager.triggerSync();
+        tabManager.triggerConfigSync();
         break;
       }
       case WebviewMessageType.NewAddon: {
@@ -211,7 +211,9 @@ export class MessageHandler implements Disposable {
         break;
       }
       case WebviewMessageType.Sync: {
-        await tabManager.triggerSync();
+        tabManager.triggerTabStateSync();
+        tabManager.triggerCollectionsSync();
+        tabManager.triggerConfigSync();
         break;
       }
       default:

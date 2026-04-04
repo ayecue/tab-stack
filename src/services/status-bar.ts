@@ -38,8 +38,8 @@ export class StatusBarService implements Disposable {
 
     this._disposables = [
       this._statusBarItem,
-      this._tabManager.onDidSyncTabs((payload) => {
-        this.setLastPayload(payload);
+      this._tabManager.onDidSyncCollections(() => {
+        this.updateFromState();
       }),
       this._tabManager.config.onDidChangeConfig((changes) => {
         if (changes.statusBarVisible !== undefined) {

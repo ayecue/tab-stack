@@ -1772,6 +1772,54 @@ body {
   left: -12px;
   color: var(--vscode-descriptionForeground);
 }
+
+/* Collection Tooltip */
+.collection-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.collection-tooltip-summary {
+  font-size: 0.9em;
+  color: var(--vscode-descriptionForeground);
+}
+
+.collection-tooltip-layout {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.collection-tooltip-layout-column {
+  background: var(--vscode-focusBorder);
+  opacity: 0.4;
+  border-radius: 1px;
+  min-width: 4px;
+}
+
+.collection-tooltip-tabs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.collection-tooltip-tab {
+  padding: 1px 0;
+  font-size: 0.85em;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collection-tooltip-more {
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
 .icon-rust { color: #ce422b; }
 .icon-cpp { color: #00599c; }
 .icon-c { color: #a8b9cc; }

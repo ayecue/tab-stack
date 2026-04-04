@@ -50,7 +50,7 @@ describe('StatusBarService', () => {
           getStatusBarVisible: vi.fn(() => true),
           onDidChangeConfig: configEmitter.event
         },
-        onDidSyncTabs: syncEmitter.event
+        onDidSyncCollections: syncEmitter.event
       }
     };
   };
@@ -98,20 +98,10 @@ describe('StatusBarService', () => {
 
     const statusBarService = new StatusBarService(service as never);
 
-    syncEmitter.fire({
-      selectedGroup: null,
-      groups: [
-        {
-          groupId: 'group-1',
-          name: 'Group One',
-          tabCount: 2,
-          columnCount: 1
-        }
-      ],
-      quickSlots: {
-        '3': 'group-1'
-      }
-    });
+    // Simulate state where no group is selected
+    service.state.stateContainer = null;
+
+    syncEmitter.fire({});
 
     expect(statusBarItem.text).toBe('Tab Stack: Unsaved Layout');
     expect(statusBarItem.command).toBe('tabStack.recentGroups');
@@ -142,7 +132,7 @@ describe('StatusBarService', () => {
         getStatusBarVisible: vi.fn(() => true),
         onDidChangeConfig: vi.fn(() => ({ dispose: vi.fn() }))
       },
-      onDidSyncTabs: vi.fn(() => ({ dispose: vi.fn() }))
+      onDidSyncCollections: vi.fn(() => ({ dispose: vi.fn() }))
     } as never);
 
     expect(statusBarItem.text).toBe('Tab Stack: Save Group');

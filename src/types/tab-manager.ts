@@ -4,8 +4,10 @@ import { Disposable, Event } from 'vscode';
 import { ConfigService } from '../services/config';
 import { Layout } from './commands';
 import {
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage,
   ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionTabStateSyncMessage
 } from './messages';
 import { TabInfo, TabState } from './tabs';
 
@@ -124,7 +126,9 @@ export interface ITabManagerService extends Disposable {
   selectWorkspaceFolder(folderPath: string | null): Promise<void>;
   clearWorkspaceFolder(): Promise<void>;
 
-  triggerSync(): void;
+  triggerTabStateSync(): void;
+  triggerCollectionsSync(): void;
+  triggerConfigSync(): void;
 
   exportStateFile(exportUri: string): Promise<void>;
   importStateFile(importUri: string): Promise<void>;
@@ -132,6 +136,8 @@ export interface ITabManagerService extends Disposable {
   exportGroup(groupId: string, exportUri: string): Promise<void>;
   importGroup(importUri: string): Promise<void>;
 
-  onDidSyncTabs: Event<Omit<ExtensionTabsSyncMessage, 'type'>>;
+  onDidSyncTabState: Event<Omit<ExtensionTabStateSyncMessage, 'type'>>;
+  onDidSyncCollections: Event<Omit<ExtensionCollectionsSyncMessage, 'type'>>;
+  onDidSyncConfig: Event<Omit<ExtensionConfigSyncMessage, 'type'>>;
   onDidNotify: Event<Omit<ExtensionNotificationMessage, 'type'>>;
 }
