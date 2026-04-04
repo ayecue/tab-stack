@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { commands, window } from 'vscode';
+import { commands, FileType, Uri, window, workspace } from 'vscode';
 
 import { createCommands } from '../../src/create-commands';
 import { EXTENSION_NAME } from '../../src/types/extension';
@@ -45,7 +45,30 @@ describe('createCommands', () => {
           }
         }
       },
-      history: {},
+      history: {
+        'history-1': {
+          id: 'history-1',
+          name: 'Snapshot One',
+          createdAt: 50,
+          state: {
+            tabState: {
+              tabGroups: {
+                1: {
+                  viewColumn: 1,
+                  activeTab: undefined,
+                  tabs: [
+                    {
+                      id: 'history-tab-1',
+                      label: 'snapshot.ts'
+                    }
+                  ]
+                }
+              },
+              activeGroup: 1
+            }
+          }
+        }
+      },
       addons: {},
       quickSlots: {},
       stateContainer: null,
@@ -84,6 +107,13 @@ describe('createCommands', () => {
         return { dispose: vi.fn() };
       }
     );
+
+    vi.mocked(workspace.fs.stat).mockResolvedValue({
+      type: FileType.File,
+      ctime: 0,
+      mtime: 0,
+      size: 1
+    } as never);
   });
 
   it('does not switch groups when the picker is cancelled', async () => {
@@ -95,6 +125,38 @@ describe('createCommands', () => {
     await registeredCommands.get(`${EXTENSION_NAME}.switchGroup`)?.();
 
     expect(tabManagerService.switchToGroup).not.toHaveBeenCalled();
+  });
+
+  it('switches to a recent group from the recentGroups command', async () => {
+    const tabManagerService = createMockTabManagerService();
+    createCommands(tabManagerService as never);
+
+    vi.mocked(window.showQuickPick).mockResolvedValue(
+      {
+        label: 'Group One',
+        groupId: 'group-1'
+      } as never
+    );
+
+    await registeredCommands.get(`${EXTENSION_NAME}.recentGroups`)?.();
+
+    expect(tabManagerService.switchToGroup).toHaveBeenCalledWith('group-1');
+  });
+
+  it('restores a recent snapshot from the recentSnapshots command', async () => {
+    const tabManagerService = createMockTabManagerService();
+    createCommands(tabManagerService as never);
+
+    vi.mocked(window.showQuickPick).mockResolvedValue(
+      {
+        label: 'Snapshot One',
+        historyId: 'history-1'
+      } as never
+    );
+
+    await registeredCommands.get(`${EXTENSION_NAME}.recentSnapshots`)?.();
+
+    expect(tabManagerService.recoverSnapshot).toHaveBeenCalledWith('history-1');
   });
 
   it('assigns the selected quick slot from the picker label', async () => {

@@ -19,3 +19,7 @@ export interface SavedTabQuickPickItem extends QuickPickItem {
   viewColumn: number | null;
   index: number | null;
 }
+
+export interface HistoryQuickPickItem extends QuickPickItem {
+  historyId: string;
+}

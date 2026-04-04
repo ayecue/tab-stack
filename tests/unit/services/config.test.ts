@@ -200,6 +200,28 @@ describe('ConfigService', () => {
     });
   });
 
+  describe('getStatusBarVisible', () => {
+    it('returns configured status bar visibility', () => {
+      vi.spyOn(workspace, 'getConfiguration').mockReturnValue({
+        get: vi.fn(() => false)
+      } as any);
+
+      configService = new ConfigService();
+
+      expect(configService.getStatusBarVisible()).toBe(false);
+    });
+
+    it('defaults status bar visibility to true', () => {
+      vi.spyOn(workspace, 'getConfiguration').mockReturnValue({
+        get: vi.fn((key: string, defaultValue: any) => defaultValue)
+      } as any);
+
+      configService = new ConfigService();
+
+      expect(configService.getStatusBarVisible()).toBe(true);
+    });
+  });
+
   describe('configuration change events', () => {
     it('fires event when git integration config changes', async () => {
       vi.spyOn(workspace, 'getConfiguration').mockReturnValue({
@@ -299,6 +321,37 @@ describe('ConfigService', () => {
 
       await expect(eventPromise).resolves.toMatchObject({
         tabRecoveryMappings: mappings
+      });
+    });
+
+    it('fires event when status bar visibility changes', async () => {
+      vi.spyOn(workspace, 'getConfiguration').mockImplementation((section?: string) => {
+        if (section === 'tabStack.statusBar') {
+          return {
+            get: vi.fn(() => false)
+          } as any;
+        }
+
+        return {
+          get: vi.fn(() => undefined)
+        } as any;
+      });
+
+      configService = new ConfigService();
+
+      const eventPromise = new Promise((resolve) => {
+        configService.onDidChangeConfig((event) => {
+          resolve(event);
+        });
+      });
+
+      mockConfigEmitter.fire({
+        affectsConfiguration: (section: string) =>
+          section === 'tabStack.statusBar.visible'
+      });
+
+      await expect(eventPromise).resolves.toMatchObject({
+        statusBarVisible: false
       });
     });
 

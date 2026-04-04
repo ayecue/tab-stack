@@ -46,6 +46,10 @@ export class ConfigService implements Disposable {
         changes.tabRecoveryMappings = this.getTabRecoveryMappings();
       }
 
+      if (e.affectsConfiguration('tabStack.statusBar.visible')) {
+        changes.statusBarVisible = this.getStatusBarVisible();
+      }
+
       if (Object.keys(changes).length > 0) {
         this._onDidChangeConfig.fire(changes);
       }
@@ -85,6 +89,11 @@ export class ConfigService implements Disposable {
   getStorageType(): StorageType {
     const config = workspace.getConfiguration('tabStack.storage');
     return config.get<StorageType>('type', StorageType.File);
+  }
+
+  getStatusBarVisible(): boolean {
+    const config = workspace.getConfiguration('tabStack.statusBar');
+    return config.get<boolean>('visible', true);
   }
 
   async setStorageType(storageType: StorageType): Promise<void> {

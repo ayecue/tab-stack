@@ -35,6 +35,7 @@ import {
   TabStackGroupFile,
   TabStateFileContent
 } from '../types/tab-manager';
+import { TabInfoText, TabKind } from '../types/tabs';
 import {
   closeAllEditors,
   focusTabInGroup,

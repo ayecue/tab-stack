@@ -41,6 +41,7 @@ export interface ConfigChangeEvent {
   gitIntegration?: GitIntegrationConfig;
   storageType?: StorageType;
   tabRecoveryMappings?: TabRecoveryMapping;
+  statusBarVisible?: boolean;
 }
 
 export interface TabKindColorRule {

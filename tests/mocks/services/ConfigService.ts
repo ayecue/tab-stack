@@ -9,6 +9,7 @@ export class MockConfigService {
   public getHistoryMaxEntries = vi.fn();
   public getMasterWorkspaceFolder = vi.fn();
   public getStorageType = vi.fn();
+  public getStatusBarVisible = vi.fn();
   public getGitIntegrationConfig = vi.fn();
   public getAvailableWorkspaceFolders = vi.fn();
   public setMasterWorkspaceFolder = vi.fn();
@@ -32,6 +33,7 @@ export class MockConfigService {
     this.getHistoryMaxEntries.mockReturnValue(defaultConfig.historyMaxEntries ?? 10);
     this.getMasterWorkspaceFolder.mockReturnValue(defaultConfig.masterWorkspaceFolder ?? null);
     this.getStorageType.mockReturnValue(defaultConfig.storageType ?? 'workspace');
+    this.getStatusBarVisible.mockReturnValue(defaultConfig.statusBarVisible ?? true);
     this.getGitIntegrationConfig.mockReturnValue(defaultConfig.gitIntegrationConfig ?? {
       enabled: false,
       mode: 'off',

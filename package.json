@@ -123,9 +123,82 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "tabStack.refresh",
+          "when": "view == tabStackView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tabStack.findTab",
+          "when": "view == tabStackView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tabStack.snapshot",
+          "when": "view == tabStackView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "tabStack.recentSnapshots",
+          "when": "view == tabStackView",
+          "group": "navigation@4"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tabStack.createGroupFromResources",
+          "group": "navigation@18"
+        },
+        {
+          "command": "tabStack.createAddonFromResources",
+          "group": "navigation@19"
+        },
+        {
+          "command": "tabStack.createGroup",
+          "group": "navigation@20"
+        },
+        {
+          "command": "tabStack.findTab",
+          "group": "navigation@21"
+        }
+      ],
       "editor/title/run": [],
-      "editor/context": [],
-      "explorer/context": [],
+      "editor/context": [
+        {
+          "command": "tabStack.createGroupFromResources",
+          "group": "navigation@18"
+        },
+        {
+          "command": "tabStack.createAddonFromResources",
+          "group": "navigation@19"
+        },
+        {
+          "command": "tabStack.findTab",
+          "group": "navigation@20"
+        },
+        {
+          "command": "tabStack.quickSwitch",
+          "group": "navigation@21"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tabStack.createGroupFromResources",
+          "when": "explorerResourceIsFolder == false && resourceExtname != .tabstack",
+          "group": "navigation@18"
+        },
+        {
+          "command": "tabStack.createAddonFromResources",
+          "when": "explorerResourceIsFolder == false && resourceExtname != .tabstack",
+          "group": "navigation@19"
+        },
+        {
+          "command": "tabStack.importGroup",
+          "when": "resourceExtname == .tabstack",
+          "group": "navigation@20"
+        }
+      ],
       "commandPalette": []
     },
     "submenus": [],
@@ -151,8 +224,31 @@
         "category": "Tab Stack"
       },
       {
+        "command": "tabStack.recentGroups",
+        "title": "Switch To Recent Group",
+        "category": "Tab Stack",
+        "icon": "$(history)"
+      },
+      {
+        "command": "tabStack.findTab",
+        "title": "Find Saved Tab",
+        "category": "Tab Stack",
+        "icon": "$(search)"
+      },
+      {
+        "command": "tabStack.recentSnapshots",
+        "title": "Restore Recent Snapshot",
+        "category": "Tab Stack",
+        "icon": "$(history)"
+      },
+      {
         "command": "tabStack.createGroup",
         "title": "Save Current Tabs as Group",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.createGroupFromResources",
+        "title": "Save File as Group",
         "category": "Tab Stack"
       },
       {
@@ -178,6 +274,11 @@
       {
         "command": "tabStack.createAddon",
         "title": "Save Current Tabs as Add-on",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.createAddonFromResources",
+        "title": "Save File as Add-on",
         "category": "Tab Stack"
       },
       {
@@ -366,6 +467,11 @@
           ],
           "default": "file",
           "description": "Storage method for tab state persistence."
+        },
+        "tabStack.statusBar.visible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Tab Stack status bar indicator with the current group and quick access to recent groups."
         },
         "tabStack.appearance.tabKindColors": {
           "type": "array",

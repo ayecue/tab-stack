@@ -7,6 +7,7 @@ import { ConfigService } from './services/config';
 import { EditorLayoutService } from './services/editor-layout';
 import { GitService } from './services/git';
 import { initializeLogger } from './services/logger';
+import { StatusBarService } from './services/status-bar';
 import { TabManagerService } from './services/tab-manager';
 import { getEditorLayout } from './utils/commands';
 import { createTestHelper } from './create-test-helper';
@@ -45,6 +46,8 @@ export async function activate(context: ExtensionContext) {
 
   await tabManagerService.attachStateHandler();
 
+  const statusBarService = new StatusBarService(tabManagerService);
+
   const viewManagerProvider = new ViewManagerProvider(
     context,
     tabManagerService
@@ -67,6 +70,7 @@ export async function activate(context: ExtensionContext) {
     configService,
     tabRecoveryService,
     tabManagerService,
+    statusBarService,
     viewManagerProvider,
     ...createCommands(tabManagerService),
     ...createTestHelper(tabManagerService),
