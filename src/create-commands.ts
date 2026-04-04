@@ -24,6 +24,18 @@ import {
 const RECENT_GROUP_LIMIT = 5 as const;
 const RECENT_SNAPSHOT_LIMIT = 5 as const;
 
+function parseStringParam(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return value;
+  } else if (typeof value === 'number') {
+    return value.toString();
+  } else if (typeof value === 'boolean') {
+    return value.toString();
+  }
+
+  return undefined;
+}
+
 function getQuickSlotByGroupId(
   quickSlots: QuickSlotAssignments,
   groupId: string
@@ -35,7 +47,7 @@ function getQuickSlotByGroupId(
   return entry?.[0] ?? null;
 }
 
-function getGroupStats(group: StateContainer | { state?: TabManagerService['state']['stateContainer']['state'] | undefined }): {
+function getGroupStats(group: StateContainer): {
   tabCount: number;
   columnCount: number;
 } {
@@ -376,7 +388,8 @@ export function createCommands(
 
   const switchGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.switchGroup`,
-    async (groupNameParam?: string) => {
+    async (groupNameParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
       const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
@@ -433,7 +446,7 @@ export function createCommands(
   const createGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.createGroup`,
     async (groupNameParam?: string) => {
-      const input = groupNameParam || (await requestNewGroupId());
+      const input = parseStringParam(groupNameParam) || (await requestNewGroupId());
       const groupName = input?.trim();
 
       if (!groupName) {
@@ -446,7 +459,8 @@ export function createCommands(
 
   const deleteGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteGroup`,
-    async (groupNameParam?: string) => {
+    async (groupNameParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
       const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
@@ -480,7 +494,8 @@ export function createCommands(
 
   const restoreSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.restoreSnapshot`,
-    async (historyNameParam?: string) => {
+    async (historyNameParamRaw?: string) => {
+      const historyNameParam = parseStringParam(historyNameParamRaw);
       const histories = tabManagerService.state.history;
       const historyIdParam = Object.values(histories).find(
         (group) => group.name === historyNameParam
@@ -496,7 +511,8 @@ export function createCommands(
 
   const deleteSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteSnapshot`,
-    async (historyNameParam?: string) => {
+    async (historyNameParamRaw?: string) => {
+      const historyNameParam = parseStringParam(historyNameParamRaw);
       const histories = tabManagerService.state.history;
       const historyIdParam = Object.values(histories).find(
         (group) => group.name === historyNameParam
@@ -513,7 +529,7 @@ export function createCommands(
   const createAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.createAddon`,
     async (addonNameParam?: string) => {
-      const input = addonNameParam || (await requestNewAddonName());
+      const input = parseStringParam(addonNameParam) || (await requestNewAddonName());
       const addonName = input?.trim();
 
       if (!addonName) {
@@ -526,7 +542,8 @@ export function createCommands(
 
   const applyAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.applyAddon`,
-    async (addonNameParam?: string) => {
+    async (addonNameParamRaw?: string) => {
+      const addonNameParam = parseStringParam(addonNameParamRaw);
       const addons = tabManagerService.state.addons;
       const addonIdParam = Object.values(addons).find(
         (addon) => addon.name === addonNameParam
@@ -541,7 +558,8 @@ export function createCommands(
 
   const deleteAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteAddon`,
-    async (addonNameParam?: string) => {
+    async (addonNameParamRaw?: string) => {
+      const addonNameParam = parseStringParam(addonNameParamRaw);
       const addons = tabManagerService.state.addons;
       const addonIdParam = Object.values(addons).find(
         (addon) => addon.name === addonNameParam
@@ -556,7 +574,9 @@ export function createCommands(
 
   const assignQuickSlotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.assignQuickSlot`,
-    async (groupNameParam?: string, slotIndexParam?: string) => {
+    async (groupNameParamRaw?: string, slotIndexParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
+      const slotIndexParam = parseStringParam(slotIndexParamRaw);
       const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
@@ -585,7 +605,8 @@ export function createCommands(
 
   const clearQuickSlotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.clearQuickSlot`,
-    async (slotIndexParam?: string) => {
+    async (slotIndexParamRaw?: string) => {
+      const slotIndexParam = parseStringParam(slotIndexParamRaw);
       const slotIndex =
         slotIndexParam != null
           ? Number(slotIndexParam)
@@ -613,7 +634,8 @@ export function createCommands(
 
   const exportGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.exportGroup`,
-    async (groupNameParam?: string) => {
+    async (groupNameParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
       const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
@@ -641,7 +663,9 @@ export function createCommands(
 
   const importGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.importGroup`,
-    async (filePathParam?: string) => {
+    async (filePathParamRaw?: string) => {
+      const filePathParam = parseStringParam(filePathParamRaw);
+
       if (filePathParam) {
         await tabManagerService.importGroup(filePathParam);
         return;

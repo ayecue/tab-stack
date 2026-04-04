@@ -147,14 +147,6 @@
       ],
       "editor/title": [
         {
-          "command": "tabStack.createGroupFromResources",
-          "group": "navigation@18"
-        },
-        {
-          "command": "tabStack.createAddonFromResources",
-          "group": "navigation@19"
-        },
-        {
           "command": "tabStack.createGroup",
           "group": "navigation@20"
         },
@@ -183,16 +175,6 @@
         }
       ],
       "explorer/context": [
-        {
-          "command": "tabStack.createGroupFromResources",
-          "when": "explorerResourceIsFolder == false && resourceExtname != .tabstack",
-          "group": "navigation@18"
-        },
-        {
-          "command": "tabStack.createAddonFromResources",
-          "when": "explorerResourceIsFolder == false && resourceExtname != .tabstack",
-          "group": "navigation@19"
-        },
         {
           "command": "tabStack.importGroup",
           "when": "resourceExtname == .tabstack",
@@ -246,12 +228,6 @@
         "title": "Save Current Tabs as Group",
         "category": "Tab Stack",
         "icon": "$(save-all)"
-      },
-      {
-        "command": "tabStack.createGroupFromResources",
-        "title": "Save File as Group",
-        "category": "Tab Stack",
-        "icon": "$(file-add)"
       },
       {
         "command": "tabStack.deleteGroup",
