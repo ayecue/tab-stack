@@ -1805,6 +1805,30 @@ body {
   overflow: hidden;
 }
 
+.collection-tooltip-columns.is-horizontal {
+  flex-direction: row;
+}
+
+.collection-tooltip-columns.is-vertical {
+  flex-direction: column;
+}
+
+.collection-tooltip-nested {
+  display: flex;
+  gap: 1px;
+  background: var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
+  min-width: 0;
+  min-height: 0;
+}
+
+.collection-tooltip-nested.is-horizontal {
+  flex-direction: row;
+}
+
+.collection-tooltip-nested.is-vertical {
+  flex-direction: column;
+}
+
 .collection-tooltip-column {
   display: flex;
   flex-direction: column;

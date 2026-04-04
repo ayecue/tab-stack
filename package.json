@@ -244,12 +244,14 @@
       {
         "command": "tabStack.createGroup",
         "title": "Save Current Tabs as Group",
-        "category": "Tab Stack"
+        "category": "Tab Stack",
+        "icon": "$(save-all)"
       },
       {
         "command": "tabStack.createGroupFromResources",
         "title": "Save File as Group",
-        "category": "Tab Stack"
+        "category": "Tab Stack",
+        "icon": "$(file-add)"
       },
       {
         "command": "tabStack.deleteGroup",
@@ -259,7 +261,8 @@
       {
         "command": "tabStack.snapshot",
         "title": "Capture Tabs Snapshot",
-        "category": "Tab Stack"
+        "category": "Tab Stack",
+        "icon": "$(device-camera)"
       },
       {
         "command": "tabStack.restoreSnapshot",
@@ -279,7 +282,8 @@
       {
         "command": "tabStack.createAddonFromResources",
         "title": "Save File as Add-on",
-        "category": "Tab Stack"
+        "category": "Tab Stack",
+        "icon": "$(plug)"
       },
       {
         "command": "tabStack.applyAddon",

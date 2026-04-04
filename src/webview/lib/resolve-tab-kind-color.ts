@@ -39,7 +39,6 @@ export function resolveTabKindColor(
   const kindLower = kind.toLowerCase();
 
   for (let i = rules.length - 1; i >= 0; i--) {
-    console.log(`[resolveTabKindColor] Checking rule ${i}: kind="${rules[i].kind}", pattern="${rules[i].pattern}", color="${rules[i].color}" against tab kind="${kind}", label="${label}"`);
     const rule = rules[i];
     if (rule.kind.toLowerCase() !== kindLower) {
       continue;
