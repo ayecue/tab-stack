@@ -828,7 +828,11 @@ export class TabManagerService implements ITabManagerService {
     const groups = this._collectionHandler!.groups;
     const groupValues = Object.values(groups);
 
-    return groupValues.map((group) => {
+    return groupValues.sort((a, b) => {
+      const timeA = a.lastSelectedAt || 0;
+      const timeB = b.lastSelectedAt || 0;
+      return timeB - timeA;
+    }).map((group) => {
       const tabGroupsArray = Object.values(group.state.tabState.tabGroups);
       const tabCount = tabGroupsArray.reduce(
         (sum, tabGroup) => sum + tabGroup.tabs.length,
@@ -849,7 +853,11 @@ export class TabManagerService implements ITabManagerService {
     const history = this._collectionHandler!.history;
     const historyValues = Object.values(history);
 
-    return historyValues.map((entry) => {
+    return historyValues.sort((a, b) => {
+      const timeA = a.lastSelectedAt || 0;
+      const timeB = b.lastSelectedAt || 0;
+      return timeB - timeA;
+    }).map((entry) => {
       const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
       const tabCount = tabGroupsArray.reduce(
         (sum, group) => sum + group.tabs.length,
@@ -870,7 +878,11 @@ export class TabManagerService implements ITabManagerService {
     const addons = this._collectionHandler!.addons;
     const addonValues = Object.values(addons);
 
-    return addonValues.map((addon) => {
+    return addonValues.sort((a, b) => {
+      const timeA = a.lastSelectedAt || 0;
+      const timeB = b.lastSelectedAt || 0;
+      return timeB - timeA;
+    }).map((addon) => {
       const tabGroupsArray = Object.values(addon.state.tabState.tabGroups);
       const tabCount = tabGroupsArray.reduce(
         (sum, group) => sum + group.tabs.length,

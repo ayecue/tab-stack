@@ -119,7 +119,15 @@ class RuntimeTracker implements Disposable {
 
   private attach() {
     this._subscriptions.push(
+      this._tabManagerService.onDidSyncTabState(() => {
+        this._lastSync++;
+      }),
+
       this._tabManagerService.onDidSyncCollections(() => {
+        this._lastSync++;
+      }),
+
+      this._tabManagerService.onDidSyncConfig(() => {
         this._lastSync++;
       }),
 
