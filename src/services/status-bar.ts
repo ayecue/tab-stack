@@ -1,5 +1,6 @@
 import {
   Disposable,
+  MarkdownString,
   StatusBarAlignment,
   StatusBarItem,
   window
@@ -82,8 +83,11 @@ export class StatusBarService implements Disposable {
   private getStatusBarPayload(): Pick<StatusBarItem, 'text' | 'tooltip' | 'command'> {
     if (this._lastPayload.groups.length === 0) {
       return {
-        text: 'Tab Stack: Save Group',
-        tooltip: 'No saved Tab Stack groups yet. Click to save the current layout.',
+        text: '$(layers) Save Group',
+        tooltip: this.buildTooltip(
+          'No groups yet',
+          'Click to save the current layout as a group.'
+        ),
         command: `${EXTENSION_NAME}.createGroup`
       };
     }
@@ -94,8 +98,11 @@ export class StatusBarService implements Disposable {
 
     if (!selectedGroup) {
       return {
-        text: 'Tab Stack: Unsaved Layout',
-        tooltip: 'Current tabs do not match a saved group. Click to choose a saved group.',
+        text: '$(layers) Unsaved',
+        tooltip: this.buildTooltip(
+          'Unsaved Layout',
+          'Current tabs don\'t match any saved group.\n\nClick to switch to a recent group.'
+        ),
         command: `${EXTENSION_NAME}.recentGroups`
       };
     }
@@ -104,16 +111,34 @@ export class StatusBarService implements Disposable {
       this._lastPayload.quickSlots ?? {},
       selectedGroup.groupId
     );
-    const slotSuffix = assignedSlot ? ` [${assignedSlot}]` : '';
+    const slotBadge = assignedSlot ? ` [${assignedSlot}]` : '';
+
+    const tabPlural = selectedGroup.tabCount === 1 ? 'tab' : 'tabs';
+    const colPlural = selectedGroup.columnCount === 1 ? 'column' : 'columns';
+    const groupCount = this._lastPayload.groups.length;
+    const groupPlural = groupCount === 1 ? 'group' : 'groups';
+
+    const lines = [
+      `**${selectedGroup.name}**${slotBadge}`,
+      '',
+      `$(file) ${selectedGroup.tabCount} ${tabPlural} · $(split-horizontal) ${selectedGroup.columnCount} ${colPlural}`,
+      `$(layers) ${groupCount} saved ${groupPlural}`,
+      '',
+      '*Click to switch groups*'
+    ];
 
     return {
-      text: `Tab Stack: ${selectedGroup.name}${slotSuffix}`,
-      tooltip:
-        `${selectedGroup.tabCount} tab${selectedGroup.tabCount === 1 ? '' : 's'} ` +
-        `across ${selectedGroup.columnCount} column${selectedGroup.columnCount === 1 ? '' : 's'}. ` +
-        'Click to switch to a recent group.',
+      text: `$(layers) ${selectedGroup.name}${slotBadge}`,
+      tooltip: this.buildTooltip(lines.join('\n')),
       command: `${EXTENSION_NAME}.recentGroups`
     };
+  }
+
+  private buildTooltip(title: string, description?: string): MarkdownString {
+    const parts = description ? `${title}\n\n${description}` : title;
+    const md = new MarkdownString(parts, true);
+    md.supportThemeIcons = true;
+    return md;
   }
 
   private update(): void {

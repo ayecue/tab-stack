@@ -610,7 +610,7 @@ describe('TabManagerService', () => {
       // Enriched data should include layout and tabs
       if (data.groups.length > 0) {
         expect(data.groups[0]).toHaveProperty('layout');
-        expect(data.groups[0]).toHaveProperty('tabs');
+        expect(data.groups[0]).toHaveProperty('tabsByColumn');
       }
     });
 

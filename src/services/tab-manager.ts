@@ -810,18 +810,16 @@ export class TabManagerService implements ITabManagerService {
     });
   }
 
-  private buildTabSummaries(container: StateContainer): CollectionTabSummary[] {
+  private buildTabsByColumn(container: StateContainer): CollectionTabSummary[][] {
     const tabGroups = Object.values(container.state.tabState.tabGroups);
 
-    return tabGroups.reduce<CollectionTabSummary[]>((result, group) => {
-      const groupTabs = group.tabs.map((tab) => ({
+    return tabGroups.map((group) =>
+      group.tabs.map((tab) => ({
         label: tab.label,
         kind: tab.kind,
         uri: 'uri' in tab ? tab.uri : undefined
-      }));
-      result.push(...groupTabs);
-      return result;
-    }, []);
+      }))
+    );
   }
 
   private buildGroupSummaries() {
@@ -844,7 +842,7 @@ export class TabManagerService implements ITabManagerService {
         tabCount,
         columnCount: tabGroupsArray.length,
         layout: group.state.layout,
-        tabs: this.buildTabSummaries(group)
+        tabsByColumn: this.buildTabsByColumn(group)
       };
     });
   }
@@ -869,7 +867,7 @@ export class TabManagerService implements ITabManagerService {
         tabCount,
         columnCount: tabGroupsArray.length,
         layout: entry.state.layout,
-        tabs: this.buildTabSummaries(entry)
+        tabsByColumn: this.buildTabsByColumn(entry)
       };
     });
   }
@@ -894,7 +892,7 @@ export class TabManagerService implements ITabManagerService {
         tabCount,
         columnCount: tabGroupsArray.length,
         layout: addon.state.layout,
-        tabs: this.buildTabSummaries(addon)
+        tabsByColumn: this.buildTabsByColumn(addon)
       };
     });
   }

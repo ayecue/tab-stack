@@ -28,7 +28,7 @@ interface AddonItemProps {
   tabCount: number;
   columnCount: number;
   layout?: Layout;
-  tabs?: CollectionTabSummary[];
+  tabsByColumn?: CollectionTabSummary[][];
 }
 
 export const AddonItem: React.FC<AddonItemProps> = ({
@@ -48,7 +48,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
   tabCount,
   columnCount,
   layout,
-  tabs
+  tabsByColumn
 }) => {
   const { messagingService } = useTabContext();
 
@@ -90,7 +90,7 @@ export const AddonItem: React.FC<AddonItemProps> = ({
         tabCount={tabCount}
         columnCount={columnCount}
         layout={layout}
-        tabs={tabs}
+        tabsByColumn={tabsByColumn}
       />
     )
   });

@@ -34,7 +34,7 @@ interface GroupItemProps {
   tabCount: number;
   columnCount: number;
   layout?: Layout;
-  tabs?: CollectionTabSummary[];
+  tabsByColumn?: CollectionTabSummary[][];
 }
 
 export const GroupItem: React.FC<GroupItemProps> = ({
@@ -58,7 +58,7 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   tabCount,
   columnCount,
   layout,
-  tabs
+  tabsByColumn
 }) => {
   const { messagingService } = useTabContext();
 
@@ -117,7 +117,7 @@ export const GroupItem: React.FC<GroupItemProps> = ({
         tabCount={tabCount}
         columnCount={columnCount}
         layout={layout}
-        tabs={tabs}
+        tabsByColumn={tabsByColumn}
       />
     )
   });

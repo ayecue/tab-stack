@@ -75,7 +75,7 @@ describe('StatusBarService', () => {
 
     const statusBarService = new StatusBarService(service as never);
 
-    expect(statusBarItem.text).toBe('Tab Stack: Group One [3]');
+    expect(statusBarItem.text).toBe('$(layers) Group One [3]');
     expect(statusBarItem.command).toBe('tabStack.recentGroups');
     expect(statusBarItem.show).toHaveBeenCalled();
 
@@ -103,7 +103,7 @@ describe('StatusBarService', () => {
 
     syncEmitter.fire({});
 
-    expect(statusBarItem.text).toBe('Tab Stack: Unsaved Layout');
+    expect(statusBarItem.text).toBe('$(layers) Unsaved');
     expect(statusBarItem.command).toBe('tabStack.recentGroups');
 
     statusBarService.dispose();
@@ -135,7 +135,7 @@ describe('StatusBarService', () => {
       onDidSyncCollections: vi.fn(() => ({ dispose: vi.fn() }))
     } as never);
 
-    expect(statusBarItem.text).toBe('Tab Stack: Save Group');
+    expect(statusBarItem.text).toBe('$(layers) Save Group');
     expect(statusBarItem.command).toBe('tabStack.createGroup');
 
     statusBarService.dispose();

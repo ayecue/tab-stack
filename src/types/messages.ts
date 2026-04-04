@@ -42,7 +42,7 @@ export interface CollectionSummaryBase {
   tabCount: number;
   columnCount: number;
   layout: Layout;
-  tabs: CollectionTabSummary[];
+  tabsByColumn: CollectionTabSummary[][];
 }
 
 export interface GroupSummary extends CollectionSummaryBase {

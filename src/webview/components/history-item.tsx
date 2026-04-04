@@ -13,7 +13,7 @@ interface HistoryItemProps {
   tabCount: number;
   columnCount: number;
   layout?: Layout;
-  tabs?: CollectionTabSummary[];
+  tabsByColumn?: CollectionTabSummary[][];
 }
 
 export const HistoryItem: React.FC<HistoryItemProps> = ({
@@ -22,7 +22,7 @@ export const HistoryItem: React.FC<HistoryItemProps> = ({
   tabCount,
   columnCount,
   layout,
-  tabs
+  tabsByColumn
 }) => {
   const { messagingService } = useTabContext();
 
@@ -54,7 +54,7 @@ export const HistoryItem: React.FC<HistoryItemProps> = ({
         tabCount={tabCount}
         columnCount={columnCount}
         layout={layout}
-        tabs={tabs}
+        tabsByColumn={tabsByColumn}
       />
     )
   });

@@ -61,6 +61,7 @@ export const {
   EndOfLine,
   FileType,
   FilePermission,
+  MarkdownString,
 } = vscode;
 
 export const window = enhancedWindow;
