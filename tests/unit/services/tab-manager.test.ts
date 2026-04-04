@@ -333,14 +333,37 @@ describe('TabManagerService', () => {
     });
 
     it('imports state file', async () => {
+      const importedPreviousGroup = {
+        id: 'group-1',
+        name: 'Imported Previous',
+        state: {
+          tabState: { tabGroups: {}, activeGroup: null },
+          layout: { groups: [], orientation: 0 }
+        },
+        createdAt: Date.now() - 1000,
+        lastSelectedAt: Date.now() - 1000
+      };
+      const importedSelectedGroup = {
+        id: 'group-2',
+        name: 'Imported Current',
+        state: {
+          tabState: { tabGroups: {}, activeGroup: null },
+          layout: { groups: [], orientation: 0 }
+        },
+        createdAt: Date.now(),
+        lastSelectedAt: Date.now()
+      };
       const mockData = new TextEncoder().encode(JSON.stringify({
-        version: 2,
-        groups: {},
+        version: 3,
+        groups: {
+          'group-1': importedPreviousGroup,
+          'group-2': importedSelectedGroup
+        },
         history: {},
         addons: {},
         quickSlots: {},
-        selectedGroup: null,
-        previousSelectedGroup: null
+        selectedGroup: 'group-2',
+        previousSelectedGroup: 'group-1'
       }));
       
       vi.mocked(workspace.fs.readFile).mockResolvedValue(mockData);
@@ -349,6 +372,8 @@ describe('TabManagerService', () => {
       await service.importStateFile('/import.json');
       
       expect(workspace.fs.readFile).toHaveBeenCalled();
+      expect(service.state.stateContainer?.id).toBe('group-2');
+      expect(service.state.previousStateContainer?.id).toBe('group-1');
     });
 
     it('handles invalid import file', async () => {
@@ -624,6 +649,32 @@ describe('TabManagerService', () => {
       
       // Should not create or switch
       expect(service.state.groups['branch/develop']).toBeUndefined();
+    });
+
+    it('does not reattach handlers when only git integration changes', async () => {
+      const attachSpy = vi.spyOn(service, 'attachStateHandler');
+
+      await configService.emitConfigChange({
+        gitIntegration: {
+          enabled: true,
+          mode: GitIntegrationMode.FullAuto,
+          groupPrefix: 'git:'
+        }
+      });
+
+      expect(gitService.updateRepository).toHaveBeenCalled();
+      expect(attachSpy).not.toHaveBeenCalled();
+    });
+
+    it('reattaches handlers when storage type changes', async () => {
+      const attachSpy = vi.spyOn(service, 'attachStateHandler');
+
+      await configService.emitConfigChange({
+        storageType: 'workspace-state'
+      });
+
+      expect(attachSpy).toHaveBeenCalledTimes(1);
+      expect(gitService.updateRepository).not.toHaveBeenCalled();
     });
   });
 

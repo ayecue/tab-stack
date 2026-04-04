@@ -49,7 +49,7 @@ export const TabListFlat: React.FC<TabListFlatProps> = ({
     <ul className="tab-list-flat" role="list">
       {flatList.map(({ tab, label, isActive, tabGroupIndex, viewColumn }) => (
         <TabItem
-          key={`${tab.viewColumn}:${tab.label}`}
+          key={tab.id}
           tab={tab}
           onOpen={() =>
             messagingService.openTab(tabGroupIndex, tab.viewColumn)

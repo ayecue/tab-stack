@@ -15,25 +15,24 @@ describe('resolveTabKindColor', () => {
     expect(resolveTabKindColor(rules, 'tabInputTerminal', 'bash')).toBe('#3b8eea');
   });
 
-  it('returns undefined when no rule matches', () => {
-    expect(resolveTabKindColor(rules, 'tabInputWebview', 'Preview')).toBeUndefined();
+  it('returns the default color when no rule matches', () => {
+    expect(resolveTabKindColor(rules, 'tabInputWebview', 'Preview')).toBe('#cccccc');
   });
 
   it('matches case-insensitively on kind', () => {
     expect(resolveTabKindColor(rules, 'TabInputTerminal', 'zsh')).toBe('#3b8eea');
   });
 
-  it('returns the first matching rule (kind-only before pattern)', () => {
-    // The first tabInputText rule (no pattern) matches before the pattern rule
-    expect(resolveTabKindColor(rules, 'tabInputText', 'app.test.ts')).toBe('#2472c8');
+  it('returns the last matching rule when multiple rules match', () => {
+    expect(resolveTabKindColor(rules, 'tabInputText', 'app.test.ts')).toBe('#ff0000');
   });
 
-  it('matches a pattern rule when listed first', () => {
+  it('lets a later kind-only rule override an earlier pattern rule', () => {
     const patternFirst: TabKindColorRule[] = [
       { kind: 'tabInputText', color: '#ff0000', pattern: '\\.test\\.' },
       { kind: 'tabInputText', color: '#2472c8' },
     ];
-    expect(resolveTabKindColor(patternFirst, 'tabInputText', 'app.test.ts')).toBe('#ff0000');
+    expect(resolveTabKindColor(patternFirst, 'tabInputText', 'app.test.ts')).toBe('#2472c8');
   });
 
   it('falls through pattern rule when label does not match', () => {
@@ -52,7 +51,7 @@ describe('resolveTabKindColor', () => {
     expect(resolveTabKindColor(badRules, 'tabInputText', 'file.ts')).toBe('#2472c8');
   });
 
-  it('returns undefined for empty rules array', () => {
-    expect(resolveTabKindColor([], 'tabInputText', 'file.ts')).toBeUndefined();
+  it('returns the default color for empty rules array', () => {
+    expect(resolveTabKindColor([], 'tabInputText', 'file.ts')).toBe('#cccccc');
   });
 });

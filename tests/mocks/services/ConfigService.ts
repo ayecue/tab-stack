@@ -2,6 +2,8 @@ import { vi } from 'vitest';
 import type { ConfigService } from '../../../src/services/config';
 
 export class MockConfigService {
+  private _configChangeListeners: Array<(event: any) => unknown> = [];
+
   public get = vi.fn();
   public onDidChange = vi.fn(() => ({ dispose: vi.fn() }));
   public getHistoryMaxEntries = vi.fn();
@@ -13,7 +15,17 @@ export class MockConfigService {
   public getTabRecoveryMappings = vi.fn();
   public setTabRecoveryMappings = vi.fn();
   public getTabKindColors = vi.fn();
-  public onDidChangeConfig = vi.fn(() => ({ dispose: vi.fn() }));
+  public onDidChangeConfig = vi.fn((listener: (event: any) => unknown) => {
+    this._configChangeListeners.push(listener);
+
+    return {
+      dispose: vi.fn(() => {
+        this._configChangeListeners = this._configChangeListeners.filter(
+          (entry) => entry !== listener
+        );
+      })
+    };
+  });
   
   constructor(defaultConfig: Record<string, any> = {}) {
     this.get.mockImplementation((key: string) => defaultConfig[key]);
@@ -39,5 +51,11 @@ export class MockConfigService {
   public setConfigValue(key: string, value: any): void {
     const current = this.get.mock.results[0]?.value || {};
     this.get.mockImplementation((k: string) => k === key ? value : current[k]);
+  }
+
+  public async emitConfigChange(event: Record<string, any>): Promise<void> {
+    await Promise.all(
+      this._configChangeListeners.map((listener) => Promise.resolve(listener(event)))
+    );
   }
 }

@@ -219,7 +219,7 @@ suite('Lifecycle: quick slots', () => {
     assert.ok(state, 'State should be accessible after quickSwitch with no previous');
   });
 
-  test('assign all slots to same group then clear all', async function () {
+  test('reassigning the same group across all slots keeps only the latest slot', async function () {
     this.timeout(1000 * 30);
     const name = `WL-AllSlots-${Date.now()}`;
     await createGroup(name);
@@ -228,7 +228,8 @@ suite('Lifecycle: quick slots', () => {
     const group = Object.values(state.groups).find((g) => g.name === name);
     assert.ok(group, 'Group should exist');
 
-    // Assign slots 1-9 to the same group
+    // Assign slots 1-9 to the same group. Only the last slot should remain,
+    // because a group can only be assigned to one quick slot at a time.
     await trackSync(async () => {
       for (let i = 1; i <= 9; i++) {
         await dispatch({ type: 'assign-quick-slot', slot: String(i), groupId: group.id });
@@ -236,9 +237,10 @@ suite('Lifecycle: quick slots', () => {
     });
 
     state = await getState();
-    for (let i = 1; i <= 9; i++) {
-      assert.strictEqual(state.quickSlots[String(i)], group.id, `Slot ${i} should be assigned`);
+    for (let i = 1; i <= 8; i++) {
+      assert.ok(!state.quickSlots[String(i)], `Slot ${i} should be empty after reassignment`);
     }
+    assert.strictEqual(state.quickSlots['9'], group.id, 'Only the latest slot should remain assigned');
 
     // Clear all slots
     await trackSync(async () => {

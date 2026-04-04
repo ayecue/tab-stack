@@ -163,6 +163,8 @@ describe('TabCollectionStateHandler', () => {
     });
 
     it('prunes history when exceeding max entries', () => {
+      const baseTime = 1_000_000;
+
       // Add multiple history entries
       for (let i = 0; i < 15; i++) {
         const history: StateContainer = {
@@ -172,15 +174,19 @@ describe('TabCollectionStateHandler', () => {
             tabState: { tabGroups: {}, activeGroup: null },
             layout: { groups: [], orientation: 0 }
           },
-          createdAt: Date.now() - (15 - i) * 1000, // Older entries have earlier timestamps
-          lastSelectedAt: Date.now()
+          createdAt: baseTime + i,
+          lastSelectedAt: baseTime + i
         };
         handler.addHistory(history);
       }
 
       handler.pruneHistory(10);
 
-      expect(Object.keys(handler.history).length).toBeLessThanOrEqual(10);
+      expect(Object.keys(handler.history)).toHaveLength(10);
+      expect(handler.history['history-0']).toBeUndefined();
+      expect(handler.history['history-4']).toBeUndefined();
+      expect(handler.history['history-5']).toBeDefined();
+      expect(handler.history['history-14']).toBeDefined();
     });
 
     it('removes history', () => {

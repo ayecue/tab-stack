@@ -226,6 +226,7 @@ describe('ConfigService', () => {
       const event = await eventPromise;
       expect(event).toHaveProperty('gitIntegration');
       expect((event as any).gitIntegration.enabled).toBe(true);
+      expect((event as any).masterWorkspaceFolder).toBeUndefined();
     });
 
     it('fires event when storage type changes', async () => {
@@ -248,6 +249,57 @@ describe('ConfigService', () => {
       const event = await eventPromise;
       expect(event).toHaveProperty('storageType');
       expect((event as any).storageType).toBe(StorageType.WorkspaceState);
+      expect((event as any).masterWorkspaceFolder).toBeUndefined();
+    });
+
+    it('fires event when workspace folder changes', async () => {
+      vi.spyOn(workspace, 'getConfiguration').mockReturnValue({
+        get: vi.fn((key: string) => {
+          if (key === 'masterWorkspaceFolder') return '/custom/workspace';
+          return undefined;
+        })
+      } as any);
+
+      configService = new ConfigService();
+
+      const eventPromise = new Promise((resolve) => {
+        configService.onDidChangeConfig((event) => {
+          resolve(event);
+        });
+      });
+
+      mockConfigEmitter.fire({
+        affectsConfiguration: (section: string) =>
+          section === 'tabStack.masterWorkspaceFolder'
+      });
+
+      await expect(eventPromise).resolves.toMatchObject({
+        masterWorkspaceFolder: '/custom/workspace'
+      });
+    });
+
+    it('fires event when tab recovery mappings change', async () => {
+      const mappings = { custom: 'workbench.action.files.openFile' };
+      vi.spyOn(workspace, 'getConfiguration').mockReturnValue({
+        get: vi.fn(() => mappings)
+      } as any);
+
+      configService = new ConfigService();
+
+      const eventPromise = new Promise((resolve) => {
+        configService.onDidChangeConfig((event) => {
+          resolve(event);
+        });
+      });
+
+      mockConfigEmitter.fire({
+        affectsConfiguration: (section: string) =>
+          section === 'tabStack.tabRecoveryMappings'
+      });
+
+      await expect(eventPromise).resolves.toMatchObject({
+        tabRecoveryMappings: mappings
+      });
     });
 
     it('does not fire event for unrelated configuration changes', () => {

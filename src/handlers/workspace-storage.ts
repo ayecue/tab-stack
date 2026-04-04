@@ -1,5 +1,6 @@
 import { ExtensionContext } from 'vscode';
 
+import { getLogger, ScopedLogger } from '../services/logger';
 import { PersistenceStore } from '../stores/persistence';
 import { transform as migrate } from '../transformers/migration';
 import { PersistenceHandler } from '../types/persistence';
@@ -13,10 +14,12 @@ const WORKSPACE_STATE_KEY = 'tabManagerState';
 export class WorkspaceStorageHandler implements PersistenceHandler {
   private _context: ExtensionContext;
   private _store: PersistenceStore;
+  private _log: ScopedLogger;
 
   constructor(context: ExtensionContext, store: PersistenceStore) {
     this._context = context;
     this._store = store;
+    this._log = getLogger().child('WorkspaceStorage');
   }
 
   async load(): Promise<void> {
@@ -50,7 +53,7 @@ export class WorkspaceStorageHandler implements PersistenceHandler {
         success: true
       });
     } catch (error) {
-      console.error('Failed to load workspace state:', error);
+      this._log.error('Failed to load workspace state', error);
       this._store.send({
         type: 'DONE',
         data: createDefaultTabStateFileContent(),
@@ -70,7 +73,7 @@ export class WorkspaceStorageHandler implements PersistenceHandler {
     try {
       await this._context.workspaceState.update(WORKSPACE_STATE_KEY, data);
     } catch (error) {
-      console.error('Failed to save workspace state:', error);
+      this._log.error('Failed to save workspace state', error);
     }
   }
 

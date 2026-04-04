@@ -28,21 +28,25 @@ export class ConfigService implements Disposable {
 
   private initializeListeners() {
     this._configChangeListener = workspace.onDidChangeConfiguration((e) => {
-      const changes: ConfigChangeEvent = {
-        masterWorkspaceFolder: this.getMasterWorkspaceFolder()
-      };
+      const changes: ConfigChangeEvent = {};
 
-      if (
-        e.affectsConfiguration('tabStack.masterWorkspaceFolder') ||
-        e.affectsConfiguration('tabStack.gitIntegration') ||
-        e.affectsConfiguration('tabStack.storage.type')
-      ) {
-        if (e.affectsConfiguration('tabStack.gitIntegration')) {
-          changes.gitIntegration = this.getGitIntegrationConfig();
-        }
-        if (e.affectsConfiguration('tabStack.storage.type')) {
-          changes.storageType = this.getStorageType();
-        }
+      if (e.affectsConfiguration('tabStack.masterWorkspaceFolder')) {
+        changes.masterWorkspaceFolder = this.getMasterWorkspaceFolder();
+      }
+
+      if (e.affectsConfiguration('tabStack.gitIntegration')) {
+        changes.gitIntegration = this.getGitIntegrationConfig();
+      }
+
+      if (e.affectsConfiguration('tabStack.storage.type')) {
+        changes.storageType = this.getStorageType();
+      }
+
+      if (e.affectsConfiguration('tabStack.tabRecoveryMappings')) {
+        changes.tabRecoveryMappings = this.getTabRecoveryMappings();
+      }
+
+      if (Object.keys(changes).length > 0) {
         this._onDidChangeConfig.fire(changes);
       }
     });

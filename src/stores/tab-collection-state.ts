@@ -146,7 +146,7 @@ export const createTabCollectionStateStore = (): TabCollectionStateStore => {
           return context;
         }
         const sortedEntries = historyEntries.sort(
-          (a, b) => b.createdAt - a.createdAt
+          (a, b) => a.createdAt - b.createdAt
         );
         const entriesToRemove = sortedEntries.slice(
           0,

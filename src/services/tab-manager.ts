@@ -169,9 +169,19 @@ export class TabManagerService implements ITabManagerService {
       this._context,
       this._configService
     );
-    await this._persistenceMediator.load();
+    const persistenceMediator = this._persistenceMediator;
+    await persistenceMediator.load();
 
-    const fileState = this._persistenceMediator.get();
+    if (
+      this._persistenceMediator !== persistenceMediator ||
+      !this._activeStateHandler ||
+      !this._stateContainerHandler ||
+      !this._collectionHandler
+    ) {
+      return;
+    }
+
+    const fileState = persistenceMediator.get();
 
     this._collectionHandler.initialize({
       groups: fileState.groups,
@@ -280,8 +290,18 @@ export class TabManagerService implements ITabManagerService {
     // No longer need to listen to tab events here - TabActiveStateHandler does this
     this._disposables.push(
       this._configService.onDidChangeConfig(async (changes) => {
-        if (changes.masterWorkspaceFolder !== undefined) {
+        const shouldReattachStateHandlers =
+          changes.masterWorkspaceFolder !== undefined ||
+          changes.storageType !== undefined;
+
+        if (shouldReattachStateHandlers) {
           await this.attachStateHandler();
+        }
+
+        if (
+          changes.masterWorkspaceFolder !== undefined ||
+          changes.gitIntegration !== undefined
+        ) {
           this._gitService.updateRepository();
         }
       })
@@ -407,6 +427,11 @@ export class TabManagerService implements ITabManagerService {
     this._stateContainerHandler?.unlockState();
     this._rendering = false;
     this._renderCompleteEmitter.fire();
+
+    if (!this._stateContainerHandler || !this._activeStateHandler) {
+      return;
+    }
+
     this._stateContainerHandler.updateTabState(
       this._activeStateHandler.getTabManagerState()
     );
@@ -543,7 +568,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async importStateFile(importUri: string): Promise<void> {
-    if (!this._collectionHandler) return;
+    if (!this._collectionHandler || !this._stateContainerHandler) return;
 
     const data = await workspace.fs.readFile(Uri.file(importUri));
     let fileContent: TabStateFileContent | null = null;
@@ -577,8 +602,27 @@ export class TabManagerService implements ITabManagerService {
       quickSlots: newContent.quickSlots
     });
 
-    // Apply the imported state
-    this.applyState(null);
+    const currentStateContainer =
+      newContent.selectedGroup in newContent.groups
+        ? newContent.groups[newContent.selectedGroup]
+        : this._stateContainerHandler.currentStateContainer ??
+          createEmptyStateContainer();
+    const previousStateContainer =
+      newContent.previousSelectedGroup in newContent.groups
+        ? newContent.groups[newContent.previousSelectedGroup]
+        : null;
+
+    this._stateContainerHandler.initialize(
+      currentStateContainer,
+      previousStateContainer
+    );
+
+    if (newContent.selectedGroup in newContent.groups) {
+      this.applyState(null);
+      return;
+    }
+
+    this.triggerSync();
   }
 
   async exportGroup(groupId: string, exportUri: string): Promise<void> {

@@ -37,7 +37,7 @@ export interface RecoveryCommandResult {
 }
 
 export interface ConfigChangeEvent {
-  masterWorkspaceFolder: string | null;
+  masterWorkspaceFolder?: string | null;
   gitIntegration?: GitIntegrationConfig;
   storageType?: StorageType;
   tabRecoveryMappings?: TabRecoveryMapping;
