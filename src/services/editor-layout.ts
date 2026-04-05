@@ -76,7 +76,7 @@ export class EditorLayoutService implements Disposable {
     this._active = false;
 
     if (this._timer) {
-      clearInterval(this._timer);
+      clearTimeout(this._timer);
       this._timer = null;
     }
 

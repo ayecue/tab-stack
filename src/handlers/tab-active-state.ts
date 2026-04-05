@@ -9,7 +9,6 @@ import {
   window
 } from 'vscode';
 
-import { ConfigService } from '../services/config';
 import { EditorLayoutService } from '../services/editor-layout';
 import { getLogger, ScopedLogger } from '../services/logger';
 import {

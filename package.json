@@ -158,14 +158,6 @@
       "editor/title/run": [],
       "editor/context": [
         {
-          "command": "tabStack.createGroupFromResources",
-          "group": "navigation@18"
-        },
-        {
-          "command": "tabStack.createAddonFromResources",
-          "group": "navigation@19"
-        },
-        {
           "command": "tabStack.findTab",
           "group": "navigation@20"
         },

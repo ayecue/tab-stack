@@ -1,4 +1,5 @@
 import debounce from 'debounce';
+import { nanoid } from 'nanoid';
 import {
   Disposable,
   EventEmitter,
@@ -26,6 +27,8 @@ export class WebviewHandler implements Disposable {
   private _view: WebviewView;
   private _context: ExtensionContext;
   private _messageEmitter: EventEmitter<any>;
+
+  private _messageListener: Disposable | null = null;
 
   constructor(view: WebviewView, context: ExtensionContext) {
     this._view = view;
@@ -64,7 +67,7 @@ export class WebviewHandler implements Disposable {
     };
 
     this._view.webview.html = await this._getHtmlForWebview();
-    this._view.webview.onDidReceiveMessage((data) => {
+    this._messageListener = this._view.webview.onDidReceiveMessage((data) => {
       this._messageEmitter.fire(data);
     });
   }
@@ -76,12 +79,16 @@ export class WebviewHandler implements Disposable {
 
     const cssWebviewUri = this._view.webview.asWebviewUri(cssUri);
     const jsWebviewUri = this._view.webview.asWebviewUri(jsUri);
+    const cspSource = this._view.webview.cspSource;
+    const nonce = nanoid();
 
     const htmlData = await workspace.fs.readFile(htmlUri);
     let html = new TextDecoder().decode(htmlData);
 
     html = html.replace('{{CSS_URI}}', cssWebviewUri.toString());
     html = html.replace('{{JS_URI}}', jsWebviewUri.toString());
+    html = html.replaceAll('{{CSP_SOURCE}}', cspSource);
+    html = html.replaceAll('{{NONCE}}', nonce);
 
     return html;
   }
@@ -132,7 +139,9 @@ export class WebviewHandler implements Disposable {
 
   dispose() {
     this._messageEmitter.dispose();
+    this._messageListener?.dispose();
 
+    this._messageListener = null;
     this._messageEmitter = null;
     this._context = null;
     this._view = null;
