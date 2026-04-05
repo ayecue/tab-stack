@@ -10,7 +10,9 @@ export class WebviewMediator implements Disposable {
   private _webview: WebviewHandler;
 
   private _onMessageListener?: Disposable;
-  private _onDidSyncTabsListener?: Disposable;
+  private _onDidSyncTabStateListener?: Disposable;
+  private _onDidSyncCollectionsListener?: Disposable;
+  private _onDidSyncConfigListener?: Disposable;
   private _onDidNotifyListener?: Disposable;
 
   constructor(
@@ -30,9 +32,21 @@ export class WebviewMediator implements Disposable {
       await this._messageHandler.handle(data);
     });
 
-    this._onDidSyncTabsListener = this._tabManager.onDidSyncTabs(
-      async (payload) => {
-        await this._webview.sendSync(payload);
+    this._onDidSyncTabStateListener = this._tabManager.onDidSyncTabState(
+      (payload) => {
+        this._webview.sendTabStateSync(payload);
+      }
+    );
+
+    this._onDidSyncCollectionsListener = this._tabManager.onDidSyncCollections(
+      (payload) => {
+        this._webview.sendCollectionsSync(payload);
+      }
+    );
+
+    this._onDidSyncConfigListener = this._tabManager.onDidSyncConfig(
+      (payload) => {
+        this._webview.sendConfigSync(payload);
       }
     );
 
@@ -45,7 +59,9 @@ export class WebviewMediator implements Disposable {
 
   dispose() {
     this._onMessageListener?.dispose();
-    this._onDidSyncTabsListener?.dispose();
+    this._onDidSyncTabStateListener?.dispose();
+    this._onDidSyncCollectionsListener?.dispose();
+    this._onDidSyncConfigListener?.dispose();
     this._onDidNotifyListener?.dispose();
     this._webview.dispose();
     this._messageHandler.dispose();

@@ -8,18 +8,21 @@
     "email": "soerenwehmeier@googlemail.com"
   },
   "icon": "icon.png",
-  "version": "1.2.7",
+  "version": "1.3.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:ayecue/tab-stack.git"
   },
   "devDependencies": {
+    "@floating-ui/react": "^0.27.19",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
     "@types/color-convert": "^2.0.0",
     "@types/glob": "^8.1.0",
+    "@types/handlebars": "^4.0.40",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.12",
+    "@types/object-inspect": "^1.13.0",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@types/vscode": "^1.90.0",
@@ -120,9 +123,56 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "tabStack.refresh",
+          "when": "view == tabStackView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tabStack.findTab",
+          "when": "view == tabStackView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tabStack.snapshot",
+          "when": "view == tabStackView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "tabStack.recentSnapshots",
+          "when": "view == tabStackView",
+          "group": "navigation@4"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tabStack.createGroup",
+          "group": "navigation@20"
+        },
+        {
+          "command": "tabStack.findTab",
+          "group": "navigation@21"
+        }
+      ],
       "editor/title/run": [],
-      "editor/context": [],
-      "explorer/context": [],
+      "editor/context": [
+        {
+          "command": "tabStack.findTab",
+          "group": "navigation@20"
+        },
+        {
+          "command": "tabStack.quickSwitch",
+          "group": "navigation@21"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "tabStack.importGroup",
+          "when": "resourceExtname == .tabstack",
+          "group": "navigation@20"
+        }
+      ],
       "commandPalette": []
     },
     "submenus": [],
@@ -148,9 +198,28 @@
         "category": "Tab Stack"
       },
       {
+        "command": "tabStack.recentGroups",
+        "title": "Switch To Recent Group",
+        "category": "Tab Stack",
+        "icon": "$(history)"
+      },
+      {
+        "command": "tabStack.findTab",
+        "title": "Find Saved Tab",
+        "category": "Tab Stack",
+        "icon": "$(search)"
+      },
+      {
+        "command": "tabStack.recentSnapshots",
+        "title": "Restore Recent Snapshot",
+        "category": "Tab Stack",
+        "icon": "$(history)"
+      },
+      {
         "command": "tabStack.createGroup",
         "title": "Save Current Tabs as Group",
-        "category": "Tab Stack"
+        "category": "Tab Stack",
+        "icon": "$(save-all)"
       },
       {
         "command": "tabStack.deleteGroup",
@@ -160,7 +229,8 @@
       {
         "command": "tabStack.snapshot",
         "title": "Capture Tabs Snapshot",
-        "category": "Tab Stack"
+        "category": "Tab Stack",
+        "icon": "$(device-camera)"
       },
       {
         "command": "tabStack.restoreSnapshot",
@@ -176,6 +246,12 @@
         "command": "tabStack.createAddon",
         "title": "Save Current Tabs as Add-on",
         "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.createAddonFromResources",
+        "title": "Save File as Add-on",
+        "category": "Tab Stack",
+        "icon": "$(plug)"
       },
       {
         "command": "tabStack.applyAddon",
@@ -200,6 +276,16 @@
       {
         "command": "tabStack.clearAllTabs",
         "title": "Close All Tabs",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.exportGroup",
+        "title": "Export Group to File",
+        "category": "Tab Stack"
+      },
+      {
+        "command": "tabStack.importGroup",
+        "title": "Import Group from File",
         "category": "Tab Stack"
       },
       {
@@ -353,6 +439,158 @@
           ],
           "default": "file",
           "description": "Storage method for tab state persistence."
+        },
+        "tabStack.statusBar.visible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Tab Stack status bar indicator with the current group and quick access to recent groups."
+        },
+        "tabStack.appearance.tabKindColors": {
+          "type": "array",
+          "default": [
+            {
+              "kind": "tabInputText",
+              "color": "#2472c8"
+            },
+            {
+              "kind": "tabInputTextDiff",
+              "color": "#f44747"
+            },
+            {
+              "kind": "tabInputCustom",
+              "color": "#c586c0"
+            },
+            {
+              "kind": "tabInputWebview",
+              "color": "#2aa198"
+            },
+            {
+              "kind": "tabInputNotebook",
+              "color": "#16825d"
+            },
+            {
+              "kind": "tabInputNotebookDiff",
+              "color": "#c19c00"
+            },
+            {
+              "kind": "tabInputTerminal",
+              "color": "#3b8eea"
+            },
+            {
+              "kind": "unknown",
+              "pattern": "^Settings$",
+              "color": "#8F38E5"
+            },
+            {
+              "kind": "unknown",
+              "pattern": "^Extensions$",
+              "color": "#c586c0"
+            },
+            {
+              "kind": "unknown",
+              "pattern": "^Welcome$",
+              "color": "#F5276C"
+            },
+            {
+              "kind": "tabInputWebview",
+              "pattern": "^Release Notes: [0-9.]+$",
+              "color": "#82E8E8"
+            }
+          ],
+          "description": "Color rules for tab kind labels and icons. Each rule matches by tab kind and optionally by a label regex pattern. The first matching rule wins.",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "color"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "Tab kind identifier (e.g. 'tabInputText', 'tabInputWebview', 'unknown')."
+              },
+              "color": {
+                "type": "string",
+                "description": "CSS color value (e.g. '#ff6161', 'rgb(255, 97, 97)')."
+              },
+              "pattern": {
+                "type": "string",
+                "description": "Optional regex pattern matched against the tab label. When omitted, the rule matches all tabs of the specified kind."
+              }
+            }
+          }
+        },
+        "tabStack.tabRecoveryMappings": {
+          "type": "object",
+          "default": {
+            "^Settings$": {
+              "command": "workbench.action.openSettings2",
+              "args": [
+                {
+                  "openToSide": false
+                }
+              ]
+            },
+            "^Keyboard Shortcuts$": "workbench.action.openGlobalKeybindings",
+            "^Extensions$": "workbench.view.extensions",
+            "^Welcome$": "workbench.action.openWalkthrough",
+            "^Release Notes: [0-9.]+$": "update.showCurrentReleaseNotes"
+          },
+          "description": "Mapping of identifiers to recovery commands for unknown tab types. Keys serve as identifiers (or as label regex patterns for backward compatibility). Values are either a command ID string (key is the label pattern) or an object with 'command', optional 'match' (regex criteria including 'label'), optional 'args', and optional 'nextTickDelay'.",
+          "patternProperties": {
+            ".*": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "VS Code command ID to execute. The key is used as a regex pattern matched against the tab label."
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "command": {
+                      "type": "string",
+                      "description": "VS Code command ID to execute."
+                    },
+                    "args": {
+                      "type": "array",
+                      "description": "Arguments to pass to the command. String values support ${property} interpolation from the tab info (e.g. ${uri}, ${viewType}, ${label}, ${viewColumn}).",
+                      "items": {}
+                    },
+                    "nextTickDelay": {
+                      "type": "number",
+                      "description": "Milliseconds to wait after command execution before checking for the tab. 0 or omitted for immediate (setImmediate).",
+                      "default": 0
+                    },
+                    "match": {
+                      "type": "object",
+                      "description": "Regex criteria matched against tab properties. All specified fields must match. If 'label' is omitted, the mapping key is used as the label pattern.",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "description": "Regex pattern to match against the tab label. Overrides the mapping key as the label matcher."
+                        },
+                        "kind": {
+                          "type": "string",
+                          "description": "Regex pattern to match against tab kind (e.g. 'tabInputWebview', 'unknown')."
+                        },
+                        "uri": {
+                          "type": "string",
+                          "description": "Regex pattern to match against the tab URI."
+                        },
+                        "viewType": {
+                          "type": "string",
+                          "description": "Regex pattern to match against the tab viewType."
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "command"
+                  ]
+                }
+              ]
+            }
+          }
         }
       }
     }
@@ -362,10 +600,16 @@
     "@vscode/debugprotocol": "^1.68.0",
     "@xstate/store": "^3.11.2",
     "debounce": "^2.2.0",
+    "deep-object-diff": "^1.1.9",
     "filter-obj": "^6.1.0",
+    "handlebars": "^4.7.9",
     "nanoid": "^5.1.6",
+    "non-blocking-schedule": "^0.2.0",
+    "object-inspect": "^1.13.4",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "vscode-icons-js": "^11.6.1",
+    "xstate": "^5.30.0"
   },
   "browserslist": "> 0.25%, not dead"
 }

@@ -1,12 +1,9 @@
 import { Layout } from '../../types/commands';
-import {
-  QuickSlotAssignments,
-  TabStateFileContent
-} from '../../types/tab-manager';
-import { TabState } from '../../types/tabs';
+import { QuickSlotAssignments } from '../../types/tab-manager';
+import { TabStateFileContentV2, TabStateV2 } from './v2';
 
 export interface TabManagerStateV1 {
-  tabState: TabState;
+  tabState: TabStateV2;
   layout: Layout;
 }
 
@@ -28,9 +25,9 @@ export interface TabStateFileContentV1 {
   quickSlots: QuickSlotAssignments;
 }
 
-export function transform(payload: any): TabStateFileContent {
+export function transform(payload: any): TabStateFileContentV2 {
   const content = payload as TabStateFileContentV1;
-  const migratedContent: TabStateFileContent = {
+  const migratedContent: TabStateFileContentV2 = {
     version: 2,
     groups: {},
     history: {},

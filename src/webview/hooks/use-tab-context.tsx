@@ -3,11 +3,13 @@ import React, {
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState,
   useSyncExternalStore
 } from 'react';
 
-import { GitIntegrationConfig, StorageType } from '../../types/config';
+import { GitIntegrationConfig, StorageType, TabKindColors } from '../../types/config';
+import { GroupSummary, HistorySummary, AddonSummary } from '../../types/messages';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
 import {
@@ -33,24 +35,9 @@ interface TabState {
   rendering: boolean;
   error: string | null;
   connectionStatus: ConnectionStatus;
-  groups: Array<{
-    groupId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  histories: Array<{
-    historyId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
-  addons: Array<{
-    addonId: string;
-    name: string;
-    tabCount: number;
-    columnCount: number;
-  }>;
+  groups: GroupSummary[];
+  histories: HistorySummary[];
+  addons: AddonSummary[];
   selectedGroup: string | null;
   quickSlots: QuickSlotAssignments;
   masterWorkspaceFolder: string | null;
@@ -58,6 +45,7 @@ interface TabState {
   gitIntegration?: GitIntegrationConfig;
   historyMaxEntries?: number;
   storageType?: StorageType;
+  tabKindColors: TabKindColors;
 }
 
 interface TabContextValue {
@@ -118,12 +106,12 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     return () => document.removeEventListener('keydown', handleKeydown);
   }, [store, messagingService]);
 
-  const contextValue: TabContextValue = {
+  const contextValue: TabContextValue = useMemo(() => ({
     state,
     messagingService,
     messenger,
     store
-  };
+  }), [state, messagingService, messenger, store]);
 
   return (
     <TabContext.Provider value={contextValue}>{children}</TabContext.Provider>

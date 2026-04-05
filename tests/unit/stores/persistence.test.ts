@@ -15,7 +15,7 @@ describe('PersistenceStore', () => {
 
       expect(snapshot.context.isLoading).toBe(false);
       expect(snapshot.context.data).toBeDefined();
-      expect(snapshot.context.data?.version).toBe(2);
+      expect(snapshot.context.data?.version).toBe(3);
     });
   });
 
@@ -81,7 +81,7 @@ describe('PersistenceStore', () => {
       store.send({ type: 'RESET' });
 
       const snapshot = store.getSnapshot();
-      expect(snapshot.context.data?.version).toBe(2);
+      expect(snapshot.context.data?.version).toBe(3);
       expect(snapshot.context.isLoading).toBe(false);
     });
   });

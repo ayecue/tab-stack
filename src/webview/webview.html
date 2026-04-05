@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{CSP_SOURCE}} https://cdn.jsdelivr.net 'unsafe-inline'; font-src https://cdn.jsdelivr.net; script-src 'nonce-{{NONCE}}'; img-src {{CSP_SOURCE}} https: data:;">
   <title>Tab Stack</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.35/dist/codicon.css">
   <link rel="stylesheet" href="{{CSS_URI}}">
 </head>
 <body>
   <div id="root"></div>
-  <script src="{{JS_URI}}"></script>
+  <script nonce="{{NONCE}}" src="{{JS_URI}}"></script>
 </body>
 </html>

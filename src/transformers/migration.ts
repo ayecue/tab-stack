@@ -2,6 +2,7 @@ import { window } from 'vscode';
 
 import { transform as v0ToV1 } from '../transformers/migration/v0';
 import { transform as v1ToV2 } from '../transformers/migration/v1';
+import { transform as v2ToV3 } from '../transformers/migration/v2';
 import {
   createDefaultTabStateFileContent,
   TabStateFileContent
@@ -13,6 +14,8 @@ export function transform(payload: { version?: number }): TabStateFileContent {
       return transform(v0ToV1(payload));
     } else if (payload.version == 1) {
       return transform(v1ToV2(payload));
+    } else if (payload.version == 2) {
+      return transform(v2ToV3(payload));
     }
 
     return payload as TabStateFileContent;

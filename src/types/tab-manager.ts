@@ -1,15 +1,14 @@
-import { DebouncedFunction } from 'debounce';
 import { nanoid } from 'nanoid';
 import { Disposable, Event } from 'vscode';
 
-import { TabStateHandler } from '../handlers/tab-state';
 import { ConfigService } from '../services/config';
 import { Layout } from './commands';
 import {
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage,
   ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionTabStateSyncMessage
 } from './messages';
-import { SelectionRange } from './selection-tracker';
 import { TabInfo, TabState } from './tabs';
 
 export type QuickSlotIndex = string;
@@ -17,7 +16,6 @@ export type QuickSlotIndex = string;
 export type QuickSlotAssignments = Partial<Record<QuickSlotIndex, string>>;
 
 export interface TabManagerState {
-  selectionMap: Record<string, SelectionRange>;
   tabState: TabState;
   layout: Layout;
 }
@@ -48,15 +46,20 @@ export function createEmptyStateContainer(): StateContainer {
       layout: {
         orientation: 0,
         groups: []
-      },
-      selectionMap: {}
+      }
     },
     lastSelectedAt: 0,
     createdAt: Date.now()
   };
 }
 
-export const CURRENT_STATE_FILE_VERSION = 2;
+export const CURRENT_STATE_FILE_VERSION = 3;
+
+export interface TabStackGroupFile {
+  version: number;
+  type: 'tabstack-group';
+  group: StateContainer;
+}
 
 export interface TabStateFileContent {
   version?: number;
@@ -86,10 +89,15 @@ export interface RenderingItem {
 }
 
 export interface ITabManagerService extends Disposable {
-  readonly state: TabStateHandler;
+  readonly state: {
+    groups: Record<string, StateContainer>;
+    history: Record<string, StateContainer>;
+    addons: Record<string, StateContainer>;
+    stateContainer: StateContainer | null;
+    previousStateContainer: StateContainer | null;
+  };
   readonly config: ConfigService;
 
-  refresh: DebouncedFunction<() => Promise<void>>;
   applyState(oldStateContainer: StateContainer): void;
   toggleTabPin(viewColumn: number, index: number): Promise<void>;
   openTab(viewColumn: number, index: number): Promise<void>;
@@ -118,11 +126,18 @@ export interface ITabManagerService extends Disposable {
   selectWorkspaceFolder(folderPath: string | null): Promise<void>;
   clearWorkspaceFolder(): Promise<void>;
 
-  triggerSync(): void;
+  triggerTabStateSync(): void;
+  triggerCollectionsSync(): void;
+  triggerConfigSync(): void;
 
   exportStateFile(exportUri: string): Promise<void>;
   importStateFile(importUri: string): Promise<void>;
 
-  onDidSyncTabs: Event<Omit<ExtensionTabsSyncMessage, 'type'>>;
+  exportGroup(groupId: string, exportUri: string): Promise<void>;
+  importGroup(importUri: string): Promise<void>;
+
+  onDidSyncTabState: Event<Omit<ExtensionTabStateSyncMessage, 'type'>>;
+  onDidSyncCollections: Event<Omit<ExtensionCollectionsSyncMessage, 'type'>>;
+  onDidSyncConfig: Event<Omit<ExtensionConfigSyncMessage, 'type'>>;
   onDidNotify: Event<Omit<ExtensionNotificationMessage, 'type'>>;
 }

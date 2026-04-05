@@ -1,27 +1,16 @@
-const { suite, test } = require('mocha');
+const { suite, test, suiteSetup } = require('mocha');
 const assert = require('assert');
 const vscode = require('vscode');
-
-const EXTENSION_ID = 'ayecue.tab-stack';
-const CMD = (name) => `tabStack.${name}`;
-
-async function activateExtension() {
-  const ext = vscode.extensions.getExtension(EXTENSION_ID);
-  assert.ok(ext, 'Extension should be discoverable');
-  if (!ext.isActive) {
-    await ext.activate();
-  }
-  assert.strictEqual(ext.isActive, true, 'Extension should be active');
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const { CMD, sleep, activateExtension } = require('./helpers/index.cjs');
 
 suite('Command smoke tests', () => {
+  suiteSetup(async function () {
+    this.timeout(1000 * 30);
+    await activateExtension();
+  });
+
   test('create -> switch -> delete group', async function () {
     this.timeout(1000 * 20);
-    await activateExtension();
 
     const groupName = `IntTestGroup-${Date.now()}`;
 
@@ -46,7 +35,6 @@ suite('Command smoke tests', () => {
 
   test('add-on lifecycle: create -> apply -> delete', async function () {
     this.timeout(1000 * 20);
-    await activateExtension();
 
     // Ensure state is initialized by creating a group first
     const bootstrapGroup = `IntTestBootstrap-${Date.now()}`;
@@ -64,7 +52,6 @@ suite('Command smoke tests', () => {
 
   test('utility commands: refresh, clear selection, quick switch, clear all tabs', async function () {
     this.timeout(1000 * 20);
-    await activateExtension();
 
     // Ensure state is initialized by creating a group first
     const bootstrapGroup = `IntTestBootstrap-${Date.now()}`;
@@ -80,7 +67,6 @@ suite('Command smoke tests', () => {
 
   test('assign quick slot validates index and does not throw', async function () {
     this.timeout(1000 * 20);
-    await activateExtension();
 
     const groupName = `IntTestGroupQS-${Date.now()}`;
     await vscode.commands.executeCommand(CMD('createGroup'), groupName);
@@ -94,7 +80,6 @@ suite('Command smoke tests', () => {
 
   test('quick switch toggles between two groups without throwing', async function () {
     this.timeout(1000 * 20);
-    await activateExtension();
 
     const g1 = `IntTestQS1-${Date.now()}`;
     await vscode.commands.executeCommand(CMD('createGroup'), g1);
@@ -112,7 +97,6 @@ suite('Command smoke tests', () => {
 
   test('assign and apply multiple quick slots', async function () {
     this.timeout(1000 * 20);
-    await activateExtension();
 
     const gA = `IntTestG-A-${Date.now()}`;
     const gB = `IntTestG-B-${Date.now()}`;

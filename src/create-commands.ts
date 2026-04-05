@@ -1,38 +1,199 @@
-import { commands, Disposable, window } from 'vscode';
+import {
+  commands,
+  Disposable,
+  FileType,
+  Uri,
+  window,
+  workspace
+} from 'vscode';
 
-import { ViewManagerProvider } from './providers/view-manager';
 import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
+import { QuickSlotAssignments, StateContainer } from './types/tab-manager';
 import {
-  ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
-} from './types/messages';
+  TabInfo,
+  TabKind,
+  TabState
+} from './types/tabs';
+import {
+  GroupQuickPickItem,
+  HistoryQuickPickItem,
+  SavedTabQuickPickItem
+} from './types/commands';
+
+const RECENT_GROUP_LIMIT = 5 as const;
+const RECENT_SNAPSHOT_LIMIT = 5 as const;
+
+function parseStringParam(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return value;
+  } else if (typeof value === 'number') {
+    return value.toString();
+  } else if (typeof value === 'boolean') {
+    return value.toString();
+  }
+
+  return undefined;
+}
+
+function getQuickSlotByGroupId(
+  quickSlots: QuickSlotAssignments,
+  groupId: string
+): string | null {
+  const entry = Object.entries(quickSlots).find(
+    ([_, assignedGroupId]) => assignedGroupId === groupId
+  );
+
+  return entry?.[0] ?? null;
+}
+
+function getGroupStats(group: StateContainer): {
+  tabCount: number;
+  columnCount: number;
+} {
+  const tabGroups = Object.values(group.state?.tabState.tabGroups ?? {});
+
+  return {
+    tabCount: tabGroups.reduce((count, tabGroup) => count + tabGroup.tabs.length, 0),
+    columnCount: tabGroups.length
+  };
+}
+
+function formatTabKind(kind: TabKind): string {
+  switch (kind) {
+    case TabKind.TabInputText:
+      return 'Text';
+    case TabKind.TabInputTextDiff:
+      return 'Diff';
+    case TabKind.TabInputCustom:
+      return 'Custom';
+    case TabKind.TabInputWebview:
+      return 'Webview';
+    case TabKind.TabInputNotebook:
+      return 'Notebook';
+    case TabKind.TabInputNotebookDiff:
+      return 'Notebook Diff';
+    case TabKind.TabInputTerminal:
+      return 'Terminal';
+    case TabKind.Unknown:
+    default:
+      return 'Unknown';
+  }
+}
+
+function getTabDetail(tab: TabInfo): string {
+  if ('uri' in tab) {
+    return tab.uri;
+  }
+
+  if ('modifiedUri' in tab && 'originalUri' in tab) {
+    return `${tab.modifiedUri} <- ${tab.originalUri}`;
+  }
+
+  if ('viewType' in tab) {
+    return tab.viewType;
+  }
+
+  if (tab.kind === TabKind.TabInputTerminal && tab.meta.type === 'terminal') {
+    return tab.meta.cwd ?? tab.meta.terminalName ?? tab.label;
+  }
+
+  return tab.label;
+}
+
+function getSavedTabs(tabState: TabState): TabInfo[] {
+  return Object.values(tabState.tabGroups)
+    .sort((left, right) => left.viewColumn - right.viewColumn)
+    .flatMap((tabGroup) => tabGroup.tabs);
+}
+
+function getGroupQuickPickItems(
+  tabManagerService: TabManagerService,
+  options?: { limit?: number }
+): GroupQuickPickItem[] {
+  const currentGroupId = tabManagerService.state.stateContainer?.id ?? null;
+
+  return Object.values(tabManagerService.state.groups)
+    .sort((left, right) => (right.lastSelectedAt ?? 0) - (left.lastSelectedAt ?? 0))
+    .slice(0, options?.limit)
+    .map((group) => {
+      const { tabCount, columnCount } = getGroupStats(group);
+      const assignedSlot = getQuickSlotByGroupId(
+        tabManagerService.state.quickSlots,
+        group.id
+      );
+
+      const descriptionParts = [
+        `${tabCount} tab${tabCount === 1 ? '' : 's'}`,
+        `${columnCount} column${columnCount === 1 ? '' : 's'}`
+      ];
+
+      if (assignedSlot) {
+        descriptionParts.push(`slot ${assignedSlot}`);
+      }
+
+      return {
+        label: group.name,
+        description: descriptionParts.join(' • '),
+        detail:
+          currentGroupId === group.id ? 'Currently selected group' : undefined,
+        picked: currentGroupId === group.id,
+        groupId: group.id
+      };
+    });
+}
+
+async function requestGroupSelection(
+  tabManagerService: TabManagerService,
+  options?: {
+    limit?: number;
+    emptyMessage?: string;
+    title?: string;
+    placeHolder?: string;
+  }
+): Promise<GroupQuickPickItem | null> {
+  const groupItems = getGroupQuickPickItems(tabManagerService, {
+    limit: options?.limit
+  });
+
+  if (groupItems.length === 0) {
+    void window.showWarningMessage(options?.emptyMessage ?? 'No groups available.');
+    return null;
+  }
+
+  const selection = await window.showQuickPick(groupItems, {
+    title: options?.title ?? 'Select the group to apply',
+    matchOnDescription: true,
+    matchOnDetail: true,
+    placeHolder: options?.placeHolder ?? 'Search saved groups'
+  });
+
+  if (!selection) {
+    return null;
+  }
+
+  return selection;
+}
 
 async function requestGroupId(
   tabManagerService: TabManagerService
 ): Promise<string | null> {
-  const groups = tabManagerService.state.getGroups();
-  const groupNames = Object.values(groups).map((group) => group.name);
+  const selection = await requestGroupSelection(tabManagerService);
 
-  if (groupNames.length === 0) {
-    window.showWarningMessage('No groups available.');
-    return;
-  }
+  return selection?.groupId ?? null;
+}
 
-  const groupName = await window.showQuickPick(groupNames, {
-    title: 'Select the group to apply'
+async function requestRecentGroupId(
+  tabManagerService: TabManagerService
+): Promise<string | null> {
+  const selection = await requestGroupSelection(tabManagerService, {
+    limit: RECENT_GROUP_LIMIT,
+    emptyMessage: 'No recent groups available.',
+    title: 'Switch to a recent group',
+    placeHolder: 'Choose from your most recently used groups'
   });
 
-  if (!groupName) {
-    window.showWarningMessage('Invalid group.');
-    return null;
-  }
-
-  const groupId = Object.values(groups).find(
-    (group) => group.name === groupName
-  )?.id;
-
-  return groupId;
+  return selection?.groupId ?? null;
 }
 
 async function requestNewGroupId(): Promise<string | null> {
@@ -45,7 +206,7 @@ async function requestNewGroupId(): Promise<string | null> {
 async function requestAddonId(
   tabManagerService: TabManagerService
 ): Promise<string | null> {
-  const addons = tabManagerService.state.getAddons();
+  const addons = tabManagerService.state.addons;
   const addonNames = Object.values(addons).map((addon) => addon.name);
 
   if (addonNames.length === 0) {
@@ -76,33 +237,73 @@ async function requestNewAddonName(): Promise<string | null> {
   });
 }
 
-async function requestSnapshotId(
-  tabManagerService: TabManagerService
-): Promise<string | null> {
-  const snapshots = tabManagerService.state.getHistory();
-  const snapshotNames = Object.values(snapshots).map(
-    (snapshot) => snapshot.name
-  );
+function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp);
 
-  if (snapshotNames.length === 0) {
-    window.showWarningMessage('No snapshots available.');
-    return;
+  if (Number.isNaN(date.getTime())) {
+    return 'Saved snapshot';
   }
 
-  const historyName = await window.showQuickPick(snapshotNames, {
-    title: 'Select snapshot to restore'
-  });
+  return date.toLocaleString();
+}
 
-  if (!historyName) {
-    window.showWarningMessage('Invalid snapshot.');
+async function requestSnapshotSelection(
+  tabManagerService: TabManagerService,
+  options?: {
+    limit?: number;
+    emptyMessage?: string;
+    title?: string;
+    placeHolder?: string;
+  }
+): Promise<HistoryQuickPickItem | null> {
+  const items: HistoryQuickPickItem[] = Object.values(tabManagerService.state.history)
+    .sort((left, right) => (right.createdAt ?? 0) - (left.createdAt ?? 0))
+    .slice(0, options?.limit)
+    .map((snapshot) => {
+      const { tabCount, columnCount } = getGroupStats(snapshot);
+
+      return {
+        label: snapshot.name,
+        description: `${tabCount} tab${tabCount === 1 ? '' : 's'} • ${columnCount} column${columnCount === 1 ? '' : 's'}`,
+        detail: formatTimestamp(snapshot.createdAt),
+        historyId: snapshot.id
+      };
+    });
+
+  if (items.length === 0) {
+    void window.showWarningMessage(
+      options?.emptyMessage ?? 'No snapshots available.'
+    );
     return null;
   }
 
-  const historyId = Object.values(snapshots).find(
-    (snapshot) => snapshot.name === historyName
-  )?.id;
+  return (await window.showQuickPick(items, {
+    title: options?.title ?? 'Select snapshot to restore',
+    matchOnDescription: true,
+    matchOnDetail: true,
+    placeHolder: options?.placeHolder ?? 'Search snapshots'
+  })) ?? null;
+}
 
-  return historyId;
+async function requestSnapshotId(
+  tabManagerService: TabManagerService
+): Promise<string | null> {
+  const selection = await requestSnapshotSelection(tabManagerService);
+
+  return selection?.historyId ?? null;
+}
+
+async function requestRecentSnapshotId(
+  tabManagerService: TabManagerService
+): Promise<string | null> {
+  const selection = await requestSnapshotSelection(tabManagerService, {
+    limit: RECENT_SNAPSHOT_LIMIT,
+    emptyMessage: 'No recent snapshots available.',
+    title: 'Restore a recent snapshot',
+    placeHolder: 'Choose from your most recently captured snapshots'
+  });
+
+  return selection?.historyId ?? null;
 }
 
 async function requestSlotIndex(): Promise<number | null> {
@@ -119,7 +320,44 @@ async function requestSlotIndex(): Promise<number | null> {
     return null;
   }
 
-  return Number(slotSelection);
+  return Number(slotSelection.label);
+}
+
+async function requestSavedTabSelection(
+  tabManagerService: TabManagerService
+): Promise<SavedTabQuickPickItem | null> {
+  const groups = Object.values(tabManagerService.state.groups).sort(
+    (left, right) => (right.lastSelectedAt ?? 0) - (left.lastSelectedAt ?? 0)
+  );
+  const items: SavedTabQuickPickItem[] = groups.flatMap((group) => {
+    const assignedSlot = getQuickSlotByGroupId(
+      tabManagerService.state.quickSlots,
+      group.id
+    );
+    const slotLabel = assignedSlot ? ` • slot ${assignedSlot}` : '';
+
+    return getSavedTabs(group.state.tabState).map((tab) => ({
+      label: tab.label,
+      description: `${group.name}${slotLabel} • ${formatTabKind(tab.kind)}`,
+      detail: getTabDetail(tab),
+      groupId: group.id,
+      viewColumn:
+        typeof tab.viewColumn === 'number' ? tab.viewColumn : null,
+      index: typeof tab.index === 'number' ? tab.index : null
+    }));
+  });
+
+  if (items.length === 0) {
+    void window.showWarningMessage('No saved tabs available.');
+    return null;
+  }
+
+  return (await window.showQuickPick(items, {
+    title: 'Find a saved tab',
+    matchOnDescription: true,
+    matchOnDetail: true,
+    placeHolder: 'Search tab labels, groups, kinds, or paths'
+  })) ?? null;
 }
 
 export function createCommands(
@@ -128,7 +366,9 @@ export function createCommands(
   const refreshCommand = commands.registerCommand(
     `${EXTENSION_NAME}.refresh`,
     async () => {
-      await tabManagerService.refresh();
+      tabManagerService.triggerTabStateSync();
+      tabManagerService.triggerCollectionsSync();
+      tabManagerService.triggerConfigSync();
     }
   );
 
@@ -148,20 +388,65 @@ export function createCommands(
 
   const switchGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.switchGroup`,
-    async (groupNameParam?: string) => {
-      const groups = tabManagerService.state.getGroups();
+    async (groupNameParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
+      const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
       )?.id;
       const groupId = groupIdParam || (await requestGroupId(tabManagerService));
+      if (!groupId) {
+        return;
+      }
       tabManagerService.switchToGroup(groupId);
+    }
+  );
+
+  const recentGroupsCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.recentGroups`,
+    async () => {
+      const groupId = await requestRecentGroupId(tabManagerService);
+      
+      if (!groupId) {
+        return;
+      }
+
+      tabManagerService.switchToGroup(groupId);
+    }
+  );
+
+  const findTabCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.findTab`,
+    async () => {
+      const selection = await requestSavedTabSelection(tabManagerService);
+
+      if (!selection) {
+        return;
+      }
+
+      const shouldSwitchGroup =
+        tabManagerService.state.stateContainer?.id !== selection.groupId;
+
+      if (shouldSwitchGroup) {
+        tabManagerService.switchToGroup(selection.groupId);
+        await tabManagerService.waitForRenderComplete();
+      }
+
+      if (selection.viewColumn == null || selection.index == null) {
+        window.showWarningMessage(
+          'Selected tab does not have valid view column or index.'
+        );
+        return;
+      }
+
+      await tabManagerService.openTab(selection.viewColumn, selection.index);
     }
   );
 
   const createGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.createGroup`,
     async (groupNameParam?: string) => {
-      const input = groupNameParam || (await requestNewGroupId());
+      const input = parseStringParam(groupNameParam) || (await requestNewGroupId());
       const groupName = input?.trim();
 
       if (!groupName) {
@@ -174,12 +459,16 @@ export function createCommands(
 
   const deleteGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteGroup`,
-    async (groupNameParam?: string) => {
-      const groups = tabManagerService.state.getGroups();
+    async (groupNameParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
+      const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
       )?.id;
       const groupId = groupIdParam || (await requestGroupId(tabManagerService));
+      if (!groupId) {
+        return;
+      }
       tabManagerService.deleteGroup(groupId);
     }
   );
@@ -191,28 +480,48 @@ export function createCommands(
     }
   );
 
+  const recentSnapshotsCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.recentSnapshots`,
+    async () => {
+      const historyId = await requestRecentSnapshotId(tabManagerService);
+      if (!historyId) {
+        return;
+      }
+
+      tabManagerService.recoverSnapshot(historyId);
+    }
+  );
+
   const restoreSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.restoreSnapshot`,
-    async (historyNameParam?: string) => {
-      const histories = tabManagerService.state.getHistory();
+    async (historyNameParamRaw?: string) => {
+      const historyNameParam = parseStringParam(historyNameParamRaw);
+      const histories = tabManagerService.state.history;
       const historyIdParam = Object.values(histories).find(
         (group) => group.name === historyNameParam
       )?.id;
       const historyId =
         historyIdParam || (await requestSnapshotId(tabManagerService));
+      if (!historyId) {
+        return;
+      }
       tabManagerService.recoverSnapshot(historyId);
     }
   );
 
   const deleteSnapshotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteSnapshot`,
-    async (historyNameParam?: string) => {
-      const histories = tabManagerService.state.getHistory();
+    async (historyNameParamRaw?: string) => {
+      const historyNameParam = parseStringParam(historyNameParamRaw);
+      const histories = tabManagerService.state.history;
       const historyIdParam = Object.values(histories).find(
         (group) => group.name === historyNameParam
       )?.id;
       const historyId =
         historyIdParam || (await requestSnapshotId(tabManagerService));
+      if (!historyId) {
+        return;
+      }
       tabManagerService.deleteSnapshot(historyId);
     }
   );
@@ -220,7 +529,7 @@ export function createCommands(
   const createAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.createAddon`,
     async (addonNameParam?: string) => {
-      const input = addonNameParam || (await requestNewAddonName());
+      const input = parseStringParam(addonNameParam) || (await requestNewAddonName());
       const addonName = input?.trim();
 
       if (!addonName) {
@@ -233,8 +542,9 @@ export function createCommands(
 
   const applyAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.applyAddon`,
-    async (addonNameParam?: string) => {
-      const addons = tabManagerService.state.getAddons();
+    async (addonNameParamRaw?: string) => {
+      const addonNameParam = parseStringParam(addonNameParamRaw);
+      const addons = tabManagerService.state.addons;
       const addonIdParam = Object.values(addons).find(
         (addon) => addon.name === addonNameParam
       )?.id;
@@ -248,8 +558,9 @@ export function createCommands(
 
   const deleteAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.deleteAddon`,
-    async (addonNameParam?: string) => {
-      const addons = tabManagerService.state.getAddons();
+    async (addonNameParamRaw?: string) => {
+      const addonNameParam = parseStringParam(addonNameParamRaw);
+      const addons = tabManagerService.state.addons;
       const addonIdParam = Object.values(addons).find(
         (addon) => addon.name === addonNameParam
       )?.id;
@@ -263,8 +574,10 @@ export function createCommands(
 
   const assignQuickSlotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.assignQuickSlot`,
-    async (groupNameParam?: string, slotIndexParam?: string) => {
-      const groups = tabManagerService.state.getGroups();
+    async (groupNameParamRaw?: string, slotIndexParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
+      const slotIndexParam = parseStringParam(slotIndexParamRaw);
+      const groups = tabManagerService.state.groups;
       const groupIdParam = Object.values(groups).find(
         (group) => group.name === groupNameParam
       )?.id;
@@ -277,8 +590,12 @@ export function createCommands(
           ? Number(slotIndexParam)
           : await requestSlotIndex();
 
+      if (slotIndex == null) {
+        return;
+      }
+
       // Validate slot index (must be 1-9)
-      if (slotIndex < 1 || slotIndex > 9) {
+      if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 9) {
         window.showWarningMessage('Invalid quick slot index. Choose 1-9.');
         return;
       }
@@ -288,13 +605,18 @@ export function createCommands(
 
   const clearQuickSlotCommand = commands.registerCommand(
     `${EXTENSION_NAME}.clearQuickSlot`,
-    async (slotIndexParam?: string) => {
+    async (slotIndexParamRaw?: string) => {
+      const slotIndexParam = parseStringParam(slotIndexParamRaw);
       const slotIndex =
         slotIndexParam != null
           ? Number(slotIndexParam)
           : await requestSlotIndex();
 
-      if (slotIndex < 1 || slotIndex > 9) {
+      if (slotIndex == null) {
+        return;
+      }
+
+      if (!Number.isInteger(slotIndex) || slotIndex < 1 || slotIndex > 9) {
         window.showWarningMessage('Invalid quick slot index. Choose 1-9.');
         return;
       }
@@ -307,6 +629,58 @@ export function createCommands(
     `${EXTENSION_NAME}.clearAllTabs`,
     async () => {
       await tabManagerService.clearAllTabs();
+    }
+  );
+
+  const exportGroupCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.exportGroup`,
+    async (groupNameParamRaw?: string) => {
+      const groupNameParam = parseStringParam(groupNameParamRaw);
+      const groups = tabManagerService.state.groups;
+      const groupIdParam = Object.values(groups).find(
+        (group) => group.name === groupNameParam
+      )?.id;
+      const groupId = groupIdParam || (await requestGroupId(tabManagerService));
+      if (!groupId) {
+        return;
+      }
+
+      const group = groups[groupId];
+      const saveUri = await window.showSaveDialog({
+        filters: { 'Tab Stack Group': ['tabstack'] },
+        saveLabel: 'Export Group',
+        title: 'Export Tab Group',
+        defaultUri: group
+          ? Uri.file(`${group.name}.tabstack`)
+          : undefined
+      });
+
+      if (saveUri) {
+        await tabManagerService.exportGroup(groupId, saveUri.toString());
+      }
+    }
+  );
+
+  const importGroupCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.importGroup`,
+    async (filePathParamRaw?: string) => {
+      const filePathParam = parseStringParam(filePathParamRaw);
+
+      if (filePathParam) {
+        await tabManagerService.importGroup(filePathParam);
+        return;
+      }
+
+      const openUris = await window.showOpenDialog({
+        canSelectMany: false,
+        filters: { 'Tab Stack Group': ['tabstack'] },
+        openLabel: 'Import Group',
+        title: 'Import Tab Group'
+      });
+
+      if (openUris && openUris[0]) {
+        await tabManagerService.importGroup(openUris[0].fsPath);
+      }
     }
   );
 
@@ -323,112 +697,17 @@ export function createCommands(
     quickSlotCommands.push(quickSlotCommand);
   }
 
-  // Test-only helper commands (not contributed to menus):
-  const testOpenView = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__openView`,
-    async () => {
-      // Ensure the view container is revealed; this resolves the view provider
-      await commands.executeCommand('workbench.view.extension.tabStack');
-    }
-  );
-
-  const testDispatch = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__webviewDispatch`,
-    async (data: any) => {
-      await ViewManagerProvider.__test__dispatchFromWebview(data);
-      return true;
-    }
-  );
-
-  const testWebviewReady = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__webviewReady`,
-    async () => {
-      return ViewManagerProvider.__test__messageHandler != null;
-    }
-  );
-
-  const testGetState = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__getState`,
-    async () => {
-      const groups = tabManagerService.state?.getGroups?.() ?? {};
-      const addons = tabManagerService.state?.getAddons?.() ?? {};
-      const history = tabManagerService.state?.getHistory?.() ?? {};
-      const quickSlots = tabManagerService.state?.getQuickSlots?.() ?? {};
-      const selectedGroupId =
-        tabManagerService.state?.stateContainer?.id ?? null;
-      return {
-        groups: Object.fromEntries(
-          Object.values(groups).map((g) => [g.id, { id: g.id, name: g.name }])
-        ),
-        addons: Object.fromEntries(
-          Object.values(addons).map((a) => [a.id, { id: a.id, name: a.name }])
-        ),
-        historyIds: Object.keys(history),
-        quickSlots,
-        selectedGroupId
-      };
-    }
-  );
-
-  // Test-only: capture Sync/Notification payloads emitted by the service (no webview changes)
-  type CapturedSync = Omit<ExtensionTabsSyncMessage, 'type'>;
-  type CapturedNotify = Omit<ExtensionNotificationMessage, 'type'>;
-
-  let __test__syncMessages: CapturedSync[] = [];
-  let __test__notifications: CapturedNotify[] = [];
-  let __test__subscriptions: Disposable[] = [];
-
-  const testStartCapture = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__startCapture`,
-    async () => {
-      __test__syncMessages = [];
-      __test__notifications = [];
-      __test__subscriptions.forEach((d) => d.dispose());
-      __test__subscriptions = [];
-      __test__subscriptions.push(
-        tabManagerService.onDidSyncTabs((p) => __test__syncMessages.push(p))
-      );
-      __test__subscriptions.push(
-        tabManagerService.onDidNotify((p) => __test__notifications.push(p))
-      );
-      return true;
-    }
-  );
-
-  const testGetCaptured = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__getCapturedMessages`,
-    async (clear = false) => {
-      const result = {
-        sync: [...__test__syncMessages],
-        notify: [...__test__notifications]
-      };
-      if (clear) {
-        __test__syncMessages = [];
-        __test__notifications = [];
-      }
-      return result;
-    }
-  );
-
-  const testStopCapture = commands.registerCommand(
-    `${EXTENSION_NAME}.__test__stopCapture`,
-    async () => {
-      __test__subscriptions.forEach((d) => d.dispose());
-      __test__subscriptions = [];
-      __test__syncMessages = [];
-      __test__notifications = [];
-      return true;
-    }
-  );
-
   return [
     refreshCommand,
     quickSwitchCommand,
     clearSelectionCommand,
     switchGroupCommand,
+    recentGroupsCommand,
+    findTabCommand,
     createGroupCommand,
     deleteGroupCommand,
     snapshotCommand,
+    recentSnapshotsCommand,
     restoreSnapshotCommand,
     deleteSnapshotCommand,
     createAddonCommand,
@@ -437,13 +716,8 @@ export function createCommands(
     assignQuickSlotCommand,
     clearQuickSlotCommand,
     clearAllTabsCommand,
-    ...quickSlotCommands,
-    testOpenView,
-    testDispatch,
-    testGetState,
-    testWebviewReady,
-    testStartCapture,
-    testGetCaptured,
-    testStopCapture
+    exportGroupCommand,
+    importGroupCommand,
+    ...quickSlotCommands
   ];
 }

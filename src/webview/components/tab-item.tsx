@@ -1,7 +1,8 @@
 import React from 'react';
 
 import { type TabInfo, TabKind } from '../../types/tabs';
-import { FileIcon } from './file-icon';
+import { Tooltip } from './common/tooltip';
+import { TabKindIcon } from './tab-kind-icon';
 
 interface TabItemProps {
   tab: TabInfo;
@@ -17,9 +18,10 @@ interface TabItemProps {
   isDragging?: boolean;
   isDraggedOver?: boolean;
   dropPosition?: 'before' | 'after';
+  resolvedColor?: string;
 }
 
-export const TabItem: React.FC<TabItemProps> = ({
+export const TabItem: React.FC<TabItemProps> = React.memo(({
   tab,
   onOpen,
   onClose,
@@ -32,7 +34,8 @@ export const TabItem: React.FC<TabItemProps> = ({
   isColumnActive,
   isDragging,
   isDraggedOver,
-  dropPosition
+  dropPosition,
+  resolvedColor
 }) => {
   const handleClose = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -44,21 +47,15 @@ export const TabItem: React.FC<TabItemProps> = ({
     onTogglePin();
   };
 
-  // Extract file extension
-  const getFileExtension = (filename: string): string => {
-    const parts = filename.split('.');
-    return parts.length > 1 ? parts[parts.length - 1] : '';
-  };
-
   const fileName = tab.label;
-  const extension = getFileExtension(fileName);
-  const isUnknownKind = tab.kind === TabKind.Unknown;
+  const isUnrecoverable = !tab.isRecoverable;
   const kindSlug = tab.kind.toLowerCase();
+
   const activeClass = [
     tab.isActive ? 'active' : '',
     tab.isPinned ? 'pinned' : '',
     isColumnActive ? 'column-active' : '',
-    isUnknownKind ? 'unknown-kind' : '',
+    isUnrecoverable ? 'unrecoverable-kind' : '',
     isDragging ? 'dragging' : '',
     isDraggedOver ? 'drag-over' : '',
     isDraggedOver && dropPosition === 'before' ? 'drop-before' : '',
@@ -72,7 +69,7 @@ export const TabItem: React.FC<TabItemProps> = ({
 
   const ariaLabelParts: string[] = [fileName];
 
-  if (isUnknownKind) {
+  if (isUnrecoverable) {
     ariaLabelParts.push('unsupported tab type (cannot restore automatically)');
   }
 
@@ -101,46 +98,54 @@ export const TabItem: React.FC<TabItemProps> = ({
     >
       <div className="tab-item-main">
         <span className="tab-icon" aria-hidden="true">
-          <FileIcon fileName={fileName} extension={extension} />
+          <TabKindIcon kind={tab.kind} fileName={fileName} color={resolvedColor} />
         </span>
         <div className="tab-item-text">
           <div className="tab-item-title">
-            <span className={tabNameClassName} title={fileName}>
-              {fileName}
-            </span>
-            {isUnknownKind && (
+            <Tooltip content={fileName}>
               <span
-                className="tab-kind-indicator"
-                role="img"
-                aria-label={unrecoverableMessage}
-                title={unrecoverableMessage}
-              />
+                className={tabNameClassName}
+                style={resolvedColor ? { color: resolvedColor } : undefined}
+              >
+                {fileName}
+              </span>
+            </Tooltip>
+            {isUnrecoverable && (
+              <Tooltip content={unrecoverableMessage}>
+                <span
+                  className="tab-kind-indicator"
+                  role="img"
+                  aria-label={unrecoverableMessage}
+                />
+              </Tooltip>
             )}
           </div>
         </div>
       </div>
       <div className="tab-item-actions">
-        <button
-          className={`pin-btn${tab.isPinned ? ' active' : ''}`}
-          onClick={handleTogglePin}
-          title={tab.isPinned ? 'Unpin tab' : 'Pin tab'}
-          aria-label={tab.isPinned ? 'Unpin tab' : 'Pin tab'}
-          aria-pressed={tab.isPinned}
-        >
-          <i
-            className={`codicon codicon-pin${tab.isPinned ? ' pinned' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
-        <button
-          className="close-btn"
-          onClick={handleClose}
-          title="Close tab"
-          aria-label="Close tab"
-        >
-          <i className="codicon codicon-close" aria-hidden="true" />
-        </button>
+        <Tooltip content={tab.isPinned ? 'Unpin tab' : 'Pin tab'}>
+          <button
+            className={`pin-btn${tab.isPinned ? ' active' : ''}`}
+            onClick={handleTogglePin}
+            aria-label={tab.isPinned ? 'Unpin tab' : 'Pin tab'}
+            aria-pressed={tab.isPinned}
+          >
+            <i
+              className={`codicon codicon-pin${tab.isPinned ? ' pinned' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+        </Tooltip>
+        <Tooltip content="Close tab">
+          <button
+            className="close-btn"
+            onClick={handleClose}
+            aria-label="Close tab"
+          >
+            <i className="codicon codicon-close" aria-hidden="true" />
+          </button>
+        </Tooltip>
       </div>
     </li>
   );
-};
+});

@@ -4,15 +4,20 @@ import {
   ConfigChangeEvent,
   GitIntegrationConfig,
   GitIntegrationMode,
-  StorageType
+  StorageType,
+  TabKindColors,
+  TabRecoveryMapping
 } from '../types/config';
 import { getWorkspaceFolder } from '../utils/get-workspace-folder';
+import { getLogger, ScopedLogger } from './logger';
 
 export class ConfigService implements Disposable {
   private _onDidChangeConfig: EventEmitter<ConfigChangeEvent>;
   private _configChangeListener?: Disposable;
+  private _log: ScopedLogger;
 
   constructor() {
+    this._log = getLogger().child('ConfigService');
     this._onDidChangeConfig = new EventEmitter<ConfigChangeEvent>();
     this.initializeListeners();
   }
@@ -23,21 +28,29 @@ export class ConfigService implements Disposable {
 
   private initializeListeners() {
     this._configChangeListener = workspace.onDidChangeConfiguration((e) => {
-      const changes: ConfigChangeEvent = {
-        masterWorkspaceFolder: this.getMasterWorkspaceFolder()
-      };
+      const changes: ConfigChangeEvent = {};
 
-      if (
-        e.affectsConfiguration('tabStack.masterWorkspaceFolder') ||
-        e.affectsConfiguration('tabStack.gitIntegration') ||
-        e.affectsConfiguration('tabStack.storage.type')
-      ) {
-        if (e.affectsConfiguration('tabStack.gitIntegration')) {
-          changes.gitIntegration = this.getGitIntegrationConfig();
-        }
-        if (e.affectsConfiguration('tabStack.storage.type')) {
-          changes.storageType = this.getStorageType();
-        }
+      if (e.affectsConfiguration('tabStack.masterWorkspaceFolder')) {
+        changes.masterWorkspaceFolder = this.getMasterWorkspaceFolder();
+      }
+
+      if (e.affectsConfiguration('tabStack.gitIntegration')) {
+        changes.gitIntegration = this.getGitIntegrationConfig();
+      }
+
+      if (e.affectsConfiguration('tabStack.storage.type')) {
+        changes.storageType = this.getStorageType();
+      }
+
+      if (e.affectsConfiguration('tabStack.tabRecoveryMappings')) {
+        changes.tabRecoveryMappings = this.getTabRecoveryMappings();
+      }
+
+      if (e.affectsConfiguration('tabStack.statusBar.visible')) {
+        changes.statusBarVisible = this.getStatusBarVisible();
+      }
+
+      if (Object.keys(changes).length > 0) {
         this._onDidChangeConfig.fire(changes);
       }
     });
@@ -78,6 +91,11 @@ export class ConfigService implements Disposable {
     return config.get<StorageType>('type', StorageType.File);
   }
 
+  getStatusBarVisible(): boolean {
+    const config = workspace.getConfiguration('tabStack.statusBar');
+    return config.get<boolean>('visible', true);
+  }
+
   async setStorageType(storageType: StorageType): Promise<void> {
     const config = workspace.getConfiguration('tabStack.storage');
     await config.update('type', storageType, false);
@@ -102,6 +120,21 @@ export class ConfigService implements Disposable {
     const config = workspace.getConfiguration('tabStack.history');
     const clampedValue = Math.max(1, Math.min(100, Math.floor(maxEntries)));
     await config.update('maxEntries', clampedValue, false);
+  }
+
+  getTabRecoveryMappings(): TabRecoveryMapping {
+    const config = workspace.getConfiguration('tabStack');
+    return config.get<TabRecoveryMapping>('tabRecoveryMappings', {});
+  }
+
+  getTabKindColors(): TabKindColors {
+    const config = workspace.getConfiguration('tabStack.appearance');
+    return config.get<TabKindColors>('tabKindColors', []);
+  }
+
+  async setTabRecoveryMappings(mappings: TabRecoveryMapping): Promise<void> {
+    const config = workspace.getConfiguration('tabStack');
+    await config.update('tabRecoveryMappings', mappings, false);
   }
 
   getAvailableWorkspaceFolders(): readonly WorkspaceFolder[] {

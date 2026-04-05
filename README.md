@@ -55,20 +55,78 @@ That is it - from here you can start building up groups, snapshots, and add-ons 
 
 Most functionality is available both through the **Tab Stack view** and the **Command Palette**.
 
+### Groups
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.createGroup` | Save current tabs as a named group | - |
+| `tabStack.switchGroup` | Pick and apply a saved group | - |
+| `tabStack.deleteGroup` | Delete a saved group | - |
+| `tabStack.clearSelection` | Clear the current group selection | - |
+| `tabStack.exportGroup` | Export a group to a `.tabstack` file | - |
+| `tabStack.importGroup` | Import a group from a `.tabstack` file | - |
+
+### Snapshots (history)
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.snapshot` | Capture a snapshot of all open tabs | - |
+| `tabStack.restoreSnapshot` | Restore a snapshot from history | - |
+| `tabStack.deleteSnapshot` | Delete a snapshot from history | - |
+
+### Add-ons
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.createAddon` | Save current tabs as an add-on (overlay) | - |
+| `tabStack.applyAddon` | Apply an add-on on top of the current layout | - |
+| `tabStack.deleteAddon` | Delete an add-on | - |
+
+### Quick slots & switching
+
 | Command ID | What it does | Default keybinding* |
 | --- | --- | --- |
 | `tabStack.quickSwitch` | Toggle between the two most recent tab states | `Ctrl`/`Cmd` + `Alt` + `Shift` + `0` |
-| `tabStack.quickSlot1` - `tabStack.quickSlot9` | Apply groups assigned to quick slots 1-9 | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` ... `9` |
-| `tabStack.createGroup` | Save current tabs as a named group | - |
-| `tabStack.switchGroup` | Pick and apply a saved group | - |
-| `tabStack.snapshot` | Capture a snapshot of all open tabs | - |
-| `tabStack.restoreSnapshot` | Restore a snapshot from history | - |
-| `tabStack.createAddon` | Save current tabs as an add-on (overlay) | - |
-| `tabStack.applyAddon` | Apply an add-on on top of the current layout | - |
+| `tabStack.quickSlot1` – `tabStack.quickSlot9` | Apply groups assigned to quick slots 1–9 | `Ctrl`/`Cmd` + `Alt` + `Shift` + `1` … `9` |
+| `tabStack.assignQuickSlot` | Assign a group to a quick slot (1–9) | - |
+| `tabStack.clearQuickSlot` | Clear a quick slot assignment | - |
+
+### Utility
+
+| Command ID | What it does | Default keybinding |
+| --- | --- | --- |
+| `tabStack.refresh` | Refresh the Tab Stack view | - |
+| `tabStack.clearAllTabs` | Close all open tabs | - |
 
 \*On macOS the shortcuts use `Cmd` instead of `Ctrl`.
 
-Additional commands like refresh, delete group/add‑on/snapshot, and quick slot assignment are also available via the Command Palette and the Tab Stack UI.
+---
+
+## URI handler
+
+Tab Stack registers a URI handler so you can trigger commands from **outside VS Code** — browsers, terminals, documentation, links in chat, etc.
+
+The URI format is:
+
+```
+vscode://ayecue.tab-stack/<path>?<params>
+```
+
+### Supported URIs
+
+| URI path | Parameters | Example |
+| --- | --- | --- |
+| `/switch-group` | `name` (group name) | `vscode://ayecue.tab-stack/switch-group?name=Sprint` |
+| `/create-group` | `name` (group name) | `vscode://ayecue.tab-stack/create-group?name=Debug` |
+| `/delete-group` | `name` (group name) | `vscode://ayecue.tab-stack/delete-group?name=Old` |
+| `/snapshot` | — | `vscode://ayecue.tab-stack/snapshot` |
+| `/restore-snapshot` | `name` (snapshot name) | `vscode://ayecue.tab-stack/restore-snapshot?name=2024-01-15` |
+| `/apply-addon` | `name` (add-on name) | `vscode://ayecue.tab-stack/apply-addon?name=Debug%20Tools` |
+| `/export-group` | `name` (group name) | `vscode://ayecue.tab-stack/export-group?name=Sprint` |
+| `/import-group` | `file` (absolute path) | `vscode://ayecue.tab-stack/import-group?file=/path/to/group.tabstack` |
+| `/quick-switch` | — | `vscode://ayecue.tab-stack/quick-switch` |
+| `/quick-slot` | `slot` (1–9) | `vscode://ayecue.tab-stack/quick-slot?slot=1` |
+| `/assign-quick-slot` | `name`, `slot` | `vscode://ayecue.tab-stack/assign-quick-slot?name=Sprint&slot=1` |
 
 ---
 
@@ -97,11 +155,53 @@ Key options:
 - **History**
 	- `tabStack.history.maxEntries` - Maximum number of snapshots to retain (default 10)
 
+- **Appearance**
+	- `tabStack.appearance.tabKindColors` - Color rules for tab kind labels and icons. Each rule matches by tab kind and optionally by a label regex pattern. The first matching rule wins.
+
+	Example (default):
+	```json
+	[
+	  { "kind": "tabInputText", "color": "#2472c8" },
+	  { "kind": "tabInputTextDiff", "color": "#f44747" },
+	  { "kind": "tabInputCustom", "color": "#c586c0" },
+	  { "kind": "tabInputWebview", "color": "#2aa198" },
+	  { "kind": "tabInputNotebook", "color": "#16825d" },
+	  { "kind": "tabInputNotebookDiff", "color": "#c19c00" },
+	  { "kind": "tabInputTerminal", "color": "#3b8eea" },
+	  { "kind": "unknown", "pattern": "^Settings$", "color": "#8F38E5" },
+	  { "kind": "unknown", "pattern": "^Extensions$", "color": "#c586c0" },
+	  { "kind": "unknown", "pattern": "^Welcome$", "color": "#F5276C" },
+	  { "kind": "tabInputWebview", "pattern": "^Release Notes: [0-9.]+$", "color": "#82E8E8" }
+	]
+	```
+
+- **Tab recovery mappings**
+	- `tabStack.tabRecoveryMappings` - Mapping of identifiers to recovery commands for tab types that VS Code cannot reopen automatically (e.g. Settings, Extensions, Keyboard Shortcuts). When Tab Stack detects a saved tab that matches a mapping, it executes the specified command to recreate the tab during restore.
+
+	Values can be a simple command ID string (the key is used as a label regex) or an object with:
+	- `command` - VS Code command ID to execute
+	- `match` (optional) - Regex criteria matched against tab properties (`label`, `kind`, `uri`, `viewType`). All specified fields must match. If `label` is omitted inside `match`, the mapping key is used as the label pattern
+	- `args` (optional) - Arguments to pass to the command. Supports `{{property}}` interpolation from the tab info (e.g. `{{viewColumn}}`, `{{label}}`). Non-string values (booleans, numbers, objects) are passed as-is
+	- `nextTickDelay` (optional) - Milliseconds to wait after command execution before checking for the tab (default `0`)
+
+	Example (default):
+	```json
+	{
+	  "^Settings$": {
+	    "command": "workbench.action.openSettings2",
+	    "args": [{ "openToSide": false }]
+	  },
+	  "^Keyboard Shortcuts$": "workbench.action.openGlobalKeybindings",
+	  "^Extensions$": "workbench.view.extensions",
+	  "^Welcome$": "workbench.action.openWalkthrough",
+	  "^Release Notes: [0-9.]+$": "update.showCurrentReleaseNotes"
+	}
+	```
+
 ---
 
-## Notes & limitations
+## Notes
 
-- Some tab types (such as certain webviews or terminals) cannot be reopened automatically by VS Code; Tab Stack marks these as **not recoverable** so you can spot them at a glance.
 - State is tracked **per workspace** - different workspaces can have independent collections.
 
 For detailed changes over time, see the [Changelog](https://github.com/ayecue/tab-stack/blob/main/CHANGELOG.md).

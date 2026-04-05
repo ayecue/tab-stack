@@ -3,7 +3,9 @@ import { Uri, workspace } from 'vscode';
 
 import {
   toAbsoluteTabStateFile,
-  toRelativeTabStateFile
+  toRelativeTabStateFile,
+  toRelativeStateContainer,
+  toAbsoluteStateContainer
 } from '../../../src/transformers/tab-uris';
 import {
   createEmptyStateContainer
@@ -222,6 +224,40 @@ describe('tab-uris transformer', () => {
       expect(result.selectedGroup).toBe('selected');
       expect(result.previousSelectedGroup).toBe('previous');
       expect(result.quickSlots).toEqual({ '1': 'group1', '2': 'group2' });
+    });
+  });
+
+  describe('toRelativeStateContainer', () => {
+    it('converts absolute URIs to relative paths in a single container', () => {
+      vi.spyOn(workspace, 'asRelativePath').mockImplementation((uri: any) => {
+        const uriString = typeof uri === 'string' ? uri : uri.toString();
+        if (uriString === 'file:///workspace/src/app.ts') return 'src/app.ts';
+        return uriString;
+      });
+
+      const tab = tabFactory.build({ uri: 'file:///workspace/src/app.ts' });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
+
+      const result = toRelativeStateContainer(container);
+
+      const resultTab = result.state.tabState.tabGroups['1'].tabs[0] as any;
+      expect(resultTab.uri).toBe('src/app.ts');
+    });
+  });
+
+  describe('toAbsoluteStateContainer', () => {
+    it('converts relative paths to absolute URIs in a single container', () => {
+      const workspaceUri = Uri.parse('file:///workspace');
+
+      const tab = tabFactory.build({ uri: 'src/app.ts' });
+      const tabState = tabStateFactory.build({}, { transient: { tabs: [tab] } });
+      const container = stateContainerFactory.build({}, { transient: { tabState } });
+
+      const result = toAbsoluteStateContainer(container, workspaceUri);
+
+      const resultTab = result.state.tabState.tabGroups['1'].tabs[0] as any;
+      expect(resultTab.uri).toBe('file:///workspace/src/app.ts');
     });
   });
 });

@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 
+import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
+import { Tooltip } from './common/tooltip';
 import { HistoryItem } from './history-item';
 
 const formatTimestamp = (value: string): string => {
@@ -13,41 +15,29 @@ const formatTimestamp = (value: string): string => {
 
 export const HistoryCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredHistory = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return state.histories;
-    }
-
-    const term = searchTerm.trim().toLowerCase();
-    return state.histories.filter((history) => {
+  const filterHistory = useCallback(
+    (
+      history: (typeof state.histories)[number],
+      term: string
+    ) => {
       const timestamp = formatTimestamp(history.historyId).toLowerCase();
       return (
         history.name.toLowerCase().includes(term) ||
         history.historyId.toLowerCase().includes(term) ||
         timestamp.includes(term)
       );
-    });
-  }, [state.histories, searchTerm]);
+    },
+    []
+  );
+
+  const { searchTerm, setSearchTerm, filteredItems: filteredHistory, clearSearch } =
+    useCollectionSearch({ items: state.histories, filterFn: filterHistory });
 
   return (
     <div className="collections-section history-collection">
       <div className="section-toolbar">
         <div className="section-toolbar-heading">
-          <h3>Snapshots</h3>
-          <button
-            type="button"
-            className="section-action"
-            onClick={() => {
-              messagingService.addToHistory();
-            }}
-            aria-label="Capture new snapshot"
-          >
-            <i className="codicon codicon-device-camera" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="section-toolbar-search">
           <div className="section-search">
             <i className="codicon codicon-search" aria-hidden="true" />
             <input
@@ -58,16 +48,30 @@ export const HistoryCollection: React.FC = () => {
               aria-label="Search snapshots"
             />
             {searchTerm && (
-              <button
-                type="button"
-                className="clear-search"
-                onClick={() => setSearchTerm('')}
-                aria-label="Clear snapshot search"
-              >
-                <i className="codicon codicon-close" aria-hidden="true" />
-              </button>
+              <Tooltip content="Clear snapshot search">
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={clearSearch}
+                  aria-label="Clear snapshot search"
+                >
+                  <i className="codicon codicon-close" aria-hidden="true" />
+                </button>
+              </Tooltip>
             )}
           </div>
+          <Tooltip content="Capture new snapshot">
+            <button
+              type="button"
+              className="section-action"
+              onClick={() => {
+                messagingService.addToHistory();
+              }}
+              aria-label="Capture new snapshot"
+            >
+              <i className="codicon codicon-device-camera" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -78,7 +82,7 @@ export const HistoryCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredHistory.map((history) => {
-            const { historyId, name, tabCount, columnCount } = history;
+            const { historyId, name, tabCount, columnCount, layout, tabsByColumn } = history;
             return (
               <HistoryItem
                 key={historyId}
@@ -86,6 +90,8 @@ export const HistoryCollection: React.FC = () => {
                 name={name}
                 tabCount={tabCount}
                 columnCount={columnCount}
+                layout={layout}
+                tabsByColumn={tabsByColumn}
               />
             );
           })}

@@ -28,6 +28,10 @@ export class EditorLayoutService implements Disposable {
     return this._emitter.event;
   }
 
+  get currentLayout(): Layout | null {
+    return this._lastLayout;
+  }
+
   setLayout(layout: Layout): void {
     this._lastLayout = layout;
   }
@@ -72,7 +76,7 @@ export class EditorLayoutService implements Disposable {
     this._active = false;
 
     if (this._timer) {
-      clearInterval(this._timer);
+      clearTimeout(this._timer);
       this._timer = null;
     }
 

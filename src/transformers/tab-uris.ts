@@ -114,3 +114,18 @@ export function toAbsoluteTabStateFile(
     toAbsoluteUriString(u, base)
   );
 }
+
+export function toRelativeStateContainer(
+  container: StateContainer
+): StateContainer {
+  return transformStateContainerUris(container, (u) => toRelativeUriString(u));
+}
+
+export function toAbsoluteStateContainer(
+  container: StateContainer,
+  base: Uri
+): StateContainer {
+  return transformStateContainerUris(container, (u) =>
+    toAbsoluteUriString(u, base)
+  );
+}

@@ -1,9 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
+import { Layout } from '../../types/commands';
+import { CollectionTabSummary } from '../../types/messages';
 import { QuickSlotIndex } from '../../types/tab-manager';
 import { useTabContext } from '../hooks/use-tab-context';
+import { useTooltip } from '../hooks/use-tooltip';
 import { CollectionTooltipContent } from './common/collection-tooltip-content';
 import { Tooltip } from './common/tooltip';
+import { SlotKeypad } from './slot-keypad';
 
 interface GroupItemProps {
   groupId: string;
@@ -11,12 +15,26 @@ interface GroupItemProps {
   index: number;
   isSelected: boolean;
   assignedSlot: string | undefined;
-  quickSlotOptions: string[];
+  occupiedSlots: Record<string, string>;
   onStartRename: (groupId: string, currentName: string) => void;
   isEditing: boolean;
   onCancelRename: () => void;
+  renameValue: string;
+  onRenameValueChange: (value: string) => void;
+  renameError: string | null;
+  onClearRenameError: () => void;
+  isRenaming: boolean;
+  renameInputRef: React.RefObject<HTMLInputElement | null>;
+  onSubmitRename: (id: string, currentName: string) => void;
+  onRenameKeyDown: (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+    currentName: string
+  ) => void;
   tabCount: number;
   columnCount: number;
+  layout?: Layout;
+  tabsByColumn?: CollectionTabSummary[][];
 }
 
 export const GroupItem: React.FC<GroupItemProps> = ({
@@ -25,43 +43,35 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   index,
   isSelected,
   assignedSlot,
-  quickSlotOptions,
+  occupiedSlots,
   onStartRename,
   isEditing,
   onCancelRename,
+  renameValue,
+  onRenameValueChange,
+  renameError,
+  onClearRenameError,
+  isRenaming,
+  renameInputRef,
+  onSubmitRename,
+  onRenameKeyDown,
   tabCount,
-  columnCount
+  columnCount,
+  layout,
+  tabsByColumn
 }) => {
-  const { state, messagingService } = useTabContext();
-  const renameInputRef = useRef<HTMLInputElement | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-  const [isRenaming, setIsRenaming] = useState(false);
-  const slotControlId = `slot-${index}`;
-
-  // Focus input when editing starts
-  useEffect(() => {
-    if (isEditing && renameInputRef.current) {
-      setRenameValue(name);
-      setRenameError(null);
-      setIsRenaming(false);
-      renameInputRef.current.focus();
-      renameInputRef.current.select();
-    }
-  }, [isEditing, name]);
+  const { messagingService } = useTabContext();
 
   const handleSlotChange = useCallback(
-    (rawValue: string) => {
-      const value = rawValue.trim();
-
-      if (!value) {
+    (rawValue: string | null) => {
+      if (rawValue === null) {
         if (assignedSlot) {
-          messagingService.assignQuickSlot(null, groupId);
+          messagingService.assignQuickSlot(assignedSlot as QuickSlotIndex, null);
         }
         return;
       }
 
-      const nextSlotNumber = Number(value);
+      const nextSlotNumber = Number(rawValue.trim());
 
       if (
         !Number.isInteger(nextSlotNumber) ||
@@ -80,64 +90,6 @@ export const GroupItem: React.FC<GroupItemProps> = ({
       messagingService.assignQuickSlot(nextSlot, groupId);
     },
     [messagingService, groupId, assignedSlot]
-  );
-
-  const submitRename = useCallback(async () => {
-    const normalized = renameValue.trim();
-
-    if (!normalized) {
-      setRenameError('Group name is required');
-      renameInputRef.current?.focus();
-      return;
-    }
-
-    if (normalized === name) {
-      onCancelRename();
-      return;
-    }
-
-    if (
-      state.groups.some((g) => g.name === normalized && g.groupId !== groupId)
-    ) {
-      setRenameError('A group with this name already exists');
-      renameInputRef.current?.focus();
-      renameInputRef.current?.select();
-      return;
-    }
-
-    try {
-      setIsRenaming(true);
-      messagingService.renameGroup(groupId, normalized);
-      onCancelRename();
-    } catch (error) {
-      console.error('Failed to rename group', error);
-      setRenameError('Unable to rename group');
-      setIsRenaming(false);
-      renameInputRef.current?.focus();
-    }
-  }, [
-    messagingService,
-    groupId,
-    renameValue,
-    onCancelRename,
-    state.groups,
-    name
-  ]);
-
-  const handleRenameKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        void submitRename();
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        onCancelRename();
-      }
-    },
-    [submitRename, onCancelRename]
   );
 
   const handleItemClick = useCallback(() => {
@@ -159,20 +111,25 @@ export const GroupItem: React.FC<GroupItemProps> = ({
     [isSelected, groupId, messagingService]
   );
 
+  const { triggerProps, renderTooltip } = useTooltip({
+    content: (
+      <CollectionTooltipContent
+        tabCount={tabCount}
+        columnCount={columnCount}
+        layout={layout}
+        tabsByColumn={tabsByColumn}
+      />
+    )
+  });
+
   return (
-    <Tooltip
-      content={
-        <CollectionTooltipContent
-          tabCount={tabCount}
-          columnCount={columnCount}
-        />
-      }
-    >
+    <>
       <li
         className={`section-item${isSelected ? ' active' : ''}${isEditing ? ' editing' : ''}`}
         tabIndex={0}
         onClick={handleItemClick}
         onKeyDown={handleItemKeyDown}
+        {...triggerProps}
       >
         <div className="item-row">
           <div className="item-primary">
@@ -184,40 +141,44 @@ export const GroupItem: React.FC<GroupItemProps> = ({
                   value={renameValue}
                   onClick={(event) => event.stopPropagation()}
                   onChange={(event) => {
-                    setRenameValue(event.target.value);
+                    onRenameValueChange(event.target.value);
                     if (renameError) {
-                      setRenameError(null);
+                      onClearRenameError();
                     }
                   }}
-                  onKeyDown={handleRenameKeyDown}
+                  onKeyDown={(event) => onRenameKeyDown(event, groupId, name)}
                   aria-label="Rename group"
                   disabled={isRenaming}
                 />
                 <div className="inline-form-actions">
-                  <button
-                    type="button"
-                    className="action-save"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void submitRename();
-                    }}
-                    disabled={isRenaming}
-                    aria-label="Save group name"
-                  >
-                    <i className="codicon codicon-check" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className="action-cancel"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onCancelRename();
-                    }}
-                    disabled={isRenaming}
-                    aria-label="Cancel rename"
-                  >
-                    <i className="codicon codicon-close" aria-hidden="true" />
-                  </button>
+                  <Tooltip content="Save group name">
+                    <button
+                      type="button"
+                      className="action-save"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onSubmitRename(groupId, name);
+                      }}
+                      disabled={isRenaming}
+                      aria-label="Save group name"
+                    >
+                      <i className="codicon codicon-check" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Cancel rename">
+                    <button
+                      type="button"
+                      className="action-cancel"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onCancelRename();
+                      }}
+                      disabled={isRenaming}
+                      aria-label="Cancel rename"
+                    >
+                      <i className="codicon codicon-close" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
                 </div>
               </>
             ) : (
@@ -235,53 +196,58 @@ export const GroupItem: React.FC<GroupItemProps> = ({
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            <div className="slot-selector">
-              <select
-                id={slotControlId}
-                value={assignedSlot ? assignedSlot.toString() : ''}
-                onClick={(event) => event.stopPropagation()}
-                onChange={(event) => {
+            <SlotKeypad
+              assignedSlot={assignedSlot}
+              occupiedSlots={occupiedSlots}
+              groupId={groupId}
+              disabled={isEditing}
+              onSlotChange={handleSlotChange}
+            />
+            {!isEditing && (
+              <Tooltip content="Export group">
+                <button
+                  type="button"
+                  className="neutral"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    messagingService.exportGroup(groupId);
+                  }}
+                >
+                  <i className="codicon codicon-cloud-upload" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
+            {!isEditing && (
+              <Tooltip content="Rename group">
+                <button
+                  type="button"
+                  className="neutral"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onStartRename(groupId, name);
+                  }}
+                >
+                  <i className="codicon codicon-edit" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
+            <Tooltip content="Delete group">
+              <button
+                type="button"
+                className="danger"
+                onClick={(event) => {
                   event.stopPropagation();
-                  handleSlotChange(event.target.value);
+                  messagingService.deleteGroup(groupId);
                 }}
                 disabled={isEditing}
               >
-                <option value="">No slot</option>
-                {quickSlotOptions.map((slot) => (
-                  <option key={slot} value={slot}>
-                    Slot {slot}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {!isEditing && (
-              <button
-                type="button"
-                className="neutral"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onStartRename(groupId, name);
-                }}
-                title="Rename group"
-              >
-                <i className="codicon codicon-edit" aria-hidden="true" />
+                <i className="codicon codicon-trash" aria-hidden="true" />
               </button>
-            )}
-            <button
-              type="button"
-              className="danger"
-              onClick={(event) => {
-                event.stopPropagation();
-                messagingService.deleteGroup(groupId);
-              }}
-              disabled={isEditing}
-              title="Delete group"
-            >
-              <i className="codicon codicon-trash" aria-hidden="true" />
-            </button>
+            </Tooltip>
           </div>
         </div>
       </li>
-    </Tooltip>
+      {renderTooltip()}
+    </>
   );
 };

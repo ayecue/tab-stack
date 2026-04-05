@@ -1,6 +1,7 @@
 import { Uri, workspace } from 'vscode';
 
 import { ConfigService } from '../services/config';
+import { getLogger, ScopedLogger } from '../services/logger';
 import { PersistenceStore } from '../stores/persistence';
 import { transform as migrate } from '../transformers/migration';
 import { PersistenceHandler } from '../types/persistence';
@@ -9,25 +10,43 @@ import {
   TabStateFileContent
 } from '../types/tab-manager';
 
-async function loadFile(location: string): Promise<TabStateFileContent | null> {
-  const fileContent = await workspace.fs.readFile(Uri.file(location));
+const URI_SCHEME_PATTERN = /^[a-zA-Z]+:/;
+
+function resolveWorkspaceUri(location: string | null): Uri | null {
+  if (!location) {
+    return null;
+  }
+
+  try {
+    return URI_SCHEME_PATTERN.test(location)
+      ? Uri.parse(location, true)
+      : Uri.file(location);
+  } catch {
+    return null;
+  }
+}
+
+function isFileNotFoundError(error: any): boolean {
+  return error?.code === 'ENOENT';
+}
+
+async function loadFile(location: Uri): Promise<TabStateFileContent | null> {
+  const fileContent = await workspace.fs.readFile(location);
   const data = migrate(JSON.parse(new TextDecoder().decode(fileContent)));
   return data;
 }
 
-async function saveFile(
-  location: string,
-  data: TabStateFileContent
-): Promise<void> {
+async function saveFile(location: Uri, data: TabStateFileContent): Promise<void> {
   const fileContent = new TextEncoder().encode(JSON.stringify(data));
-  await workspace.fs.writeFile(Uri.file(location), fileContent);
+  await workspace.fs.writeFile(location, fileContent);
 }
 
 export class FileStorageHandler implements PersistenceHandler {
   private _configService: ConfigService;
   private _store: PersistenceStore;
+  private _log: ScopedLogger;
 
-  private _location: string | null;
+  private _location: Uri | null;
   private _storageType: 'in-memory' | 'persistent' | null;
 
   constructor(configService: ConfigService, store: PersistenceStore) {
@@ -35,6 +54,7 @@ export class FileStorageHandler implements PersistenceHandler {
     this._storageType = null;
     this._configService = configService;
     this._store = store;
+    this._log = getLogger().child('FileStorage');
   }
 
   async load(): Promise<void> {
@@ -54,10 +74,10 @@ export class FileStorageHandler implements PersistenceHandler {
     this._store.send({ type: 'LOAD' });
 
     const masterFolderPath = this._configService.getMasterWorkspaceFolder();
-    const workspaceUri = Uri.parse(masterFolderPath);
+    const workspaceUri = resolveWorkspaceUri(masterFolderPath);
 
     if (!workspaceUri) {
-      console.warn('No workspace folder found, cannot load or save state.');
+      this._log.warn('No valid workspace folder found, falling back to in-memory state');
 
       this._location = null;
       this._storageType = 'in-memory';
@@ -73,12 +93,12 @@ export class FileStorageHandler implements PersistenceHandler {
     const vscodeDir = Uri.joinPath(workspaceUri, '.vscode');
     const filePath = Uri.joinPath(vscodeDir, 'tmstate.json');
 
-    this._location = filePath.fsPath;
+    this._location = filePath;
     this._storageType = 'persistent';
 
     try {
       await workspace.fs.createDirectory(vscodeDir);
-      const data = await loadFile(filePath.fsPath);
+      const data = await loadFile(filePath);
 
       this._store.send({
         type: 'DONE',
@@ -86,7 +106,16 @@ export class FileStorageHandler implements PersistenceHandler {
         success: true
       });
     } catch (error) {
-      console.error('Failed to load storage file:', error);
+      if (isFileNotFoundError(error)) {
+        this._store.send({
+          type: 'DONE',
+          data: createDefaultTabStateFileContent(),
+          success: true
+        });
+        return;
+      }
+
+      this._log.error('Failed to load storage file', error);
       this._store.send({
         type: 'DONE',
         data: createDefaultTabStateFileContent(),
@@ -108,9 +137,9 @@ export class FileStorageHandler implements PersistenceHandler {
     }
 
     try {
-      await saveFile(this._location!, data);
+      await saveFile(this._location, data);
     } catch (error) {
-      console.error('Failed to save storage file:', error);
+      this._log.error('Failed to save storage file', error);
     }
   }
 

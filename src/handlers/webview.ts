@@ -1,4 +1,5 @@
 import debounce from 'debounce';
+import { nanoid } from 'nanoid';
 import {
   Disposable,
   EventEmitter,
@@ -11,24 +12,38 @@ import {
 import {
   ExtensionMessageType,
   ExtensionNotificationMessage,
-  ExtensionTabsSyncMessage
+  ExtensionTabStateSyncMessage,
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage
 } from '../types/messages';
 
 export class WebviewHandler implements Disposable {
   static readonly DEBOUNCE_DELAY = 10 as const;
 
-  sendSync: (payload: Omit<ExtensionTabsSyncMessage, 'type'>) => Promise<void>;
+  sendTabStateSync: (payload: Omit<ExtensionTabStateSyncMessage, 'type'>) => void;
+  sendCollectionsSync: (payload: Omit<ExtensionCollectionsSyncMessage, 'type'>) => void;
+  sendConfigSync: (payload: Omit<ExtensionConfigSyncMessage, 'type'>) => void;
 
   private _view: WebviewView;
   private _context: ExtensionContext;
   private _messageEmitter: EventEmitter<any>;
 
+  private _messageListener: Disposable | null = null;
+
   constructor(view: WebviewView, context: ExtensionContext) {
     this._view = view;
     this._context = context;
     this._messageEmitter = new EventEmitter<any>();
-    this.sendSync = debounce(
-      this._sendSync.bind(this),
+    this.sendTabStateSync = debounce(
+      this._sendTabStateSync.bind(this),
+      WebviewHandler.DEBOUNCE_DELAY
+    );
+    this.sendCollectionsSync = debounce(
+      this._sendCollectionsSync.bind(this),
+      WebviewHandler.DEBOUNCE_DELAY
+    );
+    this.sendConfigSync = debounce(
+      this._sendConfigSync.bind(this),
       WebviewHandler.DEBOUNCE_DELAY
     );
   }
@@ -52,9 +67,9 @@ export class WebviewHandler implements Disposable {
     };
 
     this._view.webview.html = await this._getHtmlForWebview();
-    this._view.webview.onDidReceiveMessage((data) =>
-      this._messageEmitter.fire(data)
-    );
+    this._messageListener = this._view.webview.onDidReceiveMessage((data) => {
+      this._messageEmitter.fire(data);
+    });
   }
 
   private async _getHtmlForWebview() {
@@ -64,12 +79,16 @@ export class WebviewHandler implements Disposable {
 
     const cssWebviewUri = this._view.webview.asWebviewUri(cssUri);
     const jsWebviewUri = this._view.webview.asWebviewUri(jsUri);
+    const cspSource = this._view.webview.cspSource;
+    const nonce = nanoid();
 
     const htmlData = await workspace.fs.readFile(htmlUri);
     let html = new TextDecoder().decode(htmlData);
 
     html = html.replace('{{CSS_URI}}', cssWebviewUri.toString());
     html = html.replace('{{JS_URI}}', jsWebviewUri.toString());
+    html = html.replaceAll('{{CSP_SOURCE}}', cspSource);
+    html = html.replaceAll('{{NONCE}}', nonce);
 
     return html;
   }
@@ -85,20 +104,44 @@ export class WebviewHandler implements Disposable {
     } satisfies ExtensionNotificationMessage);
   }
 
-  private _sendSync(payload: Omit<ExtensionTabsSyncMessage, 'type'>) {
+  private _sendTabStateSync(payload: Omit<ExtensionTabStateSyncMessage, 'type'>) {
     if (!this._view) {
       return;
     }
 
     this._view.webview.postMessage({
-      type: ExtensionMessageType.Sync,
+      type: ExtensionMessageType.TabStateSync,
       ...payload
-    } satisfies ExtensionTabsSyncMessage);
+    } satisfies ExtensionTabStateSyncMessage);
+  }
+
+  private _sendCollectionsSync(payload: Omit<ExtensionCollectionsSyncMessage, 'type'>) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      type: ExtensionMessageType.CollectionsSync,
+      ...payload
+    } satisfies ExtensionCollectionsSyncMessage);
+  }
+
+  private _sendConfigSync(payload: Omit<ExtensionConfigSyncMessage, 'type'>) {
+    if (!this._view) {
+      return;
+    }
+
+    this._view.webview.postMessage({
+      type: ExtensionMessageType.ConfigSync,
+      ...payload
+    } satisfies ExtensionConfigSyncMessage);
   }
 
   dispose() {
     this._messageEmitter.dispose();
+    this._messageListener?.dispose();
 
+    this._messageListener = null;
     this._messageEmitter = null;
     this._context = null;
     this._view = null;

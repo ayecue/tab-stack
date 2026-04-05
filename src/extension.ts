@@ -1,18 +1,27 @@
 import { ExtensionContext, window } from 'vscode';
 
 import { createCommands } from './create-commands';
+import { createUriHandler } from './create-uri-handler';
 import { ViewManagerProvider } from './providers/view-manager';
 import { ConfigService } from './services/config';
 import { EditorLayoutService } from './services/editor-layout';
 import { GitService } from './services/git';
-import { SelectionTrackerService } from './services/selection-tracker';
+import { initializeLogger } from './services/logger';
+import { StatusBarService } from './services/status-bar';
 import { TabManagerService } from './services/tab-manager';
 import { getEditorLayout } from './utils/commands';
+import { createTestHelper } from './create-test-helper';
+import { TabRecoveryService } from './services/tab-recovery-resolver';
 
 export async function activate(context: ExtensionContext) {
+  const logger = initializeLogger();
+  context.subscriptions.push(logger);
+
+  logger.info('Tab Stack activating');
+
   const layoutService = new EditorLayoutService();
   const configService = new ConfigService();
-  const selectionTracker = new SelectionTrackerService();
+  const tabRecoveryService = new TabRecoveryService(configService);
 
   // Initialize git service with config service
   const gitService = new GitService(configService);
@@ -31,11 +40,13 @@ export async function activate(context: ExtensionContext) {
     context,
     layoutService,
     configService,
-    selectionTracker,
-    gitService
+    gitService,
+    tabRecoveryService
   );
 
   await tabManagerService.attachStateHandler();
+
+  const statusBarService = new StatusBarService(tabManagerService);
 
   const viewManagerProvider = new ViewManagerProvider(
     context,
@@ -57,10 +68,13 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(
     layoutService,
     configService,
-    selectionTracker,
+    tabRecoveryService,
     tabManagerService,
+    statusBarService,
     viewManagerProvider,
-    ...createCommands(tabManagerService)
+    ...createCommands(tabManagerService),
+    ...createTestHelper(tabManagerService),
+    createUriHandler()
   );
 
   if (gitInitialized) {
