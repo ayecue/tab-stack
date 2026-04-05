@@ -39,6 +39,9 @@ export class StatusBarService implements Disposable {
 
     this._disposables = [
       this._statusBarItem,
+      this._tabManager.onDidCompleteRender(() => {
+        this.updateFromState();
+      }),
       this._tabManager.onDidSyncCollections(() => {
         this.updateFromState();
       }),

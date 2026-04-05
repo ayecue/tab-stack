@@ -7,10 +7,12 @@ describe('StatusBarService', () => {
   const createMockTabManager = () => {
     const configEmitter = new EventEmitter<any>();
     const syncEmitter = new EventEmitter<any>();
+    const renderEmitter = new EventEmitter<void>();
 
     return {
       configEmitter,
       syncEmitter,
+      renderEmitter,
       service: {
         state: {
           groups: {
@@ -50,7 +52,8 @@ describe('StatusBarService', () => {
           getStatusBarVisible: vi.fn(() => true),
           onDidChangeConfig: configEmitter.event
         },
-        onDidSyncCollections: syncEmitter.event
+        onDidSyncCollections: syncEmitter.event,
+        onDidCompleteRender: renderEmitter.event
       }
     };
   };
@@ -132,7 +135,8 @@ describe('StatusBarService', () => {
         getStatusBarVisible: vi.fn(() => true),
         onDidChangeConfig: vi.fn(() => ({ dispose: vi.fn() }))
       },
-      onDidSyncCollections: vi.fn(() => ({ dispose: vi.fn() }))
+      onDidSyncCollections: vi.fn(() => ({ dispose: vi.fn() })),
+      onDidCompleteRender: vi.fn(() => ({ dispose: vi.fn() }))
     } as never);
 
     expect(statusBarItem.text).toBe('$(layers) Save Group');

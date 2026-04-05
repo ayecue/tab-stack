@@ -961,6 +961,7 @@ export class TabManagerService implements ITabManagerService {
 
     if (groupId == null) {
       this._stateContainerHandler.forkState();
+      this.triggerCollectionsSync();
       return;
     }
 
