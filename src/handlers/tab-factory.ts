@@ -3,7 +3,6 @@ import { OpenTabResult, TabInfo, TabInfoCustom, TabInfoNotebook, TabInfoNotebook
 import { getLogger, ScopedLogger } from "../services/logger";
 import { TabCreationTask, TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputTerminal, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
 import { TabCreationOperation } from "../operations/tab-creation";
-import { MoveTabToEndOperation } from "../operations/move-tab-to-end";
 import { TabOperation } from "../operations/tab-operation";
 import { TabRecoveryService } from "../services/tab-recovery-resolver";
 
@@ -75,11 +74,8 @@ export class TabFactory {
     const existingTab = tabGroup ? rawTask.findExistingTab(tabGroup.tabs) : undefined;
 
     if (existingTab) {
-      this._log.info(`tab already exists: "${existingTab.label}" in column ${existingTab.group.viewColumn}, moving to end`);
-      const moveOp = new MoveTabToEndOperation(existingTab, this._log);
-      this._queue.push(moveOp);
-      void this._processQueue();
-      return moveOp.getRelevantPromise();
+      this._log.info(`tab already exists: "${existingTab.label}" in column ${existingTab.group.viewColumn}, skipping creation`);
+      return Promise.resolve({ success: true, handle: null, tab: existingTab });
     }
 
     const creationOp = new TabCreationOperation(rawTask);
