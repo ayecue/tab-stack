@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 06-04-2026
+
+### Fix
+
+- **Duplicate tabs on restore**: Tabs that already exist in the target editor group are now moved to the correct position instead of being opened again
+- **Stale tab references**: Fixed an issue where removed tabs could still appear in the tab state due to stale ID lookups
+
 ## [1.3.0] - 03-04-2026
 
 ### Added
