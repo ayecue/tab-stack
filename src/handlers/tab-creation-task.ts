@@ -9,6 +9,9 @@ export abstract class TabCreationTask {
   abstract findRelatedTab(openedTabs: readonly Tab[]): Tab | null;
   abstract addEditorListener(callback: (handle: AssociatedTabInstance) => void): { dispose: () => void };
   abstract executeCommand(): Promise<void>;
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    return null;
+  }
   getMaxRuntime(): number {
     return 1000; // Default max runtime of 1 second, should be always greater than next tick delay
   }
@@ -23,6 +26,14 @@ export class TabCreationTaskTabInputText extends TabCreationTask {
   constructor(tabInfo: TabInfoText) {
     super();
     this._tabInfo = tabInfo;
+  }
+
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    return allTabs.find(it =>
+      it.input instanceof TabInputText &&
+      it.input.uri.toString() === this._tabInfo.uri &&
+      it.group.viewColumn === this._tabInfo.viewColumn
+    ) ?? null;
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
@@ -63,6 +74,15 @@ export class TabCreationTaskTabInputTextDiff extends TabCreationTask {
   constructor(tabInfo: TabInfoTextDiff) {
     super();
     this._tabInfo = tabInfo;
+  }
+
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    return allTabs.find(it =>
+      it.input instanceof TabInputTextDiff &&
+      it.input.original.toString() === this._tabInfo.originalUri &&
+      it.input.modified.toString() === this._tabInfo.modifiedUri &&
+      it.group.viewColumn === this._tabInfo.viewColumn
+    ) ?? null;
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
@@ -142,6 +162,14 @@ export class TabCreationTaskTabInputNotebook extends TabCreationTask {
     this._tabInfo = tabInfo;
   }
 
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    return allTabs.find(it =>
+      it.input instanceof TabInputNotebook &&
+      it.input.uri.toString() === this._tabInfo.uri &&
+      it.group.viewColumn === this._tabInfo.viewColumn
+    ) ?? null;
+  }
+
   findRelatedTab(tabs: readonly Tab[]) {
     return tabs.find(it =>
       it.label === this._tabInfo.label &&
@@ -181,6 +209,15 @@ export class TabCreationTaskTabInputNotebookDiff extends TabCreationTask {
   constructor(tabInfo: TabInfoNotebookDiff) {
     super();
     this._tabInfo = tabInfo;
+  }
+
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    return allTabs.find(it =>
+      it.input instanceof TabInputNotebookDiff &&
+      it.input.original.toString() === this._tabInfo.originalUri &&
+      it.input.modified.toString() === this._tabInfo.modifiedUri &&
+      it.group.viewColumn === this._tabInfo.viewColumn
+    ) ?? null;
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
