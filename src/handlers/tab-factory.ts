@@ -71,8 +71,8 @@ export class TabFactory {
       return Promise.resolve({ success: false, handle: null, tab: null });
     }
 
-    const allRelevantTabs = window.tabGroups.all[tabInfo.viewColumn - 1].tabs;
-    const existingTab = rawTask.findExistingTab(allRelevantTabs);
+    const tabGroup = window.tabGroups.all[tabInfo.viewColumn - 1];
+    const existingTab = tabGroup ? rawTask.findExistingTab(tabGroup.tabs) : undefined;
 
     if (existingTab) {
       this._log.info(`tab already exists: "${existingTab.label}" in column ${existingTab.group.viewColumn}, moving to end`);
