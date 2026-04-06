@@ -56,7 +56,7 @@ export class TabFactory {
           this._log.warn(`no recovery command found for tab "${tabInfo.label}" of kind "${tabInfo.kind}"`);
           return null;
         }
-        return new TabCreationTaskCustomCommand(tabInfo, recovery.command, recovery.args, recovery.nextTickDelay);
+        return new TabCreationTaskCustomCommand(tabInfo, recovery.command, recovery.args, recovery.nextTickDelay, recovery.unique);
     }
   }
 

@@ -529,12 +529,25 @@
                 {
                   "openToSide": false
                 }
-              ]
+              ],
+              "unique": true
             },
-            "^Keyboard Shortcuts$": "workbench.action.openGlobalKeybindings",
-            "^Extensions$": "workbench.view.extensions",
-            "^Welcome$": "workbench.action.openWalkthrough",
-            "^Release Notes: [0-9.]+$": "update.showCurrentReleaseNotes"
+            "^Keyboard Shortcuts$": {
+              "command": "workbench.action.openGlobalKeybindings",
+              "unique": true
+            },
+            "^Extensions$": {
+              "command": "workbench.view.extensions",
+              "unique": true
+            },
+            "^Welcome$": {
+              "command": "workbench.action.openWalkthrough",
+              "unique": true
+            },
+            "^Release Notes: [0-9.]+$": {
+              "command": "update.showCurrentReleaseNotes",
+              "unique": true
+            }
           },
           "description": "Mapping of identifiers to recovery commands for unknown tab types. Keys serve as identifiers (or as label regex patterns for backward compatibility). Values are either a command ID string (key is the label pattern) or an object with 'command', optional 'match' (regex criteria including 'label'), optional 'args', and optional 'nextTickDelay'.",
           "patternProperties": {
@@ -560,6 +573,11 @@
                       "type": "number",
                       "description": "Milliseconds to wait after command execution before checking for the tab. 0 or omitted for immediate (setImmediate).",
                       "default": 0
+                    },
+                    "unique": {
+                      "type": "boolean",
+                      "description": "When true, prevents opening duplicate tabs. If a tab with the same label already exists in the target column, it will be moved to the end instead of opening a new one.",
+                      "default": false
                     },
                     "match": {
                       "type": "object",

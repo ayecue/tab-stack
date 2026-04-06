@@ -27,6 +27,7 @@ export type TabRecoveryMappingEntry = string | {
   args?: unknown[];
   nextTickDelay?: number;
   match?: TabRecoveryMatchCriteria;
+  unique?: boolean;
 };
 export type TabRecoveryMapping = Record<string, TabRecoveryMappingEntry>;
 
@@ -34,6 +35,7 @@ export interface RecoveryCommandResult {
   command: string;
   args: unknown[];
   nextTickDelay: number;
+  unique: boolean;
 }
 
 export interface ConfigChangeEvent {

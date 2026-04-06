@@ -306,15 +306,25 @@ export class TabCreationTaskCustomCommand extends TabCreationTask {
   private _command: string;
   private _args: unknown[];
   private _nextTickDelay: number;
+  private _unique: boolean;
   private _log: ScopedLogger;
 
-  constructor(tabInfo: TabInfoBase, command: string, args: unknown[] = [], nextTickDelay: number = 0) {
+  constructor(tabInfo: TabInfoBase, command: string, args: unknown[] = [], nextTickDelay: number = 0, unique: boolean = false) {
     super();
     this._tabInfo = tabInfo;
     this._command = command;
     this._args = args;
     this._nextTickDelay = nextTickDelay;
+    this._unique = unique;
     this._log = getLogger().child('TabCreationTaskCustomCommand');
+  }
+
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    if (!this._unique) return null;
+    return allTabs.find(it =>
+      it.label === this._tabInfo.label &&
+      it.group.viewColumn === this._tabInfo.viewColumn
+    ) ?? null;
   }
 
   getNextTickDelay(): number {
