@@ -4,6 +4,8 @@ import {
   WebviewAssignQuickSlotMessage,
   WebviewClearAllTabsMessage,
   WebviewClearWorkspaceFolderMessage,
+  WebviewCloseOtherEditorsInGroupMessage,
+  WebviewCloseOtherEditorsMessage,
   WebviewCreateAddonMessage,
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
@@ -64,6 +66,24 @@ export class TabMessagingService {
   clearAllTabs(): void {
     const message: WebviewClearAllTabsMessage = {
       type: WebviewMessageType.ClearAllTabs
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  closeOtherEditors(index: number, columnView: number): void {
+    const message: WebviewCloseOtherEditorsMessage = {
+      type: WebviewMessageType.CloseOtherEditors,
+      index,
+      columnView
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  closeOtherEditorsInGroup(index: number, columnView: number): void {
+    const message: WebviewCloseOtherEditorsInGroupMessage = {
+      type: WebviewMessageType.CloseOtherEditorsInGroup,
+      index,
+      columnView
     };
     this.messenger.sendMessage(message);
   }

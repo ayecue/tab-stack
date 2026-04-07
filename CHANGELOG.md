@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.3.1] - 06-04-2026
+## [1.3.1] - 07-04-2026
+
+### Added
+
+- **Close others**: Right-click context menu on tab items with options to close all other editors across all groups, or close others within the same group only
 
 ### Fix
 

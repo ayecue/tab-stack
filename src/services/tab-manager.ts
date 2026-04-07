@@ -548,6 +548,41 @@ export class TabManagerService implements ITabManagerService {
     await closeTab(targetTab);
   }
 
+  async closeOtherTabs(viewColumn: number, index: number): Promise<void> {
+    const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
+
+    if (!targetTab) {
+      this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
+      return;
+    }
+
+    try {
+      const tabsToClose = window.tabGroups.all.flatMap((group) =>
+        group.tabs.filter((tab) => tab !== targetTab)
+      );
+      await window.tabGroups.close(tabsToClose, true);
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to close other tabs');
+    }
+  }
+
+  async closeOtherTabsInGroup(viewColumn: number, index: number): Promise<void> {
+    const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
+    const targetGroup = findTabGroupByViewColumn(viewColumn);
+
+    if (!targetTab || !targetGroup) {
+      this.notify(ExtensionNotificationKind.Warning, 'Tab not found');
+      return;
+    }
+
+    try {
+      const tabsToClose = targetGroup.tabs.filter((tab) => tab !== targetTab);
+      await window.tabGroups.close(tabsToClose, true);
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to close other tabs in group');
+    }
+  }
+
   async moveTab(
     fromViewColumn: number,
     fromIndex: number,

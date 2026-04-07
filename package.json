@@ -536,9 +536,13 @@
               "command": "workbench.action.openGlobalKeybindings",
               "unique": true
             },
-            "^Extensions$": {
-              "command": "workbench.view.extensions",
+            "^Running Extension$": {
+              "command": "workbench.action.showRuntimeExtensions",
               "unique": true
+            },
+            "^Search(: .+$)?": {
+              "command": "search.action.openNewEditor",
+              "unique": false
             },
             "^Welcome$": {
               "command": "workbench.action.openWalkthrough",

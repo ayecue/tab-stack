@@ -16,6 +16,8 @@ interface TabListFlatProps {
     openTab: (index: number, viewColumn: number) => void;
     closeTab: (index: number, viewColumn: number) => void;
     toggleTabPin: (index: number, viewColumn: number) => void;
+    closeOtherEditors: (index: number, viewColumn: number) => void;
+    closeOtherEditorsInGroup: (index: number, viewColumn: number) => void;
   };
 }
 
@@ -59,6 +61,12 @@ export const TabListFlat: React.FC<TabListFlatProps> = ({
           }
           onTogglePin={() =>
             messagingService.toggleTabPin(tabGroupIndex, tab.viewColumn)
+          }
+          onCloseOthers={() =>
+            messagingService.closeOtherEditors(tabGroupIndex, tab.viewColumn)
+          }
+          onCloseOthersInGroup={() =>
+            messagingService.closeOtherEditorsInGroup(tabGroupIndex, tab.viewColumn)
           }
           onDragStart={handleDragStart(tabGroupIndex, viewColumn)}
           onDragEnd={handleDragEnd}

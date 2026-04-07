@@ -452,4 +452,39 @@ suite('Lifecycle: webview interactions', () => {
       `Should have package.json from addon, got: ${labels.join(', ')}`
     );
   });
+
+  test('close-other-editors keeps only the targeted tab via webview dispatch', async function () {
+    this.timeout(1000 * 60);
+    // Open 5 files across 2 columns
+    await trackSync(async () => {
+      await openFiles([
+        { file: 'package.json', column: vscode.ViewColumn.One },
+        { file: 'README.md', column: vscode.ViewColumn.One },
+        { file: 'tsconfig.json', column: vscode.ViewColumn.One },
+        { file: 'vitest.config.ts', column: vscode.ViewColumn.Two },
+        { file: 'CHANGELOG.md', column: vscode.ViewColumn.Two }
+      ]);
+    });
+
+    const beforeCount = totalTabCount();
+    assert.ok(beforeCount >= 5, `Should start with >= 5 tabs, got ${beforeCount}`);
+
+    // Close all other editors except the second tab in column 1 (README.md)
+    await dispatch({ type: 'close-other-editors', index: 1, columnView: 1 });
+
+    await waitUntil(
+      () => totalTabCount() === 1,
+      'all tabs except the targeted one to close'
+    );
+
+    const afterCount = totalTabCount();
+    assert.strictEqual(afterCount, 1, `Should have exactly 1 tab remaining, got ${afterCount}`);
+
+    // Verify the surviving tab is README.md
+    const labels = getOpenTabs().flatMap((g) => g.tabLabels);
+    assert.ok(
+      labels.some((l) => l.includes('README')),
+      `Remaining tab should be README.md, got: ${labels.join(', ')}`
+    );
+  });
 });
