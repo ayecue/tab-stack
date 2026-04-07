@@ -4,6 +4,8 @@ import {
   BaseWebviewMessage,
   WebviewApplyAddonMessage,
   WebviewAssignQuickSlotMessage,
+  WebviewCloseOtherEditorsInGroupMessage,
+  WebviewCloseOtherEditorsMessage,
   WebviewCreateAddonMessage,
   WebviewDeleteAddonMessage,
   WebviewDeleteGroupMessage,
@@ -49,6 +51,16 @@ export class MessageHandler implements Disposable {
       }
       case WebviewMessageType.ClearAllTabs: {
         await tabManager.clearAllTabs();
+        break;
+      }
+      case WebviewMessageType.CloseOtherEditors: {
+        const { columnView, index } = data as WebviewCloseOtherEditorsMessage;
+        await tabManager.closeOtherTabs(columnView, index);
+        break;
+      }
+      case WebviewMessageType.CloseOtherEditorsInGroup: {
+        const { columnView, index } = data as WebviewCloseOtherEditorsInGroupMessage;
+        await tabManager.closeOtherTabsInGroup(columnView, index);
         break;
       }
       case WebviewMessageType.TabTogglePin: {

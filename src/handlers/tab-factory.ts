@@ -1,13 +1,15 @@
+import { window } from "vscode";
 import { OpenTabResult, TabInfo, TabInfoCustom, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
 import { getLogger, ScopedLogger } from "../services/logger";
-import { TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputTerminal, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
-import { TabCreationTaskMediator } from "../mediators/tab-creation-task";
+import { TabCreationTask, TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputTerminal, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
+import { TabCreationOperation } from "../operations/tab-creation";
+import { TabOperation } from "../operations/tab-operation";
 import { TabRecoveryService } from "../services/tab-recovery-resolver";
 
 export class TabFactory {
   private _recoveryResolver: TabRecoveryService;
   private _log: ScopedLogger;
-  private _queue: TabCreationTaskMediator[] = [];
+  private _queue: TabOperation[] = [];
   private _processing: boolean = false;
 
   constructor(recoveryResolver: TabRecoveryService) {
@@ -31,20 +33,20 @@ export class TabFactory {
     this._processing = false;
   }
 
-  private _buildTabCreationTask(tabInfo: TabInfo): TabCreationTaskMediator | null {
+  private _buildRawTask(tabInfo: TabInfo): TabCreationTask | null {
     switch (tabInfo.kind) {
       case TabKind.TabInputText:
-        return new TabCreationTaskMediator(new TabCreationTaskTabInputText(tabInfo as TabInfoText));
+        return new TabCreationTaskTabInputText(tabInfo as TabInfoText);
       case TabKind.TabInputTextDiff:
-        return new TabCreationTaskMediator(new TabCreationTaskTabInputTextDiff(tabInfo as TabInfoTextDiff));
+        return new TabCreationTaskTabInputTextDiff(tabInfo as TabInfoTextDiff);
       case TabKind.TabInputCustom:
-        return new TabCreationTaskMediator(new TabCreationTaskTabInputCustom(tabInfo as TabInfoCustom));
+        return new TabCreationTaskTabInputCustom(tabInfo as TabInfoCustom);
       case TabKind.TabInputNotebook:
-        return new TabCreationTaskMediator(new TabCreationTaskTabInputNotebook(tabInfo as TabInfoNotebook));
+        return new TabCreationTaskTabInputNotebook(tabInfo as TabInfoNotebook);
       case TabKind.TabInputNotebookDiff:
-        return new TabCreationTaskMediator(new TabCreationTaskTabInputNotebookDiff(tabInfo as TabInfoNotebookDiff));
+        return new TabCreationTaskTabInputNotebookDiff(tabInfo as TabInfoNotebookDiff);
       case TabKind.TabInputTerminal:
-        return new TabCreationTaskMediator(new TabCreationTaskTabInputTerminal(tabInfo as TabInfoTerminal));
+        return new TabCreationTaskTabInputTerminal(tabInfo as TabInfoTerminal);
       case TabKind.TabInputWebview:
       case TabKind.Unknown:
       default:
@@ -53,7 +55,7 @@ export class TabFactory {
           this._log.warn(`no recovery command found for tab "${tabInfo.label}" of kind "${tabInfo.kind}"`);
           return null;
         }
-        return new TabCreationTaskMediator(new TabCreationTaskCustomCommand(tabInfo, recovery.command, recovery.args, recovery.nextTickDelay));
+        return new TabCreationTaskCustomCommand(tabInfo, recovery.command, recovery.args, recovery.nextTickDelay, recovery.unique);
     }
   }
 
@@ -62,15 +64,24 @@ export class TabFactory {
       return Promise.resolve({ success: false, handle: null, tab: null });
     }
 
-    const task = this._buildTabCreationTask(tabInfo);
+    const rawTask = this._buildRawTask(tabInfo);
 
-    if (task == null) {
+    if (rawTask == null) {
       return Promise.resolve({ success: false, handle: null, tab: null });
     }
 
-    this._queue.push(task);
+    const tabGroup = window.tabGroups.all[tabInfo.viewColumn - 1];
+    const existingTab = tabGroup ? rawTask.findExistingTab(tabGroup.tabs) : undefined;
+
+    if (existingTab) {
+      this._log.info(`tab already exists: "${existingTab.label}" in column ${existingTab.group.viewColumn}, skipping creation`);
+      return Promise.resolve({ success: true, handle: null, tab: existingTab });
+    }
+
+    const creationOp = new TabCreationOperation(rawTask);
+    this._queue.push(creationOp);
     void this._processQueue();
 
-    return task.getRelevantPromise();
+    return creationOp.getRelevantPromise();
   }
 }

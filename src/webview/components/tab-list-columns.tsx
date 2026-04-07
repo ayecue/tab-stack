@@ -17,6 +17,8 @@ interface TabListColumnsProps {
     openTab: (index: number, viewColumn: number) => void;
     closeTab: (index: number, viewColumn: number) => void;
     toggleTabPin: (index: number, viewColumn: number) => void;
+    closeOtherEditors: (index: number, viewColumn: number) => void;
+    closeOtherEditorsInGroup: (index: number, viewColumn: number) => void;
   };
 }
 
@@ -67,6 +69,12 @@ export const TabListColumns: React.FC<TabListColumnsProps> = ({
                   }
                   onTogglePin={() =>
                     messagingService.toggleTabPin(originalIndex, tab.viewColumn)
+                  }
+                  onCloseOthers={() =>
+                    messagingService.closeOtherEditors(originalIndex, tab.viewColumn)
+                  }
+                  onCloseOthersInGroup={() =>
+                    messagingService.closeOtherEditorsInGroup(originalIndex, tab.viewColumn)
                   }
                   onDragStart={handleDragStart(originalIndex, viewColumn)}
                   onDragEnd={handleDragEnd}

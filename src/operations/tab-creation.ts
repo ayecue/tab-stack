@@ -3,9 +3,10 @@ import { OpenTabResult } from "../types/tabs";
 import { getLogger, ScopedLogger } from "../services/logger";
 import { tabCreationMachine } from "../state-machines/tab-creation";
 import { TabCreationTask } from "../handlers/tab-creation-task";
+import { TabOperation } from "./tab-operation";
 
 
-export class TabCreationTaskMediator {
+export class TabCreationOperation extends TabOperation {
   private _task: TabCreationTask;
   private _actor: Actor<typeof tabCreationMachine>;
   private _log: ScopedLogger;
@@ -14,11 +15,12 @@ export class TabCreationTaskMediator {
   private _promise: Promise<OpenTabResult>;
 
   constructor(task: TabCreationTask) {
+    super();
     this._task = task;
     this._actor = createActor(tabCreationMachine, {
       input: { task },
     });
-    this._log = getLogger().child('TabCreationTaskMediator');
+    this._log = getLogger().child('TabCreationOperation');
     this._resolve = null;
     this._promise = new Promise((resolve) => {
       this._resolve = resolve;
@@ -44,9 +46,9 @@ export class TabCreationTaskMediator {
     });
   }
 
-  execute(): Promise<OpenTabResult> {
+  async execute(): Promise<void> {
     this._actor.start();
-    return this._promise;
+    await this._promise;
   }
 
   getRelevantPromise() {

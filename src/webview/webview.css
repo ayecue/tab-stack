@@ -563,6 +563,38 @@ body {
   color: var(--vscode-list-activeSelectionForeground);
 }
 
+.tab-context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 180px;
+  background: var(--vscode-menu-background, var(--vscode-dropdown-background));
+  color: var(--vscode-menu-foreground, var(--vscode-dropdown-foreground));
+  border: 1px solid var(--vscode-menu-border, var(--vscode-dropdown-border));
+  border-radius: 4px;
+  padding: 4px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tab-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: var(--vscode-font-size, 13px);
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  text-align: left;
+}
+
+.tab-context-menu-item:hover {
+  background: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
+  color: var(--vscode-menu-selectionForeground, var(--vscode-list-hoverForeground));
+}
+
 .tab-item-main {
   display: flex;
   align-items: center;

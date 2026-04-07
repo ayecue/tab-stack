@@ -90,6 +90,8 @@ describe('createCommands', () => {
     deleteAddon: vi.fn(),
     assignQuickSlot: vi.fn(),
     clearAllTabs: vi.fn(),
+    closeOtherTabs: vi.fn(),
+    closeOtherTabsInGroup: vi.fn(),
     exportGroup: vi.fn(),
     importGroup: vi.fn(),
     applyQuickSlot: vi.fn(),

@@ -110,7 +110,9 @@ export enum WebviewMessageType {
   ExportStateFile = 'export-state-file',
   ImportStateFile = 'import-state-file',
   ExportGroup = 'export-group',
-  ImportGroup = 'import-group'
+  ImportGroup = 'import-group',
+  CloseOtherEditors = 'close-other-editors',
+  CloseOtherEditorsInGroup = 'close-other-editors-in-group'
 }
 
 export interface BaseWebviewMessage {
@@ -257,4 +259,16 @@ export interface WebviewExportGroupMessage extends BaseWebviewMessage {
 
 export interface WebviewImportGroupMessage extends BaseWebviewMessage {
   type: WebviewMessageType.ImportGroup;
+}
+
+export interface WebviewCloseOtherEditorsMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.CloseOtherEditors;
+  index: number;
+  columnView: number;
+}
+
+export interface WebviewCloseOtherEditorsInGroupMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.CloseOtherEditorsInGroup;
+  index: number;
+  columnView: number;
 }

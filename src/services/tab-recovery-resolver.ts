@@ -64,7 +64,8 @@ export class TabRecoveryService implements Disposable {
             matchFields: [],
             command: entry,
             argTemplates: [],
-            nextTickDelay: 0
+            nextTickDelay: 0,
+            unique: false
           });
           continue;
         }
@@ -87,7 +88,8 @@ export class TabRecoveryService implements Disposable {
           matchFields,
           command: entry.command,
           argTemplates,
-          nextTickDelay: entry.nextTickDelay ?? 0
+          nextTickDelay: entry.nextTickDelay ?? 0,
+          unique: entry.unique ?? false
         });
       } catch {
         this._log.warn(`skipping invalid recovery mapping "${key}": compilation failed`);
@@ -130,7 +132,8 @@ export class TabRecoveryService implements Disposable {
       return {
         command: mapping.command,
         args,
-        nextTickDelay: mapping.nextTickDelay
+        nextTickDelay: mapping.nextTickDelay,
+        unique: mapping.unique
       };
     }
 

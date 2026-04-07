@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type TabInfo, TabKind } from '../../types/tabs';
 import { Tooltip } from './common/tooltip';
@@ -9,6 +9,8 @@ interface TabItemProps {
   onOpen: () => void;
   onClose: () => void;
   onTogglePin: () => void;
+  onCloseOthers: () => void;
+  onCloseOthersInGroup: () => void;
   onDragStart?: (e: React.DragEvent<HTMLLIElement>) => void;
   onDragEnd?: (e: React.DragEvent<HTMLLIElement>) => void;
   onDragOver?: (e: React.DragEvent<HTMLLIElement>) => void;
@@ -26,6 +28,8 @@ export const TabItem: React.FC<TabItemProps> = React.memo(({
   onOpen,
   onClose,
   onTogglePin,
+  onCloseOthers,
+  onCloseOthersInGroup,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -37,6 +41,9 @@ export const TabItem: React.FC<TabItemProps> = React.memo(({
   dropPosition,
   resolvedColor
 }) => {
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
   const handleClose = (event: React.MouseEvent) => {
     event.stopPropagation();
     onClose();
@@ -46,6 +53,37 @@ export const TabItem: React.FC<TabItemProps> = React.memo(({
     event.stopPropagation();
     onTogglePin();
   };
+
+  const handleContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setContextMenu({ x: event.clientX, y: event.clientY });
+  }, []);
+
+  const handleCloseOthers = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    setContextMenu(null);
+    onCloseOthers();
+  }, [onCloseOthers]);
+
+  const handleCloseOthersInGroup = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    setContextMenu(null);
+    onCloseOthersInGroup();
+  }, [onCloseOthersInGroup]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [contextMenu]);
 
   const fileName = tab.label;
   const isUnrecoverable = !tab.isRecoverable;
@@ -88,6 +126,7 @@ export const TabItem: React.FC<TabItemProps> = React.memo(({
     <li
       className={`tab-item ${activeClass}`.trim()}
       onClick={onOpen}
+      onContextMenu={handleContextMenu}
       draggable={true}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -146,6 +185,31 @@ export const TabItem: React.FC<TabItemProps> = React.memo(({
           </button>
         </Tooltip>
       </div>
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="tab-context-menu"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          role="menu"
+        >
+          <button
+            className="tab-context-menu-item"
+            onClick={handleCloseOthers}
+            role="menuitem"
+          >
+            <i className="codicon codicon-close-all" aria-hidden="true" />
+            Close Others
+          </button>
+          <button
+            className="tab-context-menu-item"
+            onClick={handleCloseOthersInGroup}
+            role="menuitem"
+          >
+            <i className="codicon codicon-close-all" aria-hidden="true" />
+            Close Others in Group
+          </button>
+        </div>
+      )}
     </li>
   );
 });

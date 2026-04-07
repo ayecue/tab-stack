@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 07-04-2026
+
+### Added
+
+- **Close others**: Right-click context menu on tab items with options to close all other editors across all groups, or close others within the same group only
+
+### Fix
+
+- **Duplicate tabs on addon**: Tabs that already exist in the target editor group are now properly detected and skipped during addon application
+- **Stale tab references**: Fixed an issue where removed tabs could still appear in the tab state due to stale ID lookups
+
 ## [1.3.0] - 03-04-2026
 
 ### Added

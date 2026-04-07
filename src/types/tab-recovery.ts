@@ -9,6 +9,7 @@ export interface CompiledMapping {
   command: string;
   argTemplates: CompiledArgTemplate[];
   nextTickDelay: number;
+  unique: boolean;
 }
 
 export type CompiledArgTemplate =

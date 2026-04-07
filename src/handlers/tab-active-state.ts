@@ -401,7 +401,7 @@ export class TabActiveStateHandler implements Disposable {
       return group.tabs.map((tab, index) => {
         const key = createTabKey(tab, group, index);
         const tabId = this._associatedTabs.get(key);
-        if (tabId == null) {
+        if (tabId == null || currentTabs[tabId] == null) {
           return transformTabToTabInfo(tab, group, index);
         }
         return currentTabs[tabId];
