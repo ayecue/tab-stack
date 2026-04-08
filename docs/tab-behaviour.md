@@ -1,0 +1,152 @@
+# Tab Behaviour
+
+Validation status for the claims below lives in [tab-behaviour-validation.md](./tab-behaviour-validation.md). The analyzer-backed matrix marks each current claim as proven, disproven, or conditional against the captured VS Code behavior.
+
+## Events that can trigger tab changes
+
+### Tab Events
+
+- User clicks on tab
+  - Effect: Tab becomes active
+    - Side-Effects: Any previously active tab becomes inactive
+- User clicks on tab close button
+  - Effect: Tab closes
+  - Side-Effects:
+    - If the closed tab was active, another tab in the same Tab Group becomes active
+    - If the closed tab was the last remaining tab in the Tab Group, the Tab Group closes, thus potentially causing all tab groups to the right to shift one position to the left, thus changing their viewColumn and all contained tabs viewColumn
+    - If the closed tab was active and there are other tabs in the same Tab Group, all tabs to the right will shift one position to the left, thus changing their index
+- User presses on close other tabs which closes all other tabs in the same Tab Group except the clicked tab
+  - Effect: All other tabs in the same Tab Group close
+  - Side-Effects:
+    - If the clicked tab was not active, it becomes active, thus causing any previously active tab to become inactive
+- User opens file in active Tab Group
+  - Effect: New tab opens in active Tab Group and becomes active
+  - Side-Effects:
+    - Any previously active tab becomes inactive
+    - In the captured populated-group cases, the new tab opens immediately to the right of the previously active tab
+    - All tabs to the right of the new tab shift one position to the right, thus changing their index
+    - If the new tab opens a file that is already open in the same Tab Group, the existing tab will become active instead of opening a duplicate tab, thus causing any previously active tab to become inactive (look into [Tab Identity](./tab-identity.md) for more details on which tabs are affected by this)
+- User drags tab to new position within same Tab Group
+  - Effect: Tab moves to new position
+  - Side-Effects:
+    - All tabs between the old and new position shift one position to the left or right, thus changing their index
+- User drags tab to other existing Tab Group
+  - Effect: Tab moves to other Tab Group and becomes active
+  - Side-Effects:
+    - In source Tab Group, all tabs to the right of the moved tab shift one position to the left, thus changing their index
+    - In target Tab Group, all tabs at and to the right of the new tab position shift one position to the right, thus changing their index
+    - Any previously active tab in target Tab Group becomes inactive
+    - If the target Tab Group already had the same file open as the moved tab, the moved tab will close instead of moving to target Tab Group, thus essentially evaporating instead of moving (look into [Tab Identity](./tab-identity.md) for more details on which tabs are affected by this)
+- User drags tab to create new Tab Group
+  - Effect: Tab moves to new Tab Group and becomes active
+  - Side-Effects:
+    - In source Tab Group, all tabs to the right of the moved tab shift one position to the left, thus changing their index
+    - New Tab Group is created to the right of source Tab Group, thus all Tab Groups to the right of source Tab Group shift one position to the right, thus changing their viewColumn and all contained tabs viewColumn
+    - New Tab Group becomes active, thus any previously active Tab Group becomes inactive
+- User splits editor with active tab (creating new Tab Group)
+  - Effect: Active tab is duplicated into a new Tab Group and the duplicated tab becomes active
+  - Side-Effects:
+    - The original tab remains in the source Tab Group
+    - New Tab Group is created to the right of source Tab Group, thus all Tab Groups to the right of source Tab Group shift one position to the right, thus changing their viewColumn and all contained tabs viewColumn
+    - New Tab Group becomes active, thus any previously active Tab Group becomes inactive
+- User selects multiple tabs and drags to new position within same Tab Group
+  - Effect: Tabs move to new position
+  - Side-Effects:
+    - All tabs between the old and new position shift one or more positions to the left or right, thus changing their index
+  - Capture status:
+    - `AN1` to `AN3` approximate this by activating each selected file in turn and replaying in-group left or right move commands in the order that preserves the block ordering
+    - Direct multi-select drag capture is still pending
+- User selects multiple tabs and drags to other existing Tab Group
+  - Effect: Tabs move to other Tab Group and become active
+  - Side-Effects:
+    - In source Tab Group, all tabs to the right of the moved tabs shift one or more positions to the left, thus changing their index
+    - In target Tab Group, all tabs at and to the right of the new tab position shift one or more positions to the right, thus changing their index
+    - Any previously active tab in target Tab Group becomes inactive
+    - If the target Tab Group already had the same file open as any of the moved tabs, those moved tabs will close instead of moving to target Tab Group, thus essentially evaporating instead of moving (look into [Tab Identity](./tab-identity.md) for more details on which tabs are affected by this)
+  - Capture status:
+    - `AJ1` to `AJ3` approximate this by issuing one context-aware group-move command per file in parallel
+    - Direct multi-select drag capture is still pending
+- User selects multiple tabs and drags to create new Tab Group
+  - Effect: Tabs move to new Tab Group and become active
+  - Side-Effects:
+    - In source Tab Group, all tabs to the right of the moved tabs shift one or more positions to the left, thus changing their index
+    - New Tab Group is created to the right of source Tab Group, thus all Tab Groups to the right of source Tab Group shift one position to the right, thus changing their viewColumn and all contained tabs viewColumn
+    - New Tab Group becomes active, thus any previously active Tab Group becomes inactive
+  - Capture status:
+    - `AK1` to `AK3` approximate this by issuing one context-aware move-to-right-group command per file in parallel
+    - Direct multi-select drag capture is still pending
+- User selects multiple tabs and splits editor (creating new Tab Group)
+  - Effect: Current command approximation duplicates the selected tabs into a new Tab Group and makes the duplicated copies active
+  - Side-Effects:
+    - The original tabs remain in the source Tab Group
+    - New Tab Group is created to the right of source Tab Group, thus all Tab Groups to the right of source Tab Group shift one position to the right, thus changing their viewColumn and all contained tabs viewColumn
+    - New Tab Group becomes active, thus any previously active Tab Group becomes inactive
+  - Capture status:
+    - `AL1` to `AL3` approximate this by creating the new group and opening the same files into it in parallel
+    - Direct multi-select split capture is still pending
+- User drags tab to existing Tab Group, while the Tab Group already has the same file open, thus effectively closing the dragged tab instead of moving it
+  - Effect: Tab closes instead of moving to target Tab Group (look into [Tab Identity](./tab-identity.md) for more details on which tabs are affected by this)
+  - Side-Effects:
+    - If the closed tab was active, another tab in the same Tab Group becomes active
+    - If the closed tab was the last remaining tab in the Tab Group, the Tab Group closes, thus potentially causing all tab groups to the right to shift one position to the left, thus changing their viewColumn and all contained tabs viewColumn
+    - If the closed tab was active and there are other tabs in the same Tab Group, all tabs to the right will shift one position to the left, thus changing their index
+- User drags last remaining tab out of a Tab Group, thus closing the now empty Tab Group
+  - Effect: Tab moves to new position and Tab Group closes
+  - Side-Effects:
+    - All Tab Groups to the right of the closed source Tab Group shift one position to the left, thus changing their viewColumn and all contained tabs viewColumn
+    - If the closed Tab Group was active, another Tab Group becomes active, thus any previously active Tab Group becomes inactive
+- User drags last remaining tab out of a Tab Group, thus closing the now empty Tab Group, the existing Tab Group already has the same file open, thus effectively closing the dragged tab instead of moving it
+  - Effect: Tab closes and Tab Group closes (look into [Tab Identity](./tab-identity.md) for more details on which tabs are affected by this)
+  - Side-Effects:
+    - All Tab Groups to the right of the closed source Tab Group shift one position to the left, thus changing their viewColumn and all contained tabs viewColumn
+    - If the closed Tab Group was active, another Tab Group becomes active, thus any previously active Tab Group becomes inactive
+- User changes text in tab thus it becomes dirty
+  - Effect: Tab becomes dirty
+  - Side-Effects: None
+- User saves tab thus it becomes not dirty
+  - Effect: Tab becomes not dirty
+  - Side-Effects: None
+- User pins tab
+  - Effect: Tab becomes pinned
+  - Side-Effects: None
+- User unpins tab
+  - Effect: Tab becomes unpinned
+  - Side-Effects: None
+- User double clicks on tab
+  - Effect: Tab editor becomes active thus change the state of isPreview to false
+  - Side-Effects: None
+
+### Tab Group Events
+
+- User clicks on tab group
+  - Effect: Tab group becomes active
+  - Side-Effects:
+    - Any previously active Tab Group becomes inactive
+- User clicks on tab group close button
+  - Effect: Tab group closes
+  - Side-Effects:
+    - All tabs within the closed Tab Group close, thus potentially causing all tab groups to the right to shift one position to the left, thus changing their viewColumn and all contained tabs viewColumn
+    - If the closed Tab Group was active, another Tab Group becomes active, thus any previously active Tab Group becomes inactive
+- User creates new tab group
+  - Effect: New tab group is created and becomes active
+  - Side-Effects:
+    - All Tab Groups to the right of the new Tab Group shift one position to the right, thus changing their viewColumn and all contained tabs viewColumn
+    - Any previously active Tab Group becomes inactive
+- User drags tab group to new position
+  - Effect: Tab group moves to new position
+  - Side-Effects:
+    - All Tab Groups between the old and new position shift one position to the left or right, thus changing their viewColumn and all contained tabs viewColumn
+- User drags tab group to other existing tab group, thus merging the two tab groups
+  - Effect: Tab groups merge and the merged group becomes active
+  - Side-Effects:
+    - All tabs from the merged Tab Group are added to the target Tab Group, thus changing their viewColumn and index
+    - If the merged Tab Group was active, the target Tab Group becomes active, thus any previously active Tab Group becomes inactive
+    - If the target Tab Group already had the same file open as any of the merged tabs, those merged tabs will close instead of moving to target Tab Group, thus essentially evaporating instead of merging (look into [Tab Identity](./tab-identity.md) for more details on which tabs are affected by this)
+  - Capture status:
+    - `AM1` to `AM3` capture targeted merges via `workbench.action.joinTwoGroups`
+    - `AD1` to `AD3` remain useful as the broader `joinAllGroups` approximation family
+- User closes tab group with multiple tabs, thus closing all tabs within the group
+  - Effect: Tab group closes and all contained tabs close
+  - Side-Effects:
+    - If the closed Tab Group was active, another Tab Group becomes active, thus any previously active Tab Group becomes inactive
+    - All tab groups to the right of the closed Tab Group shift one position to the left, thus changing their viewColumn and all contained tabs viewColumn

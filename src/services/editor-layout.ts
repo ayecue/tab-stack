@@ -1,7 +1,7 @@
 import { Disposable, Event, EventEmitter } from 'vscode';
 
 import { Layout } from '../types/commands';
-import { getEditorLayout } from '../utils/commands';
+import { getEditorLayout } from '../utils/layout';
 import { isLayoutEqual } from '../utils/is-layout-equal';
 
 export class EditorLayoutService implements Disposable {

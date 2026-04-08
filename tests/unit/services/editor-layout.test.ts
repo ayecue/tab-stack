@@ -2,9 +2,10 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import { EditorLayoutService } from '../../../src/services/editor-layout';
 import { Layout } from '../../../src/types/commands';
-import * as commands from '../../../src/utils/commands';
+import * as commands from '../../../src/utils/layout';
+import { createLayout } from '../../factories';
 
-vi.mock('../../../src/utils/commands', () => ({
+vi.mock('../../../src/utils/layout', () => ({
   getEditorLayout: vi.fn()
 }));
 
@@ -22,11 +23,6 @@ describe('EditorLayoutService', () => {
     vi.clearAllTimers();
     vi.useRealTimers();
     vi.clearAllMocks();
-  });
-
-  const createLayout = (orientation: number = 0): Layout => ({
-    orientation,
-    groups: [{ groups: [], size: 1 }]
   });
 
   describe('initialization', () => {

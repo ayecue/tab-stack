@@ -72,7 +72,13 @@
     "test:unit:watch": "vitest",
     "pretest:integration": "npm run compile",
     "test:integration": "node ./tests/integration/runTest.cjs",
-    "test:browser": "npm run compile:ts && npm run compile:browser && vscode-test-web --extensionDevelopmentPath=. ."
+    "test:browser": "npm run compile:ts && npm run compile:browser && vscode-test-web --extensionDevelopmentPath=. .",
+    "analyze:events": "node tools/vscode-event-analyzer/run-analyzer.cjs",
+    "audit:pipeline:semantics": "node tools/vscode-event-analyzer/run-pipeline-semantic-audit.cjs",
+    "octo:index": "sh tools/octocode/run.sh index --no-git",
+    "octo:reindex": "sh tools/octocode/reindex.sh",
+    "octo:watch": "sh tools/octocode/run.sh watch --no-git",
+    "octo:mcp": "sh tools/octocode/run-mcp.sh"
   },
   "homepage": "https://github.com/ayecue/tab-stack",
   "engines": {

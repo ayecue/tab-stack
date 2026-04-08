@@ -1,10 +1,10 @@
-import { window } from "vscode";
 import { OpenTabResult, TabInfo, TabInfoCustom, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
 import { getLogger, ScopedLogger } from "../services/logger";
 import { TabCreationTask, TabCreationTaskCustomCommand, TabCreationTaskTabInputCustom, TabCreationTaskTabInputNotebook, TabCreationTaskTabInputNotebookDiff, TabCreationTaskTabInputTerminal, TabCreationTaskTabInputText, TabCreationTaskTabInputTextDiff } from "./tab-creation-task";
 import { TabCreationOperation } from "../operations/tab-creation";
 import { TabOperation } from "../operations/tab-operation";
 import { TabRecoveryService } from "../services/tab-recovery-resolver";
+import { findTabGroupByViewColumn } from "../utils/tab-utils";
 
 export class TabFactory {
   private _recoveryResolver: TabRecoveryService;
@@ -70,7 +70,7 @@ export class TabFactory {
       return Promise.resolve({ success: false, handle: null, tab: null });
     }
 
-    const tabGroup = window.tabGroups.all[tabInfo.viewColumn - 1];
+    const tabGroup = findTabGroupByViewColumn(tabInfo.viewColumn);
     const existingTab = tabGroup ? rawTask.findExistingTab(tabGroup.tabs) : undefined;
 
     if (existingTab) {

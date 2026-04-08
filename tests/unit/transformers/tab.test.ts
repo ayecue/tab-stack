@@ -12,25 +12,22 @@ import {
 
 import { transformTabToTabInfo } from '../../../src/transformers/tab';
 import { TabKind } from '../../../src/types/tabs';
+import { createVSCodeTab, createVSCodeTabGroup } from '../../factories';
 
 const createGroup = (
   overrides: Partial<VsCodeTabGroup> = {}
 ): VsCodeTabGroup =>
-  ({
-    viewColumn: undefined,
-    tabs: [] as unknown as readonly VsCodeTab[],
-    ...overrides
-  }) as VsCodeTabGroup;
+  createVSCodeTabGroup({
+    viewColumn: overrides.viewColumn,
+    tabs: (overrides.tabs as VsCodeTab[]) ?? [],
+    isActive: overrides.isActive,
+    activeTab: overrides.activeTab as VsCodeTab,
+  });
 
 const createTab = (input: unknown, overrides: Partial<VsCodeTab> = {}): VsCodeTab => ({
-  label: 'tab',
-  isActive: false,
-  isPinned: false,
-  isDirty: false,
-  isPreview: overrides.isPreview ?? false,
-  input,
+  ...createVSCodeTab({ input }),
   group: overrides.group ?? createGroup(),
-  ...overrides
+  ...overrides,
 }) as VsCodeTab;
 
 describe('transformTabToTabInfo', () => {

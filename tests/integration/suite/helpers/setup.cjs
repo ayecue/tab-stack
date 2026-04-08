@@ -1,6 +1,5 @@
 const { suiteSetup, teardown } = require('mocha');
-const { activateExtension, openAndWaitWebview } = require('./core.cjs');
-const { closeAllTabs } = require('./editor.cjs');
+const { activateExtension, openAndWaitWebview, resetExtensionState } = require('./core.cjs');
 
 /**
  * Standard lifecycle hooks for a Mocha suite that uses the webview.
@@ -21,7 +20,7 @@ function lifecycleSetup() {
   });
 
   teardown(async function () {
-    await closeAllTabs();
+    await resetExtensionState();
   });
 }
 

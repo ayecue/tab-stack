@@ -1,6 +1,8 @@
 import { Disposable, EventEmitter } from 'vscode';
 
 import { getLogger, ScopedLogger } from '../services/logger';
+import { isLayoutEqual } from '../utils/is-layout-equal';
+import { isTabStateEqual } from '../utils/tab-utils';
 import {
   createTabStateContainerStore,
   TabStateContainerStore
@@ -78,6 +80,13 @@ export class TabStateContainerHandler implements Disposable {
   updateTabState(newState: TabManagerState): void {
     const current = this.currentStateContainer;
     if (!current) return;
+
+    if (
+      isTabStateEqual(current.state.tabState, newState.tabState) &&
+      isLayoutEqual(current.state.layout, newState.layout)
+    ) {
+      return;
+    }
 
     const updatedContainer: StateContainer = {
       ...current,

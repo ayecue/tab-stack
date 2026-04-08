@@ -7,10 +7,13 @@ import {
   RecoveryCommandResult,
   TabRecoveryMapping
 } from '../types/config';
-import { TabInfo, TabInfoBase } from '../types/tabs';
+import type { TabRecoverabilityResolver } from '../types/tab-active-state';
+import { TabInfo, TabInfoBase, TabKind } from '../types/tabs';
 import { CompiledArgTemplate, CompiledMapping, CompiledMatchField } from '../types/tab-recovery';
 
-export class TabRecoveryService implements Disposable {
+export class TabRecoveryService
+  implements Disposable, TabRecoverabilityResolver
+{
   static readonly tabInfoFields: Set<keyof TabInfoBase> = new Set([
     'id',
     'label',
@@ -150,6 +153,22 @@ export class TabRecoveryService implements Disposable {
     }
 
     return false;
+  }
+
+  isRecoverable(tabInfo: TabInfo): boolean {
+    switch (tabInfo.kind) {
+      case TabKind.TabInputText:
+      case TabKind.TabInputTextDiff:
+      case TabKind.TabInputNotebook:
+      case TabKind.TabInputNotebookDiff:
+      case TabKind.TabInputCustom:
+      case TabKind.TabInputTerminal:
+        return true;
+      case TabKind.TabInputWebview:
+      case TabKind.Unknown:
+      default:
+        return this.hasMatch(tabInfo);
+    }
   }
 
   private _extractField(tabInfo: TabInfo, field: string): TabInfoBase[keyof Omit<TabInfoBase, 'meta'>] | null {

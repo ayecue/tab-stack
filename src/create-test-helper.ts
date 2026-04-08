@@ -1,6 +1,8 @@
 import {
   commands,
   Disposable,
+  Tab,
+  TabGroup,
   Uri,
   window,
   TabInputCustom,
@@ -24,6 +26,14 @@ import { getLogger } from './services/logger';
 
 type CapturedSync = Omit<ExtensionCollectionsSyncMessage, 'type'>;
 type CapturedNotify = Omit<ExtensionNotificationMessage, 'type'>;
+
+type RuntimeProcess = {
+  env?: Record<string, string | undefined>;
+};
+
+const runtimeProcess = globalThis as typeof globalThis & {
+  process?: RuntimeProcess;
+};
 
 function getTabInputKind(input: unknown): string {
   if (input instanceof TabInputText) return 'TabInputText';
@@ -176,7 +186,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   // Test-only helper commands (not contributed to menus):
   const testCommands: Disposable[] = [];
 
-  if (!process.env.VSCODE_TAB_STACK_TEST) {
+  if (!runtimeProcess.process?.env?.VSCODE_TAB_STACK_TEST) {
     return testCommands;
   }
 
@@ -473,6 +483,236 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
           activeEditorUri:
             activeEditor?.document?.uri?.toString() ?? null
         };
+      }
+    )
+  );
+
+  // --- Raw VS Code event capture for diagnostic tests ---
+  let rawEventCapture: {
+    seq: number;
+    tabEvents: Array<{
+      seq: number;
+      timestamp: number;
+      opened: Array<ReturnType<typeof serializeTab>>;
+      closed: Array<ReturnType<typeof serializeTab>>;
+      changed: Array<ReturnType<typeof serializeTab>>;
+    }>;
+    groupEvents: Array<{
+      seq: number;
+      timestamp: number;
+      opened: Array<ReturnType<typeof serializeTabGroup>>;
+      closed: Array<ReturnType<typeof serializeTabGroup>>;
+      changed: Array<ReturnType<typeof serializeTabGroup>>;
+    }>;
+    disposables: Disposable[];
+  } | null = null;
+
+  function serializeTab(tab: Tab) {
+    return {
+      label: tab.label,
+      kind: getTabInputKind(tab.input),
+      viewColumn: tab.group.viewColumn,
+      index: tab.group.tabs.indexOf(tab),
+      isActive: tab.isActive,
+      isDirty: tab.isDirty,
+      isPinned: tab.isPinned,
+      isPreview: tab.isPreview,
+    };
+  }
+
+  function serializeTabGroup(group: TabGroup) {
+    return {
+      viewColumn: group.viewColumn,
+      isActive: group.isActive,
+      tabCount: group.tabs.length,
+      tabLabels: group.tabs.map((t) => t.label),
+    };
+  }
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__startRawEventCapture`,
+      () => {
+        if (rawEventCapture) {
+          rawEventCapture.disposables.forEach((d) => d.dispose());
+        }
+
+        rawEventCapture = {
+          seq: 0,
+          tabEvents: [],
+          groupEvents: [],
+          disposables: [],
+        };
+
+        const capture = rawEventCapture;
+
+        capture.disposables.push(
+          window.tabGroups.onDidChangeTabs((e) => {
+            capture.tabEvents.push({
+              seq: capture.seq++,
+              timestamp: Date.now(),
+              opened: e.opened.map(serializeTab),
+              closed: e.closed.map(serializeTab),
+              changed: e.changed.map(serializeTab),
+            });
+          }),
+          window.tabGroups.onDidChangeTabGroups((e) => {
+            capture.groupEvents.push({
+              seq: capture.seq++,
+              timestamp: Date.now(),
+              opened: e.opened.map(serializeTabGroup),
+              closed: e.closed.map(serializeTabGroup),
+              changed: e.changed.map(serializeTabGroup),
+            });
+          })
+        );
+
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__stopRawEventCapture`,
+      () => {
+        if (rawEventCapture) {
+          rawEventCapture.disposables.forEach((d) => d.dispose());
+          rawEventCapture.disposables = [];
+        }
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__getRawEvents`,
+      (clear = false) => {
+        if (!rawEventCapture) {
+          return { tabEvents: [], groupEvents: [] };
+        }
+        const result = {
+          tabEvents: [...rawEventCapture.tabEvents],
+          groupEvents: [...rawEventCapture.groupEvents],
+        };
+        if (clear) {
+          rawEventCapture.tabEvents = [];
+          rawEventCapture.groupEvents = [];
+          rawEventCapture.seq = 0;
+        }
+        return result;
+      }
+    )
+  );
+
+  // --- Resolved proxy event capture for integration tests ---
+  let resolvedEventCapture: {
+    events: Array<{
+      seq: number;
+      timestamp: number;
+      created: Array<{ label: string; viewColumn: number; index: number }>;
+      closed: Array<{ label: string; viewColumn: number; index: number }>;
+      moved: Array<{
+        label: string;
+        fromViewColumn: number;
+        toViewColumn: number;
+        fromIndex: number;
+        toIndex: number;
+        changed: string[];
+      }>;
+      updated: Array<{
+        label: string;
+        changed: string[];
+      }>;
+    }>;
+    disposable: Disposable | null;
+  } | null = null;
+
+  // @ts-expect-error - accessing private _tabChangeProxy for testing
+  const tabChangeProxy = tabManagerService._tabChangeProxy as import('./services/tab-change-proxy').TabChangeProxyService;
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__startResolvedEventCapture`,
+      () => {
+        if (resolvedEventCapture?.disposable) {
+          resolvedEventCapture.disposable.dispose();
+        }
+
+        resolvedEventCapture = {
+          events: [],
+          disposable: null,
+        };
+
+        const capture = resolvedEventCapture;
+        let seq = 0;
+
+        capture.disposable = tabChangeProxy.onDidChangeTabs((e) => {
+          capture.events.push({
+            seq: seq++,
+            timestamp: Date.now(),
+            created: e.created.map((t) => {
+              const entry = e.createdEntries.get(t);
+              return {
+                label: t.label,
+                viewColumn: entry?.viewColumn ?? t.group.viewColumn,
+                index: entry?.index ?? t.group.tabs.indexOf(t),
+              };
+            }),
+            closed: e.closed.map((t) => {
+              const entry = e.closedEntries.get(t);
+              return {
+                label: t.label,
+                viewColumn: entry?.viewColumn ?? t.group.viewColumn,
+                index: entry?.index ?? t.group.tabs.indexOf(t),
+              };
+            }),
+            moved: e.moved.map((m) => ({
+              label: m.tab.label,
+              fromViewColumn: m.fromViewColumn,
+              toViewColumn: m.toViewColumn,
+              fromIndex: m.fromIndex,
+              toIndex: m.toIndex,
+              changed: [...m.changed],
+            })),
+            updated: e.updated.map((u) => ({
+              label: u.tab.label,
+              changed: [...u.changed],
+            })),
+          });
+        });
+
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__stopResolvedEventCapture`,
+      () => {
+        if (resolvedEventCapture) {
+          resolvedEventCapture.disposable?.dispose();
+          resolvedEventCapture = null;
+        }
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__getResolvedEvents`,
+      (clear = false) => {
+        if (!resolvedEventCapture) {
+          return { events: [] };
+        }
+        const result = { events: [...resolvedEventCapture.events] };
+        if (clear) {
+          resolvedEventCapture.events = [];
+        }
+        return result;
       }
     )
   );

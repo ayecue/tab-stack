@@ -1,0 +1,1910 @@
+{
+  "scenario": "P: group move + reorder",
+  "events": {
+    "tabEvents": [
+      {
+        "seq": 2,
+        "timestamp": 1776007218064,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "tabRefId": "tab-9",
+            "label": "tsconfig.json",
+            "kind": "text",
+            "viewColumn": 2,
+            "index": 1,
+            "isActive": true,
+            "isDirty": false,
+            "isPinned": false,
+            "isPreview": false,
+            "uri": "file:///workspace/tsconfig.json"
+          }
+        ]
+      }
+    ],
+    "groupEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007217657,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-5",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-6",
+              "tab-7",
+              "tab-5"
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-8",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-8"
+            ]
+          }
+        ]
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007217658,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-9",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-10",
+              "tab-11",
+              "tab-9"
+            ]
+          },
+          {
+            "groupRefId": "group-6",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-12",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-12"
+            ]
+          }
+        ]
+      }
+    ],
+    "snapshotDiffs": [
+      {
+        "seq": 0,
+        "timestamp": 1776007217657,
+        "trigger": "group",
+        "beforeVersion": 0,
+        "afterVersion": 1,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-1",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-2",
+              "tab-3",
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-2",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              },
+              {
+                "tabRefId": "tab-3",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-1",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": "tab-4",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-4",
+                "label": "vitest.config.ts",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/vitest.config.ts"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-5",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-6",
+              "tab-7",
+              "tab-5"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-6",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              },
+              {
+                "tabRefId": "tab-7",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-5",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-8",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-8"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-8",
+                "label": "vitest.config.ts",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/vitest.config.ts"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-3",
+            "oldValue": "group-1"
+          },
+          {
+            "path": [
+              0,
+              "viewColumn"
+            ],
+            "type": "CHANGE",
+            "value": 2,
+            "oldValue": 1
+          },
+          {
+            "path": [
+              0,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-5",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-6",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              1
+            ],
+            "type": "CHANGE",
+            "value": "tab-7",
+            "oldValue": "tab-3"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              2
+            ],
+            "type": "CHANGE",
+            "value": "tab-5",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-6",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "viewColumn"
+            ],
+            "type": "CHANGE",
+            "value": 2,
+            "oldValue": 1
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-7",
+            "oldValue": "tab-3"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "viewColumn"
+            ],
+            "type": "CHANGE",
+            "value": 2,
+            "oldValue": 1
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-5",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "viewColumn"
+            ],
+            "type": "CHANGE",
+            "value": 2,
+            "oldValue": 1
+          },
+          {
+            "path": [
+              1,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-4",
+            "oldValue": "group-2"
+          },
+          {
+            "path": [
+              1,
+              "viewColumn"
+            ],
+            "type": "CHANGE",
+            "value": 1,
+            "oldValue": 2
+          },
+          {
+            "path": [
+              1,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-8",
+            "oldValue": "tab-4"
+          },
+          {
+            "path": [
+              1,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-8",
+            "oldValue": "tab-4"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-8",
+            "oldValue": "tab-4"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              0,
+              "viewColumn"
+            ],
+            "type": "CHANGE",
+            "value": 1,
+            "oldValue": 2
+          }
+        ]
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007217658,
+        "trigger": "group",
+        "beforeVersion": 1,
+        "afterVersion": 2,
+        "before": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-5",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-6",
+              "tab-7",
+              "tab-5"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-6",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              },
+              {
+                "tabRefId": "tab-7",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-5",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-8",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-8"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-8",
+                "label": "vitest.config.ts",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/vitest.config.ts"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-9",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-10",
+              "tab-11",
+              "tab-9"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-10",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              },
+              {
+                "tabRefId": "tab-11",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-9",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-6",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-12",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-12"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-12",
+                "label": "vitest.config.ts",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/vitest.config.ts"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-5",
+            "oldValue": "group-3"
+          },
+          {
+            "path": [
+              0,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-5"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-10",
+            "oldValue": "tab-6"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              1
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-7"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              2
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-5"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-10",
+            "oldValue": "tab-6"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-7"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-5"
+          },
+          {
+            "path": [
+              1,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-6",
+            "oldValue": "group-4"
+          },
+          {
+            "path": [
+              1,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-12",
+            "oldValue": "tab-8"
+          },
+          {
+            "path": [
+              1,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-12",
+            "oldValue": "tab-8"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-12",
+            "oldValue": "tab-8"
+          }
+        ]
+      },
+      {
+        "seq": 2,
+        "timestamp": 1776007218064,
+        "trigger": "tab",
+        "beforeVersion": 2,
+        "afterVersion": 3,
+        "before": [
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-9",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-10",
+              "tab-11",
+              "tab-9"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-10",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              },
+              {
+                "tabRefId": "tab-11",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-9",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-6",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-12",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-12"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-12",
+                "label": "vitest.config.ts",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/vitest.config.ts"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-9",
+            "tabCount": 3,
+            "tabLabels": [
+              "package.json",
+              "tsconfig.json",
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-10",
+              "tab-9",
+              "tab-11"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-10",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              },
+              {
+                "tabRefId": "tab-9",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              },
+              {
+                "tabRefId": "tab-11",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-6",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-12",
+            "tabCount": 1,
+            "tabLabels": [
+              "vitest.config.ts"
+            ],
+            "tabRefIds": [
+              "tab-12"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-12",
+                "label": "vitest.config.ts",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/vitest.config.ts"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "tabLabels",
+              1
+            ],
+            "type": "CHANGE",
+            "value": "tsconfig.json",
+            "oldValue": "README.md"
+          },
+          {
+            "path": [
+              0,
+              "tabLabels",
+              2
+            ],
+            "type": "CHANGE",
+            "value": "README.md",
+            "oldValue": "tsconfig.json"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              1
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-11"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              2
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-9"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-11"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "label"
+            ],
+            "type": "CHANGE",
+            "value": "tsconfig.json",
+            "oldValue": "README.md"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": true,
+            "oldValue": false
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              1,
+              "uri"
+            ],
+            "type": "CHANGE",
+            "value": "file:///workspace/tsconfig.json",
+            "oldValue": "file:///workspace/README.md"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-9"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "label"
+            ],
+            "type": "CHANGE",
+            "value": "README.md",
+            "oldValue": "tsconfig.json"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": false,
+            "oldValue": true
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              2,
+              "uri"
+            ],
+            "type": "CHANGE",
+            "value": "file:///workspace/README.md",
+            "oldValue": "file:///workspace/tsconfig.json"
+          }
+        ]
+      }
+    ]
+  },
+  "replay": {
+    "observedEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007217657,
+        "observedAtMs": 1776007217657,
+        "type": "group",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-5",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-6",
+                "tab-7",
+                "tab-5"
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-8",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-8"
+              ]
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 0,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-1",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-2",
+                "tab-3",
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-2",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                },
+                {
+                  "tabRefId": "tab-3",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-1",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": "tab-4",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-4",
+                  "label": "vitest.config.ts",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/vitest.config.ts"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-5",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-6",
+                "tab-7",
+                "tab-5"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-6",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                },
+                {
+                  "tabRefId": "tab-7",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-5",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-8",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-8"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-8",
+                  "label": "vitest.config.ts",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/vitest.config.ts"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007217658,
+        "observedAtMs": 1776007217658,
+        "type": "group",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-9",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-10",
+                "tab-11",
+                "tab-9"
+              ]
+            },
+            {
+              "groupRefId": "group-6",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-12",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-12"
+              ]
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-5",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-6",
+                "tab-7",
+                "tab-5"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-6",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                },
+                {
+                  "tabRefId": "tab-7",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-5",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-8",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-8"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-8",
+                  "label": "vitest.config.ts",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/vitest.config.ts"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 2,
+          "groups": [
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-9",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-10",
+                "tab-11",
+                "tab-9"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-10",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                },
+                {
+                  "tabRefId": "tab-11",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-9",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-6",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-12",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-12"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-12",
+                  "label": "vitest.config.ts",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/vitest.config.ts"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "seq": 2,
+        "timestamp": 1776007218064,
+        "observedAtMs": 1776007218064,
+        "type": "tab",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "tabRefId": "tab-9",
+              "label": "tsconfig.json",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 1,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/tsconfig.json"
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 2,
+          "groups": [
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-9",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-10",
+                "tab-11",
+                "tab-9"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-10",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                },
+                {
+                  "tabRefId": "tab-11",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-9",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-6",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-12",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-12"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-12",
+                  "label": "vitest.config.ts",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/vitest.config.ts"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 3,
+          "groups": [
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-9",
+              "tabCount": 3,
+              "tabLabels": [
+                "package.json",
+                "tsconfig.json",
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-10",
+                "tab-9",
+                "tab-11"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-10",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                },
+                {
+                  "tabRefId": "tab-9",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                },
+                {
+                  "tabRefId": "tab-11",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-6",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-12",
+              "tabCount": 1,
+              "tabLabels": [
+                "vitest.config.ts"
+              ],
+              "tabRefIds": [
+                "tab-12"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-12",
+                  "label": "vitest.config.ts",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/vitest.config.ts"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "initialSnapshot": {
+      "version": 0,
+      "groups": [
+        {
+          "groupRefId": "group-1",
+          "viewColumn": 1,
+          "isActive": true,
+          "activeTabRefId": "tab-1",
+          "tabCount": 3,
+          "tabLabels": [
+            "package.json",
+            "README.md",
+            "tsconfig.json"
+          ],
+          "tabRefIds": [
+            "tab-2",
+            "tab-3",
+            "tab-1"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-2",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            },
+            {
+              "tabRefId": "tab-3",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 1,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            },
+            {
+              "tabRefId": "tab-1",
+              "label": "tsconfig.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 2,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/tsconfig.json"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-2",
+          "viewColumn": 2,
+          "isActive": false,
+          "activeTabRefId": "tab-4",
+          "tabCount": 1,
+          "tabLabels": [
+            "vitest.config.ts"
+          ],
+          "tabRefIds": [
+            "tab-4"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-4",
+              "label": "vitest.config.ts",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/vitest.config.ts"
+            }
+          ]
+        }
+      ]
+    },
+    "finalSnapshot": {
+      "version": 3,
+      "groups": [
+        {
+          "groupRefId": "group-5",
+          "viewColumn": 2,
+          "isActive": true,
+          "activeTabRefId": "tab-9",
+          "tabCount": 3,
+          "tabLabels": [
+            "package.json",
+            "tsconfig.json",
+            "README.md"
+          ],
+          "tabRefIds": [
+            "tab-10",
+            "tab-9",
+            "tab-11"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-10",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            },
+            {
+              "tabRefId": "tab-9",
+              "label": "tsconfig.json",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 1,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/tsconfig.json"
+            },
+            {
+              "tabRefId": "tab-11",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 2,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-6",
+          "viewColumn": 1,
+          "isActive": false,
+          "activeTabRefId": "tab-12",
+          "tabCount": 1,
+          "tabLabels": [
+            "vitest.config.ts"
+          ],
+          "tabRefIds": [
+            "tab-12"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-12",
+              "label": "vitest.config.ts",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/vitest.config.ts"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "layout": {
+    "before": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json",
+          "README.md",
+          "tsconfig.json"
+        ]
+      },
+      {
+        "viewColumn": 2,
+        "tabs": [
+          "vitest.config.ts"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "viewColumn": 2,
+        "tabs": [
+          "package.json",
+          "tsconfig.json",
+          "README.md"
+        ]
+      },
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "vitest.config.ts"
+        ]
+      }
+    ]
+  }
+}

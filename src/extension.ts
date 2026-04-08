@@ -9,7 +9,7 @@ import { GitService } from './services/git';
 import { initializeLogger } from './services/logger';
 import { StatusBarService } from './services/status-bar';
 import { TabManagerService } from './services/tab-manager';
-import { getEditorLayout } from './utils/commands';
+import { getEditorLayout } from './utils/layout';
 import { createTestHelper } from './create-test-helper';
 import { TabRecoveryService } from './services/tab-recovery-resolver';
 

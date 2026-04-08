@@ -24,6 +24,10 @@ class TabInputCustom {
   constructor(public uri: any, public viewType: string) {}
 }
 
+class TabInputWebview {
+  constructor(public viewType: string) {}
+}
+
 class TabInputTerminal {}
 
 // Enhance window mock to return proper disposable objects
@@ -42,6 +46,7 @@ const enhanced = {
   TabInputNotebook,
   TabInputNotebookDiff,
   TabInputCustom,
+  TabInputWebview,
   TabInputTerminal,
 };
 
@@ -65,4 +70,4 @@ export const {
 } = vscode;
 
 export const window = enhancedWindow;
-export { TabInputText, TabInputTextDiff, TabInputNotebook, TabInputNotebookDiff, TabInputCustom, TabInputTerminal };
+export { TabInputText, TabInputTextDiff, TabInputNotebook, TabInputNotebookDiff, TabInputCustom, TabInputWebview, TabInputTerminal };

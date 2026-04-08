@@ -12,6 +12,8 @@ interface Column {
   label: string | null;
   tabs: TabWithIndex[];
   isActive: boolean;
+  totalTabCount: number;
+  nonFilteredIndices: number[];
 }
 
 interface FlatItem {
@@ -138,17 +140,31 @@ export function useTabFilter({
         originalIndex: index
       }));
 
+      const isFiltering = searchTerm.trim() !== '' || (filters && (filters.pinnedOnly || filters.dirtyOnly || filters.type !== 'all'));
+
       const filteredTabs = (
         searchTerm.trim()
           ? tabsWithIndices.filter(({ tab }) => matchesSearch(tab, searchTerm))
           : tabsWithIndices
       ).filter(({ tab }) => passesFilters(tab, filters));
 
+      const filteredIndexSet = isFiltering
+        ? new Set(filteredTabs.map(({ originalIndex }) => originalIndex))
+        : new Set<number>();
+
+      const nonFilteredIndices = isFiltering
+        ? tabsWithIndices
+            .filter(({ originalIndex }) => !filteredIndexSet.has(originalIndex))
+            .map(({ originalIndex }) => originalIndex)
+        : [];
+
       return {
         viewColumn: group.viewColumn,
         label: displayName,
         tabs: filteredTabs,
-        isActive: activeGroup === group.viewColumn
+        isActive: activeGroup === group.viewColumn,
+        totalTabCount: group.tabs.length,
+        nonFilteredIndices
       };
     });
   }, [tabGroups, searchTerm, activeGroup, filters]);
