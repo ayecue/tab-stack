@@ -115,7 +115,9 @@ export const CollectionTooltipContent: React.FC<
       </div>
 
       {hasColumns && (
-        <div className={`collection-tooltip-columns ${isHorizontal ? 'is-horizontal' : 'is-vertical'}`}>
+        <div
+          className={`collection-tooltip-columns ${isHorizontal ? 'is-horizontal' : 'is-vertical'}`}
+        >
           {layout
             ? (() => {
                 const indexRef = { current: 0 };

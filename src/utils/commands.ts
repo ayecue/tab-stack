@@ -127,7 +127,10 @@ export async function moveTab(
   }
 }
 
-export async function moveTabToEnd(viewColumn: number, index: number): Promise<void> {
+export async function moveTabToEnd(
+  viewColumn: number,
+  index: number
+): Promise<void> {
   await focusTabInGroup(viewColumn, index);
   await commands.executeCommand('workbench.action.moveEditorToEnd');
 }

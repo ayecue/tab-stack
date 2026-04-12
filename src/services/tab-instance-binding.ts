@@ -302,7 +302,8 @@ export class TabInstanceBindingService implements AssociatedInstanceRegistry {
   ): TabInfoId | null {
     return this._resolveAssociatedInstanceTabId(
       editor,
-      (tabInfo) => this._matchesTextEditorTabInfo(editor as TextEditor, tabInfo),
+      (tabInfo) =>
+        this._matchesTextEditorTabInfo(editor as TextEditor, tabInfo),
       () => this._findTextEditorTabId(editor as TextEditor)
     );
   }

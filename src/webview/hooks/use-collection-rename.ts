@@ -49,15 +49,12 @@ export function useCollectionRename({
     setIsRenaming(false);
   }, []);
 
-  const startRename = useCallback(
-    (id: string, currentName: string) => {
-      setEditingId(id);
-      setRenameValue(currentName);
-      setRenameError(null);
-      setIsRenaming(false);
-    },
-    []
-  );
+  const startRename = useCallback((id: string, currentName: string) => {
+    setEditingId(id);
+    setRenameValue(currentName);
+    setRenameError(null);
+    setIsRenaming(false);
+  }, []);
 
   const clearRenameError = useCallback(() => {
     setRenameError(null);
@@ -79,7 +76,9 @@ export function useCollectionRename({
       }
 
       if (isDuplicate?.(normalized, id)) {
-        setRenameError(`A ${entityLabel.toLowerCase()} with this name already exists`);
+        setRenameError(
+          `A ${entityLabel.toLowerCase()} with this name already exists`
+        );
         renameInputRef.current?.focus();
         renameInputRef.current?.select();
         return;

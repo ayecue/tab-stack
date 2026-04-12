@@ -23,7 +23,11 @@ function columnDragReducer(
 ): ColumnDragState {
   switch (action.type) {
     case 'start':
-      return { draggedColumn: action.viewColumn, dropTarget: null, dropMode: null };
+      return {
+        draggedColumn: action.viewColumn,
+        dropTarget: null,
+        dropMode: null
+      };
     case 'updateDrop':
       if (!state.draggedColumn) return state;
       if (state.draggedColumn === action.viewColumn) return state;
@@ -41,9 +45,13 @@ export interface UseColumnDragDropResult {
   dropMode: 'reorder' | 'merge' | null;
   handleColumnDragStart: (viewColumn: number) => (e: React.DragEvent) => void;
   handleColumnDragEnd: () => void;
-  handleColumnHeaderDragOver: (viewColumn: number) => (e: React.DragEvent) => void;
+  handleColumnHeaderDragOver: (
+    viewColumn: number
+  ) => (e: React.DragEvent) => void;
   handleColumnHeaderDrop: (viewColumn: number) => (e: React.DragEvent) => void;
-  handleColumnBodyDragOver: (viewColumn: number) => (e: React.DragEvent) => void;
+  handleColumnBodyDragOver: (
+    viewColumn: number
+  ) => (e: React.DragEvent) => void;
   handleColumnBodyDrop: (viewColumn: number) => (e: React.DragEvent) => void;
   isColumnDragging: (viewColumn: number) => boolean;
   isColumnDropTarget: (viewColumn: number) => boolean;

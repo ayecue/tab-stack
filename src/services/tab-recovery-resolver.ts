@@ -1,15 +1,16 @@
 import Handlebars from 'handlebars';
 import { Disposable } from 'vscode';
 
+import { RecoveryCommandResult, TabRecoveryMapping } from '../types/config';
+import type { TabRecoverabilityResolver } from '../types/tab-active-state';
+import {
+  CompiledArgTemplate,
+  CompiledMapping,
+  CompiledMatchField
+} from '../types/tab-recovery';
+import { TabInfo, TabInfoBase, TabKind } from '../types/tabs';
 import { ConfigService } from './config';
 import { getLogger, ScopedLogger } from './logger';
-import {
-  RecoveryCommandResult,
-  TabRecoveryMapping
-} from '../types/config';
-import type { TabRecoverabilityResolver } from '../types/tab-active-state';
-import { TabInfo, TabInfoBase, TabKind } from '../types/tabs';
-import { CompiledArgTemplate, CompiledMapping, CompiledMatchField } from '../types/tab-recovery';
 
 export class TabRecoveryService
   implements Disposable, TabRecoverabilityResolver
@@ -84,7 +85,9 @@ export class TabRecoveryService
           }
         }
 
-        const argTemplates = (entry.args ?? []).map(arg => this._compileArg(arg));
+        const argTemplates = (entry.args ?? []).map((arg) =>
+          this._compileArg(arg)
+        );
 
         result.push({
           labelRegex,
@@ -95,7 +98,9 @@ export class TabRecoveryService
           unique: entry.unique ?? false
         });
       } catch {
-        this._log.warn(`skipping invalid recovery mapping "${key}": compilation failed`);
+        this._log.warn(
+          `skipping invalid recovery mapping "${key}": compilation failed`
+        );
       }
     }
 
@@ -111,16 +116,25 @@ export class TabRecoveryService
       if (!arg.includes('{{')) {
         return { type: 'literal', value: arg };
       }
-      return { type: 'template', render: Handlebars.compile(arg, { noEscape: true }) };
+      return {
+        type: 'template',
+        render: Handlebars.compile(arg, { noEscape: true })
+      };
     }
 
     if (typeof arg === 'object' && !Array.isArray(arg)) {
-      const entries: [string, CompiledArgTemplate][] = Object.entries(arg as Record<string, unknown>)
-        .map(([key, val]) => [key, this._compileArg(val)] as [string, CompiledArgTemplate]);
+      const entries: [string, CompiledArgTemplate][] = Object.entries(
+        arg as Record<string, unknown>
+      ).map(
+        ([key, val]) =>
+          [key, this._compileArg(val)] as [string, CompiledArgTemplate]
+      );
       return { type: 'object', entries };
     }
 
-    throw new Error(`invalid recovery mapping argument: unsupported type ${typeof arg}`);
+    throw new Error(
+      `invalid recovery mapping argument: unsupported type ${typeof arg}`
+    );
   }
 
   findMatch(tabInfo: TabInfo): RecoveryCommandResult | null {
@@ -130,7 +144,9 @@ export class TabRecoveryService
       if (!mapping.labelRegex.test(tabInfo.label)) continue;
       if (!this._matchesFields(mapping.matchFields, tabInfo)) continue;
 
-      const args = mapping.argTemplates.map(t => this._resolveArg(t, tabInfo));
+      const args = mapping.argTemplates.map((t) =>
+        this._resolveArg(t, tabInfo)
+      );
 
       return {
         command: mapping.command,
@@ -171,15 +187,23 @@ export class TabRecoveryService
     }
   }
 
-  private _extractField(tabInfo: TabInfo, field: string): TabInfoBase[keyof Omit<TabInfoBase, 'meta'>] | null {
+  private _extractField(
+    tabInfo: TabInfo,
+    field: string
+  ): TabInfoBase[keyof Omit<TabInfoBase, 'meta'>] | null {
     if (!TabRecoveryService.tabInfoFields.has(field as keyof TabInfoBase)) {
-      this._log.warn(`invalid match field "${field}" in recovery mapping: not a valid TabInfo property`);
+      this._log.warn(
+        `invalid match field "${field}" in recovery mapping: not a valid TabInfo property`
+      );
       return null;
     }
     return tabInfo[field as keyof Omit<TabInfoBase, 'meta'>] ?? null;
   }
 
-  private _matchesFields(fields: CompiledMatchField[], tabInfo: TabInfo): boolean {
+  private _matchesFields(
+    fields: CompiledMatchField[],
+    tabInfo: TabInfo
+  ): boolean {
     for (const { field, regex } of fields) {
       const value = this._extractField(tabInfo, field);
       if (value == null) return false;
@@ -188,7 +212,10 @@ export class TabRecoveryService
     return true;
   }
 
-  private _resolveArg(template: CompiledArgTemplate, tabInfo: TabInfo): unknown {
+  private _resolveArg(
+    template: CompiledArgTemplate,
+    tabInfo: TabInfo
+  ): unknown {
     switch (template.type) {
       case 'literal':
         return template.value;
@@ -211,7 +238,7 @@ export class TabRecoveryService
   }
 
   dispose(): void {
-    this._disposables.forEach(d => d.dispose());
+    this._disposables.forEach((d) => d.dispose());
     this._compiled = null;
   }
 }

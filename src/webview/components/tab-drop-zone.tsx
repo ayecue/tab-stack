@@ -4,7 +4,10 @@ interface TabDropZoneProps {
   index: number;
   viewColumn: number;
   isActive: boolean;
-  onDragOver: (index: number, viewColumn: number) => (e: React.DragEvent) => void;
+  onDragOver: (
+    index: number,
+    viewColumn: number
+  ) => (e: React.DragEvent) => void;
   onDrop: (index: number, viewColumn: number) => (e: React.DragEvent) => void;
 }
 

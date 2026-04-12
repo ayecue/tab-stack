@@ -77,10 +77,7 @@ function matchesSearch(tab: TabInfo, term: string): boolean {
   }
 
   if ('originalUri' in tab) {
-    if (
-      tab.originalUri &&
-      tab.originalUri.toLowerCase().includes(lowerTerm)
-    ) {
+    if (tab.originalUri && tab.originalUri.toLowerCase().includes(lowerTerm)) {
       return true;
     }
     if (
@@ -140,7 +137,10 @@ export function useTabFilter({
         originalIndex: index
       }));
 
-      const isFiltering = searchTerm.trim() !== '' || (filters && (filters.pinnedOnly || filters.dirtyOnly || filters.type !== 'all'));
+      const isFiltering =
+        searchTerm.trim() !== '' ||
+        (filters &&
+          (filters.pinnedOnly || filters.dirtyOnly || filters.type !== 'all'));
 
       const filteredTabs = (
         searchTerm.trim()

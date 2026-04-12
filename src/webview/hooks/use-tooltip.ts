@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
+  type Placement,
   arrow,
   autoUpdate,
   flip,
   offset,
-  type Placement,
   shift,
   useFloating
 } from '@floating-ui/react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface UseTooltipOptions {
   content: React.ReactNode;
@@ -42,10 +42,20 @@ export function useTooltip({
   const arrowRef = useRef<HTMLDivElement>(null);
   const tooltipId = useId();
 
-  const { refs, floatingStyles, middlewareData, placement: resolvedPlacement } = useFloating({
+  const {
+    refs,
+    floatingStyles,
+    middlewareData,
+    placement: resolvedPlacement
+  } = useFloating({
     placement,
     open: isVisible && !isSuppressed,
-    middleware: [offset(10), flip(), shift({ padding: 8 }), arrow({ element: arrowRef })],
+    middleware: [
+      offset(10),
+      flip(),
+      shift({ padding: 8 }),
+      arrow({ element: arrowRef })
+    ],
     whileElementsMounted: autoUpdate
   });
 
@@ -106,8 +116,14 @@ export function useTooltip({
   const renderTooltip = (): React.ReactPortal | null => {
     if (!visible) return null;
 
-    const side = resolvedPlacement.split('-')[0] as 'top' | 'bottom' | 'left' | 'right';
-    const staticSide = ({ top: 'bottom', bottom: 'top', left: 'right', right: 'left' } as const)[side];
+    const side = resolvedPlacement.split('-')[0] as
+      | 'top'
+      | 'bottom'
+      | 'left'
+      | 'right';
+    const staticSide = (
+      { top: 'bottom', bottom: 'top', left: 'right', right: 'left' } as const
+    )[side];
     const arrowX = middlewareData.arrow?.x;
     const arrowY = middlewareData.arrow?.y;
 

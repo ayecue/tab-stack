@@ -2,14 +2,20 @@ import { commands, Terminal, TerminalOptions, window } from 'vscode';
 
 import { getLogger, ScopedLogger } from '../services/logger';
 import type { TabActiveStateStore } from '../stores/tab-active-state';
+import { Layout, MoveStep } from '../types/commands';
 import type {
   AssociatedInstanceRegistry,
   TabLayoutStateProvider,
   TabStateReplayOptions,
   TrackedTabAssociationRegistry
 } from '../types/tab-active-state';
-import { Layout, MoveStep } from '../types/commands';
-import { TabInfo, TabInfoId, TabInfoMetaTerminal, TabKind, TabState } from '../types/tabs';
+import {
+  TabInfo,
+  TabInfoId,
+  TabInfoMetaTerminal,
+  TabKind,
+  TabState
+} from '../types/tabs';
 import { focusGroup, focusTabInGroup, pinEditor } from '../utils/commands';
 import {
   countLayoutLeaves,
@@ -94,7 +100,9 @@ export class TabReplayHandler {
         const tabKey = createTabKey(tab, currentGroup, j);
         const currentTabId = this._associatedTabs.associatedTabs.get(tabKey);
         const associatedInstance = currentTabId
-          ? this._associatedInstances.findAssociatedInstanceByTabId(currentTabId)
+          ? this._associatedInstances.findAssociatedInstanceByTabId(
+              currentTabId
+            )
           : null;
 
         newTabs[tabInfo.id] = { ...tabInfo };

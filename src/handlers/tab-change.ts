@@ -511,14 +511,15 @@ export class TabChangeResolver {
     this._log.info(`reconciling ${staleCount} stale Tab ref(s)`);
 
     // ── Build group fingerprints from captured entry metadata ───────
-    const newFP = session.computationCache.groupFingerprintCluesByViewColumn(
-      freshByRef
-    );
+    const newFP =
+      session.computationCache.groupFingerprintCluesByViewColumn(freshByRef);
 
     const oldVCsByFingerprint = new Map(
-      [...session.computationCache.viewColumnsByGroupFingerprintClue(
-        session.snapshot
-      )].map(([fingerprint, viewColumns]) => [fingerprint, [...viewColumns]])
+      [
+        ...session.computationCache.viewColumnsByGroupFingerprintClue(
+          session.snapshot
+        )
+      ].map(([fingerprint, viewColumns]) => [fingerprint, [...viewColumns]])
     );
 
     // Map: newVC → oldVC  (which old group ended up at this new VC?)
@@ -590,9 +591,10 @@ export class TabChangeResolver {
     // Reconcile batch-start snapshot with the same Tab-ref mapping.
     // Use a pre-built lookup instead of scanning the full batch per entry (O(n) vs O(n²)).
     if (session.batchStartSnapshot) {
-      const batchLookup = session.computationCache.entriesByViewColumnAndGlobalRef(
-        session.batchStartSnapshot
-      );
+      const batchLookup =
+        session.computationCache.entriesByViewColumnAndGlobalRef(
+          session.batchStartSnapshot
+        );
 
       const reconciledBatch = new Map<Tab, TabEntrySnapshot>();
       const matchedBatchKeys = new Set<string>();
@@ -631,7 +633,6 @@ export class TabChangeResolver {
     };
 
     if (session.ops.length > 0) {
-
       for (const op of session.ops) {
         if (op.type === 'update') {
           op.entry = reconcileEntryTabRef(op.entry);
@@ -652,14 +653,19 @@ export class TabChangeResolver {
 
         for (const hop of hops) {
           const reconciledAddTab = oldTabToFreshTab.get(hop.addOp.entry.tab);
-          const reconciledRemoveTab = oldTabToFreshTab.get(hop.removeOp.entry.tab);
+          const reconciledRemoveTab = oldTabToFreshTab.get(
+            hop.removeOp.entry.tab
+          );
 
           if (reconciledAddTab) {
             hop.addOp.entry = { ...hop.addOp.entry, tab: reconciledAddTab };
           }
 
           if (reconciledRemoveTab) {
-            hop.removeOp.entry = { ...hop.removeOp.entry, tab: reconciledRemoveTab };
+            hop.removeOp.entry = {
+              ...hop.removeOp.entry,
+              tab: reconciledRemoveTab
+            };
           }
 
           existingHops.push(hop);
@@ -865,7 +871,10 @@ export class TabChangeResolver {
       reasons.push('end exact continuity was already claimed');
     }
 
-    if (entryExactKeyClue != null && claims.stateDonors.has(entryExactKeyClue)) {
+    if (
+      entryExactKeyClue != null &&
+      claims.stateDonors.has(entryExactKeyClue)
+    ) {
       this._pushRejectedClue(
         rejectedClues,
         'exact-key',

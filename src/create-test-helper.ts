@@ -1,10 +1,9 @@
 import {
   commands,
   Disposable,
+  LogOutputChannel,
   Tab,
   TabGroup,
-  Uri,
-  window,
   TabInputCustom,
   TabInputNotebook,
   TabInputNotebookDiff,
@@ -12,17 +11,18 @@ import {
   TabInputText,
   TabInputTextDiff,
   TabInputWebview,
-  LogOutputChannel,
+  Uri,
+  window
 } from 'vscode';
 
 import { ViewManagerProvider } from './providers/view-manager';
+import { getLogger } from './services/logger';
+import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
 import {
   ExtensionCollectionsSyncMessage,
   ExtensionNotificationMessage
 } from './types/messages';
-import { TabManagerService } from './services/tab-manager';
-import { getLogger } from './services/logger';
 
 type CapturedSync = Omit<ExtensionCollectionsSyncMessage, 'type'>;
 type CapturedNotify = Omit<ExtensionNotificationMessage, 'type'>;
@@ -48,7 +48,8 @@ function getTabInputKind(input: unknown): string {
 
 class LoggerInterceptor {
   private _channel: LogOutputChannel;
-  private _logMessages: { level: number, message: string; args: unknown[] }[] = [];
+  private _logMessages: { level: number; message: string; args: unknown[] }[] =
+    [];
 
   constructor() {
     // @ts-expect-error - accessing private member for testing purposes
@@ -80,7 +81,7 @@ class LoggerInterceptor {
       });
       return originalDebug.call(this._channel, message, ...args);
     };
-    
+
     this._channel.warn = (message: string, ...args: unknown[]) => {
       this._logMessages.push({
         level: 3,
@@ -145,8 +146,10 @@ class RuntimeTracker implements Disposable {
         this._lastRender++;
       }),
 
-      this._tabManagerService.onDidSyncCollections((p) => this._syncMessages.push(p)),
-      this._tabManagerService.onDidNotify((p) => this._notifications.push(p)),
+      this._tabManagerService.onDidSyncCollections((p) =>
+        this._syncMessages.push(p)
+      ),
+      this._tabManagerService.onDidNotify((p) => this._notifications.push(p))
     );
   }
 
@@ -182,7 +185,9 @@ class RuntimeTracker implements Disposable {
   }
 }
 
-export function createTestHelper(tabManagerService: TabManagerService): Disposable[] {
+export function createTestHelper(
+  tabManagerService: TabManagerService
+): Disposable[] {
   // Test-only helper commands (not contributed to menus):
   const testCommands: Disposable[] = [];
 
@@ -205,12 +210,9 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   );
 
   testCommands.push(
-    commands.registerCommand(
-      `${EXTENSION_NAME}.__test__openView`,
-      async () => {
-        await commands.executeCommand('workbench.view.extension.tabStack');
-      }
-    )
+    commands.registerCommand(`${EXTENSION_NAME}.__test__openView`, async () => {
+      await commands.executeCommand('workbench.view.extension.tabStack');
+    })
   );
 
   testCommands.push(
@@ -233,52 +235,56 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   );
 
   testCommands.push(
-    commands.registerCommand(
-      `${EXTENSION_NAME}.__test__getState`,
-      async () => {
-        const groups = tabManagerService.state?.groups ?? {};
-        const addons = tabManagerService.state?.addons ?? {};
-        const history = tabManagerService.state?.history ?? {};
-        const quickSlots = tabManagerService.state?.quickSlots ?? {};
-        const selectedGroupId =
-          tabManagerService.state?.stateContainer?.id ?? null;
-        return {
-          groups: Object.fromEntries(
-            Object.values(groups).map((g) => {
-              const tabGroupsArray = Object.values(g.state?.tabState?.tabGroups ?? {});
-              const tabCount = tabGroupsArray.reduce(
-                (sum, tg) => sum + tg.tabs.length, 0
-              );
-              const columnCount = tabGroupsArray.length;
-              const tabLabels = tabGroupsArray.flatMap((tg) => tg.tabs.map((t) => t.label));
-              return [
-                g.id,
-                { id: g.id, name: g.name, tabCount, columnCount, tabLabels }
-              ];
-            })
-          ),
-          addons: Object.fromEntries(
-            Object.values(addons).map((a) => [
-              a.id,
-              { id: a.id, name: a.name }
-            ])
-          ),
-          historyIds: Object.keys(history),
-          history: Object.fromEntries(
-            Object.values(history).map((h) => {
-              const tabGroupsArray = Object.values(h.state?.tabState?.tabGroups ?? {});
-              const tabCount = tabGroupsArray.reduce(
-                (sum, tg) => sum + tg.tabs.length, 0
-              );
-              const tabLabels = tabGroupsArray.flatMap((tg) => tg.tabs.map((t) => t.label));
-              return [h.id, { id: h.id, name: h.name, tabCount, tabLabels }];
-            })
-          ),
-          quickSlots,
-          selectedGroupId
-        };
-      }
-    )
+    commands.registerCommand(`${EXTENSION_NAME}.__test__getState`, async () => {
+      const groups = tabManagerService.state?.groups ?? {};
+      const addons = tabManagerService.state?.addons ?? {};
+      const history = tabManagerService.state?.history ?? {};
+      const quickSlots = tabManagerService.state?.quickSlots ?? {};
+      const selectedGroupId =
+        tabManagerService.state?.stateContainer?.id ?? null;
+      return {
+        groups: Object.fromEntries(
+          Object.values(groups).map((g) => {
+            const tabGroupsArray = Object.values(
+              g.state?.tabState?.tabGroups ?? {}
+            );
+            const tabCount = tabGroupsArray.reduce(
+              (sum, tg) => sum + tg.tabs.length,
+              0
+            );
+            const columnCount = tabGroupsArray.length;
+            const tabLabels = tabGroupsArray.flatMap((tg) =>
+              tg.tabs.map((t) => t.label)
+            );
+            return [
+              g.id,
+              { id: g.id, name: g.name, tabCount, columnCount, tabLabels }
+            ];
+          })
+        ),
+        addons: Object.fromEntries(
+          Object.values(addons).map((a) => [a.id, { id: a.id, name: a.name }])
+        ),
+        historyIds: Object.keys(history),
+        history: Object.fromEntries(
+          Object.values(history).map((h) => {
+            const tabGroupsArray = Object.values(
+              h.state?.tabState?.tabGroups ?? {}
+            );
+            const tabCount = tabGroupsArray.reduce(
+              (sum, tg) => sum + tg.tabs.length,
+              0
+            );
+            const tabLabels = tabGroupsArray.flatMap((tg) =>
+              tg.tabs.map((t) => t.label)
+            );
+            return [h.id, { id: h.id, name: h.name, tabCount, tabLabels }];
+          })
+        ),
+        quickSlots,
+        selectedGroupId
+      };
+    })
   );
 
   testCommands.push(
@@ -358,7 +364,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       }
     )
   );
-    
+
   testCommands.push(
     commands.registerCommand(
       `${EXTENSION_NAME}.__test__getLastRenderTime`,
@@ -371,7 +377,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       `${EXTENSION_NAME}.__test__waitForRender`,
       async (fromTimeParam?: string, maxTimeParam?: string) => {
         const fromTime = fromTimeParam ? Number(fromTimeParam) : Date.now();
-        
+
         if (isNaN(fromTime)) {
           throw new Error('Invalid fromTime parameter');
         }
@@ -395,7 +401,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
             setTimeout(check, 50);
           };
-          
+
           check();
         });
       }
@@ -414,7 +420,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       `${EXTENSION_NAME}.__test__waitForSync`,
       (fromTimeParam?: string, maxTimeParam?: string) => {
         const fromTime = fromTimeParam ? Number(fromTimeParam) : Date.now();
-        
+
         if (isNaN(fromTime)) {
           throw new Error('Invalid fromTime parameter');
         }
@@ -438,7 +444,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
             setTimeout(check, 50);
           };
-          
+
           check();
         });
       }
@@ -480,8 +486,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
         return {
           tabGroups,
           selection,
-          activeEditorUri:
-            activeEditor?.document?.uri?.toString() ?? null
+          activeEditorUri: activeEditor?.document?.uri?.toString() ?? null
         };
       }
     )
@@ -516,7 +521,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       isActive: tab.isActive,
       isDirty: tab.isDirty,
       isPinned: tab.isPinned,
-      isPreview: tab.isPreview,
+      isPreview: tab.isPreview
     };
   }
 
@@ -525,7 +530,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       viewColumn: group.viewColumn,
       isActive: group.isActive,
       tabCount: group.tabs.length,
-      tabLabels: group.tabs.map((t) => t.label),
+      tabLabels: group.tabs.map((t) => t.label)
     };
   }
 
@@ -541,7 +546,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
           seq: 0,
           tabEvents: [],
           groupEvents: [],
-          disposables: [],
+          disposables: []
         };
 
         const capture = rawEventCapture;
@@ -553,7 +558,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
               timestamp: Date.now(),
               opened: e.opened.map(serializeTab),
               closed: e.closed.map(serializeTab),
-              changed: e.changed.map(serializeTab),
+              changed: e.changed.map(serializeTab)
             });
           }),
           window.tabGroups.onDidChangeTabGroups((e) => {
@@ -562,7 +567,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
               timestamp: Date.now(),
               opened: e.opened.map(serializeTabGroup),
               closed: e.closed.map(serializeTabGroup),
-              changed: e.changed.map(serializeTabGroup),
+              changed: e.changed.map(serializeTabGroup)
             });
           })
         );
@@ -594,7 +599,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
         }
         const result = {
           tabEvents: [...rawEventCapture.tabEvents],
-          groupEvents: [...rawEventCapture.groupEvents],
+          groupEvents: [...rawEventCapture.groupEvents]
         };
         if (clear) {
           rawEventCapture.tabEvents = [];
@@ -630,7 +635,8 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   } | null = null;
 
   // @ts-expect-error - accessing private _tabChangeProxy for testing
-  const tabChangeProxy = tabManagerService._tabChangeProxy as import('./services/tab-change-proxy').TabChangeProxyService;
+  const tabChangeProxy =
+    tabManagerService._tabChangeProxy as import('./services/tab-change-proxy').TabChangeProxyService;
 
   testCommands.push(
     commands.registerCommand(
@@ -642,7 +648,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
         resolvedEventCapture = {
           events: [],
-          disposable: null,
+          disposable: null
         };
 
         const capture = resolvedEventCapture;
@@ -657,7 +663,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
               return {
                 label: t.label,
                 viewColumn: entry?.viewColumn ?? t.group.viewColumn,
-                index: entry?.index ?? t.group.tabs.indexOf(t),
+                index: entry?.index ?? t.group.tabs.indexOf(t)
               };
             }),
             closed: e.closed.map((t) => {
@@ -665,7 +671,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
               return {
                 label: t.label,
                 viewColumn: entry?.viewColumn ?? t.group.viewColumn,
-                index: entry?.index ?? t.group.tabs.indexOf(t),
+                index: entry?.index ?? t.group.tabs.indexOf(t)
               };
             }),
             moved: e.moved.map((m) => ({
@@ -674,12 +680,12 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
               toViewColumn: m.toViewColumn,
               fromIndex: m.fromIndex,
               toIndex: m.toIndex,
-              changed: [...m.changed],
+              changed: [...m.changed]
             })),
             updated: e.updated.map((u) => ({
               label: u.tab.label,
-              changed: [...u.changed],
-            })),
+              changed: [...u.changed]
+            }))
           });
         });
 

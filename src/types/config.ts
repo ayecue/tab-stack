@@ -22,13 +22,15 @@ export interface TabRecoveryMatchCriteria {
   viewType?: string;
 }
 
-export type TabRecoveryMappingEntry = string | {
-  command: string;
-  args?: unknown[];
-  nextTickDelay?: number;
-  match?: TabRecoveryMatchCriteria;
-  unique?: boolean;
-};
+export type TabRecoveryMappingEntry =
+  | string
+  | {
+      command: string;
+      args?: unknown[];
+      nextTickDelay?: number;
+      match?: TabRecoveryMatchCriteria;
+      unique?: boolean;
+    };
 export type TabRecoveryMapping = Record<string, TabRecoveryMappingEntry>;
 
 export interface RecoveryCommandResult {

@@ -11,9 +11,7 @@ import {
  * Lifecycle-scoped cache for derived tab-entry computations used across
  * the event pipeline while a bucket is being resolved.
  */
-export class TabChangeComputationCache
-  implements TabChangeComputationCacheApi
-{
+export class TabChangeComputationCache implements TabChangeComputationCacheApi {
   private _byViewColumnCache = new WeakMap<
     Map<Tab, TabEntrySnapshot>,
     Map<number, Map<Tab, TabEntrySnapshot>>
@@ -36,10 +34,7 @@ export class TabChangeComputationCache
 
   private _fullDiffCache = new WeakMap<
     TabEntrySnapshot,
-    WeakMap<
-      TabEntrySnapshot,
-      Set<TabChangeProperty | 'viewColumn' | 'index'>
-    >
+    WeakMap<TabEntrySnapshot, Set<TabChangeProperty | 'viewColumn' | 'index'>>
   >();
 
   private _propertyDiffCache = new WeakMap<
@@ -109,9 +104,10 @@ export class TabChangeComputationCache
     }
 
     const grouped = new Map<string, number[]>();
-    for (const [viewColumn, fingerprintClue] of this.groupFingerprintCluesByViewColumn(
-      byRef
-    )) {
+    for (const [
+      viewColumn,
+      fingerprintClue
+    ] of this.groupFingerprintCluesByViewColumn(byRef)) {
       const viewColumns = grouped.get(fingerprintClue) ?? [];
 
       viewColumns.push(viewColumn);
@@ -202,7 +198,8 @@ export class TabChangeComputationCache
     oldEntry: TabEntrySnapshot,
     value: T
   ): void {
-    const byOldEntry = cache.get(newEntry) ?? new WeakMap<TabEntrySnapshot, T>();
+    const byOldEntry =
+      cache.get(newEntry) ?? new WeakMap<TabEntrySnapshot, T>();
 
     byOldEntry.set(oldEntry, value);
     cache.set(newEntry, byOldEntry);

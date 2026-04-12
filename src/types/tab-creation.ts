@@ -1,5 +1,6 @@
-import { Tab } from "vscode";
-import { AssociatedTabInstance } from "./tabs";
+import { Tab } from 'vscode';
+
+import { AssociatedTabInstance } from './tabs';
 
 export type TabCreationEvent =
   | { type: 'TAB_FOUND'; tab: Tab }

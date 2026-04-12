@@ -1,15 +1,10 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo
-} from 'react';
-
-import { Tooltip } from './common/tooltip';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCollectionCreate } from '../hooks/use-collection-create';
 import { useCollectionRename } from '../hooks/use-collection-rename';
 import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
+import { Tooltip } from './common/tooltip';
 import { GroupItem } from './group-item';
 
 export const GroupsCollection: React.FC = () => {
@@ -39,8 +34,12 @@ export const GroupsCollection: React.FC = () => {
     []
   );
 
-  const { searchTerm, setSearchTerm, filteredItems: filteredGroups, clearSearch } =
-    useCollectionSearch({ items: state.groups, filterFn: filterGroup });
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredItems: filteredGroups,
+    clearSearch
+  } = useCollectionSearch({ items: state.groups, filterFn: filterGroup });
 
   const slotByGroup = useMemo(() => {
     const mapping: Record<string, string> = {};
@@ -120,7 +119,10 @@ export const GroupsCollection: React.FC = () => {
                 onClick={() => messagingService.importGroup()}
                 aria-label="Import group from file"
               >
-                <i className="codicon codicon-cloud-download" aria-hidden="true" />
+                <i
+                  className="codicon codicon-cloud-download"
+                  aria-hidden="true"
+                />
               </button>
             </Tooltip>
             <Tooltip content="Create new group">
@@ -184,7 +186,14 @@ export const GroupsCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredGroups.map((group, index) => {
-            const { groupId, name, tabCount, columnCount, layout, tabsByColumn } = group;
+            const {
+              groupId,
+              name,
+              tabCount,
+              columnCount,
+              layout,
+              tabsByColumn
+            } = group;
             const assignedSlot = slotByGroup[groupId];
             const isSelected = state.selectedGroup === groupId;
             const isEditing = rename.editingId === groupId;

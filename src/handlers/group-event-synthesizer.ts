@@ -1,10 +1,7 @@
 import { Tab } from 'vscode';
 
-import {
-  GeneratorContext,
-  TabEntrySnapshot
-} from '../types/tab-change-proxy';
 import { getLogger } from '../services/logger';
+import { GeneratorContext, TabEntrySnapshot } from '../types/tab-change-proxy';
 
 /**
  * Translates group-level VS Code events into synthetic tab-level events
@@ -81,14 +78,19 @@ export class GroupEventSynthesizer {
    * right when VS Code inserts the new group before it.
    */
   private _stageCascadingVCShifts(ctx: GeneratorContext): void {
-    if (ctx.closedViewColumns.size === 0 && ctx.openedViewColumns.size === 0) return;
+    if (ctx.closedViewColumns.size === 0 && ctx.openedViewColumns.size === 0)
+      return;
 
     const openedViewColumns = [...ctx.openedViewColumns];
     const closedViewColumns = [...ctx.closedViewColumns];
 
     for (const [vc, groupTabs] of ctx.snapshotByVC) {
-      const affectedByOpen = openedViewColumns.some((openedVC) => vc >= openedVC);
-      const affectedByClose = closedViewColumns.some((closedVC) => vc > closedVC);
+      const affectedByOpen = openedViewColumns.some(
+        (openedVC) => vc >= openedVC
+      );
+      const affectedByClose = closedViewColumns.some(
+        (closedVC) => vc > closedVC
+      );
 
       if (!affectedByOpen && !affectedByClose) {
         continue;
@@ -119,11 +121,11 @@ export class GroupEventSynthesizer {
    */
   private _stageChangedGroups(ctx: GeneratorContext): void {
     const changedViewColumns = new Set(
-      ctx.groupEvent.changed.map((g) => g.viewColumn),
+      ctx.groupEvent.changed.map((g) => g.viewColumn)
     );
 
     this._log.info(
-      `stageChangedGroups: changedVCs=[${[...changedViewColumns].join(',')}] snapshot=${ctx.snapshot.size} freshByRef=${ctx.freshByRef.size}`,
+      `stageChangedGroups: changedVCs=[${[...changedViewColumns].join(',')}] snapshot=${ctx.snapshot.size} freshByRef=${ctx.freshByRef.size}`
     );
 
     // Pass 1: Tabs in changed VCs — detect viewColumn changes and property diffs.
@@ -138,7 +140,9 @@ export class GroupEventSynthesizer {
         if (!newEntry) continue;
 
         if (oldEntry.viewColumn !== newEntry.viewColumn) {
-          this._log.info(`  tab "${tab.label}": vc ${oldEntry.viewColumn} → ${newEntry.viewColumn} — cross-group move`);
+          this._log.info(
+            `  tab "${tab.label}": vc ${oldEntry.viewColumn} → ${newEntry.viewColumn} — cross-group move`
+          );
           ctx.closed.push(tab);
           ctx.opened.push(tab);
           ctx.processed.add(tab);
@@ -147,7 +151,9 @@ export class GroupEventSynthesizer {
 
         const diff = ctx.computationCache.diffFull(newEntry, oldEntry);
         if (diff.size > 0) {
-          this._log.info(`  tab "${tab.label}": vc=${oldEntry.viewColumn} property changes: ${[...diff].join(',')}`);
+          this._log.info(
+            `  tab "${tab.label}": vc=${oldEntry.viewColumn} property changes: ${[...diff].join(',')}`
+          );
           ctx.changed.push(tab);
           ctx.processed.add(tab);
         }
@@ -163,7 +169,9 @@ export class GroupEventSynthesizer {
         if (ctx.processed.has(tab)) continue;
         if (ctx.snapshot.has(tab)) continue;
 
-        this._log.info(`  tab "${tab.label}": NOT in snapshot — classifying as opened (newVC=${newEntry.viewColumn})`);
+        this._log.info(
+          `  tab "${tab.label}": NOT in snapshot — classifying as opened (newVC=${newEntry.viewColumn})`
+        );
         ctx.opened.push(tab);
         ctx.processed.add(tab);
       }

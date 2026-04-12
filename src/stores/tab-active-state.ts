@@ -96,7 +96,9 @@ export const createTabActiveStateStore = (): TabActiveStateStore => {
 
   store.subscribe((snapshot) => {
     const tabCount = Object.keys(snapshot.context.tabs).length;
-    log.debug(`<< state updated — ${tabCount} tab(s), locked=${snapshot.context.isLocked}`);
+    log.debug(
+      `<< state updated — ${tabCount} tab(s), locked=${snapshot.context.isLocked}`
+    );
   });
 
   return store;

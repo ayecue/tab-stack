@@ -108,7 +108,9 @@ export class TabActiveStateHandler implements Disposable {
       this
     );
 
-    this.syncTabs = this._tabEventsHandler.syncTabs.bind(this._tabEventsHandler);
+    this.syncTabs = this._tabEventsHandler.syncTabs.bind(
+      this._tabEventsHandler
+    );
     this.rehydrateTabs = this._tabEventsHandler.rehydrateTabs.bind(
       this._tabEventsHandler
     );
@@ -125,7 +127,7 @@ export class TabActiveStateHandler implements Disposable {
   scheduleStateUpdate(): void {
     void this.triggerStateUpdate();
   }
-  
+
   getTabManagerState(): TabManagerState {
     return this._tabStateProjector.getTabManagerState();
   }
@@ -150,7 +152,10 @@ export class TabActiveStateHandler implements Disposable {
     if (fromViewColumn === toViewColumn) return;
 
     await this._tabMutationHandler.runLocked(async () => {
-      await this._tabReplayHandler.moveEditorGroup(fromViewColumn, toViewColumn);
+      await this._tabReplayHandler.moveEditorGroup(
+        fromViewColumn,
+        toViewColumn
+      );
     });
   }
 

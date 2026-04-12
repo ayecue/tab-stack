@@ -79,11 +79,7 @@ export const HistoryItem: React.FC<HistoryItemProps> = ({
             onKeyDown={(event) => event.stopPropagation()}
           >
             <Tooltip content="Delete snapshot">
-              <button
-                type="button"
-                className="danger"
-                onClick={handleDelete}
-              >
+              <button type="button" className="danger" onClick={handleDelete}>
                 <i className="codicon codicon-trash" aria-hidden="true" />
               </button>
             </Tooltip>

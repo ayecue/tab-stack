@@ -89,10 +89,11 @@ export const createTabStateContainerStore = (): TabStateContainerStore => {
   inspectStore(store, log);
 
   store.subscribe((snapshot) => {
-    const { currentStateContainer, previousStateContainer, isLocked } = snapshot.context;
+    const { currentStateContainer, previousStateContainer, isLocked } =
+      snapshot.context;
     log.debug(
       `<< state updated — current=${currentStateContainer?.name ?? 'none'} (${currentStateContainer?.id ?? '-'}), ` +
-      `previous=${previousStateContainer?.name ?? 'none'}, locked=${isLocked}`
+        `previous=${previousStateContainer?.name ?? 'none'}, locked=${isLocked}`
     );
   });
 

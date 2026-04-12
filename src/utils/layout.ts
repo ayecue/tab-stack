@@ -1,4 +1,5 @@
 import { commands } from 'vscode';
+
 import { Layout, LayoutGroup, MoveStep } from '../types/commands';
 
 export async function getEditorLayout(): Promise<Layout> {
@@ -29,9 +30,7 @@ export function resolveGroupMove(from: number, to: number): MoveStep[] {
   if (from === to) return [];
 
   const movingRight = to > from;
-  const command = movingRight
-    ? MOVE_COMMANDS.right
-    : MOVE_COMMANDS.left;
+  const command = movingRight ? MOVE_COMMANDS.right : MOVE_COMMANDS.left;
 
   const steps: MoveStep[] = [];
   const direction = movingRight ? 1 : -1;

@@ -36,7 +36,10 @@ async function loadFile(location: Uri): Promise<TabStateFileContent | null> {
   return data;
 }
 
-async function saveFile(location: Uri, data: TabStateFileContent): Promise<void> {
+async function saveFile(
+  location: Uri,
+  data: TabStateFileContent
+): Promise<void> {
   const fileContent = new TextEncoder().encode(JSON.stringify(data));
   await workspace.fs.writeFile(location, fileContent);
 }
@@ -77,7 +80,9 @@ export class FileStorageHandler implements PersistenceHandler {
     const workspaceUri = resolveWorkspaceUri(masterFolderPath);
 
     if (!workspaceUri) {
-      this._log.warn('No valid workspace folder found, falling back to in-memory state');
+      this._log.warn(
+        'No valid workspace folder found, falling back to in-memory state'
+      );
 
       this._location = null;
       this._storageType = 'in-memory';

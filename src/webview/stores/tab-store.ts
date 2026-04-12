@@ -1,17 +1,21 @@
 import { createStore } from '@xstate/store';
 
 import { Layout } from '../../types/commands';
-import { GitIntegrationConfig, StorageType, TabKindColors } from '../../types/config';
 import {
+  GitIntegrationConfig,
+  StorageType,
+  TabKindColors
+} from '../../types/config';
+import {
+  AddonSummary,
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage,
   ExtensionMessageType,
   ExtensionNotificationKind,
   ExtensionNotificationMessage,
   ExtensionTabStateSyncMessage,
-  ExtensionCollectionsSyncMessage,
-  ExtensionConfigSyncMessage,
   GroupSummary,
-  HistorySummary,
-  AddonSummary
+  HistorySummary
 } from '../../types/messages';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
@@ -42,8 +46,14 @@ export interface TabStoreContext {
   tabKindColors: TabKindColors;
 }
 
-type TabStateSyncEvent = { type: 'tabStateSync'; data: ExtensionTabStateSyncMessage };
-type CollectionsSyncEvent = { type: 'collectionsSync'; data: ExtensionCollectionsSyncMessage };
+type TabStateSyncEvent = {
+  type: 'tabStateSync';
+  data: ExtensionTabStateSyncMessage;
+};
+type CollectionsSyncEvent = {
+  type: 'collectionsSync';
+  data: ExtensionCollectionsSyncMessage;
+};
 type ConfigSyncEvent = { type: 'configSync'; data: ExtensionConfigSyncMessage };
 type NotificationEvent = {
   type: 'notification';

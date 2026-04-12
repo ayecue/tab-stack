@@ -59,5 +59,10 @@ export function useCollectionSearch<T>({
     return items.filter((item) => filterFn(item, term));
   }, [items, debouncedTerm, filterFn]);
 
-  return { searchTerm, setSearchTerm: handleSetSearchTerm, filteredItems, clearSearch };
+  return {
+    searchTerm,
+    setSearchTerm: handleSetSearchTerm,
+    filteredItems,
+    clearSearch
+  };
 }

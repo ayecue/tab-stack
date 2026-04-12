@@ -1,12 +1,11 @@
 import React from 'react';
 
 import { TabKindColors } from '../../types/config';
+import type { UseTabDragDropResult } from '../hooks/use-tab-drag-drop';
+import type { UseTabFilterResult } from '../hooks/use-tab-filter';
 import { resolveTabKindColor } from '../lib/resolve-tab-kind-color';
 import { TabDropZone } from './tab-drop-zone';
 import { TabItem } from './tab-item';
-
-import type { UseTabDragDropResult } from '../hooks/use-tab-drag-drop';
-import type { UseTabFilterResult } from '../hooks/use-tab-filter';
 
 interface TabListFlatProps {
   flatList: UseTabFilterResult['flatList'];
@@ -53,9 +52,7 @@ export const TabListFlat: React.FC<TabListFlatProps> = ({
         <TabItem
           key={tab.id}
           tab={tab}
-          onOpen={() =>
-            messagingService.openTab(tabGroupIndex, tab.viewColumn)
-          }
+          onOpen={() => messagingService.openTab(tabGroupIndex, tab.viewColumn)}
           onClose={() =>
             messagingService.closeTab(tabGroupIndex, tab.viewColumn)
           }
@@ -66,7 +63,10 @@ export const TabListFlat: React.FC<TabListFlatProps> = ({
             messagingService.closeOtherEditors(tabGroupIndex, tab.viewColumn)
           }
           onCloseOthersInGroup={() =>
-            messagingService.closeOtherEditorsInGroup(tabGroupIndex, tab.viewColumn)
+            messagingService.closeOtherEditorsInGroup(
+              tabGroupIndex,
+              tab.viewColumn
+            )
           }
           onDragStart={handleDragStart(tabGroupIndex, viewColumn)}
           onDragEnd={handleDragEnd}
@@ -74,7 +74,11 @@ export const TabListFlat: React.FC<TabListFlatProps> = ({
           onDrop={handleDrop(tabGroupIndex, viewColumn)}
           viewColumnLabel={label}
           isColumnActive={isActive}
-          resolvedColor={resolveTabKindColor(tabKindColors, tab.kind, tab.label)}
+          resolvedColor={resolveTabKindColor(
+            tabKindColors,
+            tab.kind,
+            tab.label
+          )}
           isDragging={isDragging(tabGroupIndex, viewColumn)}
           isDraggedOver={isDraggedOver(tabGroupIndex, viewColumn)}
           dropPosition={getDropPosition(tabGroupIndex, viewColumn)}

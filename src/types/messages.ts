@@ -273,7 +273,8 @@ export interface WebviewCloseOtherEditorsMessage extends BaseWebviewMessage {
   columnView: number;
 }
 
-export interface WebviewCloseOtherEditorsInGroupMessage extends BaseWebviewMessage {
+export interface WebviewCloseOtherEditorsInGroupMessage
+  extends BaseWebviewMessage {
   type: WebviewMessageType.CloseOtherEditorsInGroup;
   index: number;
   columnView: number;
@@ -284,13 +285,15 @@ export interface WebviewCloseColumnMessage extends BaseWebviewMessage {
   viewColumn: number;
 }
 
-export interface WebviewCloseColumnFilteredTabsMessage extends BaseWebviewMessage {
+export interface WebviewCloseColumnFilteredTabsMessage
+  extends BaseWebviewMessage {
   type: WebviewMessageType.CloseColumnFilteredTabs;
   viewColumn: number;
   indices: number[];
 }
 
-export interface WebviewCloseColumnNonFilteredTabsMessage extends BaseWebviewMessage {
+export interface WebviewCloseColumnNonFilteredTabsMessage
+  extends BaseWebviewMessage {
   type: WebviewMessageType.CloseColumnNonFilteredTabs;
   viewColumn: number;
   indices: number[];

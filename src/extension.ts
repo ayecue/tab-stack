@@ -1,6 +1,7 @@
 import { ExtensionContext, window } from 'vscode';
 
 import { createCommands } from './create-commands';
+import { createTestHelper } from './create-test-helper';
 import { createUriHandler } from './create-uri-handler';
 import { ViewManagerProvider } from './providers/view-manager';
 import { ConfigService } from './services/config';
@@ -9,9 +10,8 @@ import { GitService } from './services/git';
 import { initializeLogger } from './services/logger';
 import { StatusBarService } from './services/status-bar';
 import { TabManagerService } from './services/tab-manager';
-import { getEditorLayout } from './utils/layout';
-import { createTestHelper } from './create-test-helper';
 import { TabRecoveryService } from './services/tab-recovery-resolver';
+import { getEditorLayout } from './utils/layout';
 
 export async function activate(context: ExtensionContext) {
   const logger = initializeLogger();

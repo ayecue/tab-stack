@@ -37,9 +37,9 @@ export const GitIntegrationSection: React.FC = () => {
         Git Integration
       </label>
       <p className="settings-description">
-        Control how tab groups follow your Git branches: auto switch on
-        branch change, auto create groups, or full auto. Prefix controls
-        the generated group name.
+        Control how tab groups follow your Git branches: auto switch on branch
+        change, auto create groups, or full auto. Prefix controls the generated
+        group name.
       </p>
 
       {state.gitIntegration ? (

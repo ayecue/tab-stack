@@ -17,10 +17,7 @@ export const HistoryCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
 
   const filterHistory = useCallback(
-    (
-      history: (typeof state.histories)[number],
-      term: string
-    ) => {
+    (history: (typeof state.histories)[number], term: string) => {
       const timestamp = formatTimestamp(history.historyId).toLowerCase();
       return (
         history.name.toLowerCase().includes(term) ||
@@ -31,8 +28,12 @@ export const HistoryCollection: React.FC = () => {
     []
   );
 
-  const { searchTerm, setSearchTerm, filteredItems: filteredHistory, clearSearch } =
-    useCollectionSearch({ items: state.histories, filterFn: filterHistory });
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredItems: filteredHistory,
+    clearSearch
+  } = useCollectionSearch({ items: state.histories, filterFn: filterHistory });
 
   return (
     <div className="collections-section history-collection">
@@ -82,7 +83,14 @@ export const HistoryCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredHistory.map((history) => {
-            const { historyId, name, tabCount, columnCount, layout, tabsByColumn } = history;
+            const {
+              historyId,
+              name,
+              tabCount,
+              columnCount,
+              layout,
+              tabsByColumn
+            } = history;
             return (
               <HistoryItem
                 key={historyId}

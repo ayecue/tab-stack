@@ -1,13 +1,13 @@
 import { window } from 'vscode';
 
 import type { TabActiveStateStore } from '../stores/tab-active-state';
+import { transformTabToTabInfo } from '../transformers/tab';
 import type {
   TabLayoutStateProvider,
   TrackedTabAssociationRegistry
 } from '../types/tab-active-state';
 import { TabManagerState } from '../types/tab-manager';
 import { TabInfo, TabInfoId, TabState } from '../types/tabs';
-import { transformTabToTabInfo } from '../transformers/tab';
 import { createTabKey } from '../utils/tab-utils';
 
 export class TabStateProjector {

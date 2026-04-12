@@ -1,10 +1,10 @@
-import { Actor, createActor } from "xstate";
-import { OpenTabResult } from "../types/tabs";
-import { getLogger, ScopedLogger } from "../services/logger";
-import { tabCreationMachine } from "../state-machines/tab-creation";
-import { TabCreationTask } from "../handlers/tab-creation-task";
-import { TabOperation } from "./tab-operation";
+import { Actor, createActor } from 'xstate';
 
+import { TabCreationTask } from '../handlers/tab-creation-task';
+import { getLogger, ScopedLogger } from '../services/logger';
+import { tabCreationMachine } from '../state-machines/tab-creation';
+import { OpenTabResult } from '../types/tabs';
+import { TabOperation } from './tab-operation';
 
 export class TabCreationOperation extends TabOperation {
   private _task: TabCreationTask;
@@ -18,7 +18,7 @@ export class TabCreationOperation extends TabOperation {
     super();
     this._task = task;
     this._actor = createActor(tabCreationMachine, {
-      input: { task },
+      input: { task }
     });
     this._log = getLogger().child('TabCreationOperation');
     this._resolve = null;
@@ -37,7 +37,9 @@ export class TabCreationOperation extends TabOperation {
       }
 
       if (tab == null) {
-        this._log.warn(`${this._task.getDescription()} not found in any tab group after ${exceeded ? 'timeout' : 'executing command'}`);
+        this._log.warn(
+          `${this._task.getDescription()} not found in any tab group after ${exceeded ? 'timeout' : 'executing command'}`
+        );
         this._resolve!({ success: false, handle: editor, tab: null });
         return;
       }

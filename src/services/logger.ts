@@ -1,7 +1,6 @@
-import { Disposable, LogOutputChannel, window } from 'vscode';
-import inspect from 'object-inspect';
-
 import type { Store, StoreInspectionEvent } from '@xstate/store';
+import inspect from 'object-inspect';
+import { Disposable, LogOutputChannel, window } from 'vscode';
 
 export enum LogLevel {
   Debug = 'debug',

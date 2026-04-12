@@ -69,7 +69,12 @@ export class TabEventOperationBuilder {
       if (oldEntry && newEntry) {
         const changed = session.computationCache.diffFull(newEntry, oldEntry);
         if (changed.size > 0) {
-          session.ops.push({ type: 'update', entry: newEntry, oldEntry, changed });
+          session.ops.push({
+            type: 'update',
+            entry: newEntry,
+            oldEntry,
+            changed
+          });
         }
         processed.add(tab);
       }
@@ -93,7 +98,12 @@ export class TabEventOperationBuilder {
         if (!newEntry) continue;
         const changed = session.computationCache.diffFull(newEntry, oldEntry);
         if (changed.size > 0) {
-          const op: TabOp = { type: 'update', entry: newEntry, oldEntry, changed };
+          const op: TabOp = {
+            type: 'update',
+            entry: newEntry,
+            oldEntry,
+            changed
+          };
           session.pushDerivedShiftOp(op);
           processed.add(tab);
         }
@@ -117,7 +127,12 @@ export class TabEventOperationBuilder {
       }
       const changed = session.computationCache.diffFull(newEntry, oldEntry);
       if (changed.size > 0) {
-        const op: TabOp = { type: 'update', entry: newEntry, oldEntry, changed };
+        const op: TabOp = {
+          type: 'update',
+          entry: newEntry,
+          oldEntry,
+          changed
+        };
         session.pushOp(op, true);
       }
     }

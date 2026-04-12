@@ -34,8 +34,18 @@ export const TabList: React.FC<TabListProps> = ({
   const tabKindColors = state.tabKindColors;
 
   const moveTab = useCallback(
-    (fromIndex: number, fromViewColumn: number, toIndex: number, toViewColumn: number) => {
-      messagingService.moveTab(fromIndex, fromViewColumn, toIndex, toViewColumn);
+    (
+      fromIndex: number,
+      fromViewColumn: number,
+      toIndex: number,
+      toViewColumn: number
+    ) => {
+      messagingService.moveTab(
+        fromIndex,
+        fromViewColumn,
+        toIndex,
+        toViewColumn
+      );
     },
     [messagingService]
   );
