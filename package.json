@@ -47,6 +47,7 @@
     "glob": "^11.0.0",
     "happy-dom": "^14.10.1",
     "jest-mock-vscode": "^4.8.2",
+    "microdiff": "^1.5.0",
     "mocha": "^10.7.3",
     "ovsx": "^0.10.1",
     "source-map-support": "^0.5.12",
