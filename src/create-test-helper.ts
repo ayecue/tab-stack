@@ -634,9 +634,11 @@ export function createTestHelper(
     disposable: Disposable | null;
   } | null = null;
 
-  // @ts-expect-error - accessing private _tabChangeProxy for testing
-  const tabChangeProxy =
-    tabManagerService._tabChangeProxy as import('./services/tab-change-proxy').TabChangeProxyService;
+  const tabChangeProxy = (
+    tabManagerService as unknown as {
+      _tabChangeProxy: import('./services/tab-change-proxy').TabChangeProxyService;
+    }
+  )._tabChangeProxy;
 
   testCommands.push(
     commands.registerCommand(

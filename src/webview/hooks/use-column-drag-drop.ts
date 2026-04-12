@@ -1,5 +1,8 @@
 import React, { useCallback, useReducer, useRef } from 'react';
 
+const COLUMN_REORDER_TOP_ZONE_PX = 56;
+const COLUMN_REORDER_EDGE_ZONE_PX = 28;
+
 interface ColumnDragState {
   draggedColumn: number | null;
   dropTarget: number | null;
@@ -31,6 +34,12 @@ function columnDragReducer(
     case 'updateDrop':
       if (!state.draggedColumn) return state;
       if (state.draggedColumn === action.viewColumn) return state;
+      if (
+        state.dropTarget === action.viewColumn &&
+        state.dropMode === action.mode
+      ) {
+        return state;
+      }
       return { ...state, dropTarget: action.viewColumn, dropMode: action.mode };
     case 'reset':
       return initialState;
@@ -39,20 +48,35 @@ function columnDragReducer(
 
 const COLUMN_DRAG_TYPE = 'application/x-tab-column';
 
+function resolveColumnDropMode(
+  event: React.DragEvent<Element>
+): 'reorder' | 'merge' {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const relativeX = event.clientX - rect.left;
+  const relativeY = event.clientY - rect.top;
+
+  const reorderTopZone = Math.min(
+    COLUMN_REORDER_TOP_ZONE_PX,
+    rect.height * 0.45
+  );
+  const isNearTop = relativeY <= reorderTopZone;
+  const isNearEdge =
+    relativeX <= COLUMN_REORDER_EDGE_ZONE_PX ||
+    relativeX >= rect.width - COLUMN_REORDER_EDGE_ZONE_PX;
+
+  return isNearTop || isNearEdge ? 'reorder' : 'merge';
+}
+
 export interface UseColumnDragDropResult {
   draggedColumn: number | null;
   dropTarget: number | null;
   dropMode: 'reorder' | 'merge' | null;
   handleColumnDragStart: (viewColumn: number) => (e: React.DragEvent) => void;
   handleColumnDragEnd: () => void;
-  handleColumnHeaderDragOver: (
-    viewColumn: number
-  ) => (e: React.DragEvent) => void;
-  handleColumnHeaderDrop: (viewColumn: number) => (e: React.DragEvent) => void;
-  handleColumnBodyDragOver: (
-    viewColumn: number
-  ) => (e: React.DragEvent) => void;
-  handleColumnBodyDrop: (viewColumn: number) => (e: React.DragEvent) => void;
+  handleColumnDragOver: (viewColumn: number) => (e: React.DragEvent) => void;
+  handleColumnDrop: (viewColumn: number) => (e: React.DragEvent) => void;
+  handleProjectedColumnReorderDragOver: () => (e: React.DragEvent) => void;
+  handleProjectedColumnReorderDrop: () => (e: React.DragEvent) => void;
   isColumnDragging: (viewColumn: number) => boolean;
   isColumnDropTarget: (viewColumn: number) => boolean;
   getColumnDropMode: (viewColumn: number) => 'reorder' | 'merge' | null;
@@ -79,50 +103,74 @@ export function useColumnDragDrop(
     dispatch({ type: 'reset' });
   }, []);
 
-  const handleColumnHeaderDragOver = useCallback(
+  const executeColumnReorder = useCallback(() => {
+    const { draggedColumn, dropTarget, dropMode } = stateRef.current;
+
+    if (
+      draggedColumn == null ||
+      dropTarget == null ||
+      dropMode !== 'reorder' ||
+      draggedColumn === dropTarget
+    ) {
+      return;
+    }
+
+    moveColumn(draggedColumn, dropTarget);
+    dispatch({ type: 'reset' });
+  }, [moveColumn]);
+
+  const handleColumnDragOver = useCallback(
     (viewColumn: number) => (e: React.DragEvent) => {
       if (!e.dataTransfer.types.includes(COLUMN_DRAG_TYPE)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      dispatch({ type: 'updateDrop', viewColumn, mode: 'reorder' });
+      dispatch({
+        type: 'updateDrop',
+        viewColumn,
+        mode: resolveColumnDropMode(e)
+      });
     },
     []
   );
 
-  const handleColumnHeaderDrop = useCallback(
+  const handleColumnDrop = useCallback(
     (viewColumn: number) => (e: React.DragEvent) => {
       if (!e.dataTransfer.types.includes(COLUMN_DRAG_TYPE)) return;
       e.preventDefault();
       const { draggedColumn } = stateRef.current;
-      if (draggedColumn != null && draggedColumn !== viewColumn) {
-        moveColumn(draggedColumn, viewColumn);
+      if (draggedColumn == null || draggedColumn === viewColumn) {
+        dispatch({ type: 'reset' });
+        return;
       }
-      dispatch({ type: 'reset' });
-    },
-    [moveColumn]
-  );
 
-  const handleColumnBodyDragOver = useCallback(
-    (viewColumn: number) => (e: React.DragEvent) => {
-      if (!e.dataTransfer.types.includes(COLUMN_DRAG_TYPE)) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      dispatch({ type: 'updateDrop', viewColumn, mode: 'merge' });
-    },
-    []
-  );
-
-  const handleColumnBodyDrop = useCallback(
-    (viewColumn: number) => (e: React.DragEvent) => {
-      if (!e.dataTransfer.types.includes(COLUMN_DRAG_TYPE)) return;
-      e.preventDefault();
-      const { draggedColumn } = stateRef.current;
-      if (draggedColumn != null && draggedColumn !== viewColumn) {
+      if (resolveColumnDropMode(e) === 'reorder') {
+        moveColumn(draggedColumn, viewColumn);
+      } else {
         mergeColumns(draggedColumn, viewColumn);
       }
+
       dispatch({ type: 'reset' });
     },
-    [mergeColumns]
+    [mergeColumns, moveColumn]
+  );
+
+  const handleProjectedColumnReorderDragOver = useCallback(
+    () => (e: React.DragEvent) => {
+      if (!e.dataTransfer.types.includes(COLUMN_DRAG_TYPE)) return;
+      if (stateRef.current.dropMode !== 'reorder') return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    []
+  );
+
+  const handleProjectedColumnReorderDrop = useCallback(
+    () => (e: React.DragEvent) => {
+      if (!e.dataTransfer.types.includes(COLUMN_DRAG_TYPE)) return;
+      e.preventDefault();
+      executeColumnReorder();
+    },
+    [executeColumnReorder]
   );
 
   const isColumnDragging = useCallback(
@@ -147,10 +195,10 @@ export function useColumnDragDrop(
     dropMode: state.dropMode,
     handleColumnDragStart,
     handleColumnDragEnd,
-    handleColumnHeaderDragOver,
-    handleColumnHeaderDrop,
-    handleColumnBodyDragOver,
-    handleColumnBodyDrop,
+    handleColumnDragOver,
+    handleColumnDrop,
+    handleProjectedColumnReorderDragOver,
+    handleProjectedColumnReorderDrop,
     isColumnDragging,
     isColumnDropTarget,
     getColumnDropMode
