@@ -17,6 +17,7 @@ docs
 package-lock.json
 assets
 node_modules
+plan
 
 # Ignore build scripts, config files, and other non-source assets that are not needed for extension development or testing.
 copy-assets.cjs
@@ -27,6 +28,7 @@ vitest.config.ts
 tsconfig.json
 AI_SETUP.md
 AGENTS.md
+ARCHITECTURE.md
 .gitignore
 .eslintrc
 .npmignore
