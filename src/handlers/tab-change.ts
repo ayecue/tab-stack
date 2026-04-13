@@ -258,16 +258,13 @@ export class TabChangeResolver {
         afterSnapshot
       );
 
-      session.setLastResolverTrace(
-        createResolverTrace(source, bucketId, beforeSnapshot, afterSnapshot)
-      );
-
       return {
         ...baseEvent,
         bucketId,
+        tabRewireDeltas: resolvedBucketDelta.tabRewireDeltas,
+        resolvedBucketDelta,
         beforeSnapshot,
-        afterSnapshot,
-        resolvedBucketDelta
+        afterSnapshot
       };
     }
 
@@ -487,19 +484,17 @@ export class TabChangeResolver {
    * Tab-ref-keyed lookups work correctly.
    *
    * Matching strategy:
-   * 1. Build group fingerprints from captured snapshot metadata.
-   *    for old and new snapshots.
+   * 1. Build group fingerprints from captured snapshot metadata for old and
+   *    new snapshots.
    * 2. Match old VCs to new VCs by identical fingerprint.
-   * 3. For each fresh Tab, find the old entry with the same globalRefClue
-   *    in the mapped old VC.  Fall back to any unmatched entry with
-   *    the same globalRefClue if fingerprint matching is incomplete.
-   * 4. Old entries with no fresh match (e.g. from closed groups) are
-   *    kept with their original Tab refs.
+   * 3. Reconcile entries by globalRefClue. Unique clues pair directly.
+   *    Duplicate clues are paired as ordered groups so same-label terminals
+   *    or split duplicates do not collapse onto a single old entry.
+   * 4. Old entries with no fresh match (e.g. from closed groups) are kept
+   *    with their original Tab refs.
    */
   private _reconcileSnapshotRefs(freshByRef: Map<Tab, TabEntrySnapshot>): void {
     const session = this._session;
-    const createLookupKey = (viewColumn: number, globalRefClue: string) =>
-      `${viewColumn}\0${globalRefClue}`;
 
     // Quick check: are any snapshot Tab refs missing from freshByRef?
     let staleCount = 0;
@@ -510,117 +505,23 @@ export class TabChangeResolver {
 
     this._log.info(`reconciling ${staleCount} stale Tab ref(s)`);
 
-    // ── Build group fingerprints from captured entry metadata ───────
-    const newFP =
-      session.computationCache.groupFingerprintCluesByViewColumn(freshByRef);
-
-    const oldVCsByFingerprint = new Map(
-      [
-        ...session.computationCache.viewColumnsByGroupFingerprintClue(
-          session.snapshot
-        )
-      ].map(([fingerprint, viewColumns]) => [fingerprint, [...viewColumns]])
-    );
-
-    // Map: newVC → oldVC  (which old group ended up at this new VC?)
-    const newVCtoOldVC = new Map<number, number>();
-    for (const [newVC, fp] of newFP) {
-      const oldVCs = oldVCsByFingerprint.get(fp);
-      const oldVC = oldVCs?.shift();
-
-      if (oldVC !== undefined) {
-        newVCtoOldVC.set(newVC, oldVC);
-      }
-    }
+    const { newVCtoOldVC, reconciled, oldTabToFreshTab } =
+      this._reconcileEntriesByGlobalRef(session.snapshot, freshByRef, true);
 
     this._log.info(
       `VC mapping: ${[...newVCtoOldVC].map(([n, o]) => `new${n}←old${o}`).join(', ')}`
     );
 
-    // ── Lookup: "oldVC\0globalRefClue" → old entry ─────────────────
-    const oldLookup = session.computationCache.entriesByViewColumnAndGlobalRef(
-      session.snapshot
-    );
-
-    // ── Reconcile: fresh Tab refs with old position data ────────────
-    const reconciled = new Map<Tab, TabEntrySnapshot>();
-    const matchedOldKeys = new Set<string>();
-    const oldTabToFreshTab = new Map<Tab, Tab>();
-
-    for (const [freshTab, freshEntry] of freshByRef) {
-      const expectedOldVC = newVCtoOldVC.get(freshEntry.viewColumn);
-
-      // Prefer entry in the fingerprint-mapped old VC, fall back to same VC
-      const candidates =
-        expectedOldVC !== undefined
-          ? [
-              createLookupKey(expectedOldVC, freshEntry.globalRefClue),
-              createLookupKey(freshEntry.viewColumn, freshEntry.globalRefClue)
-            ]
-          : [createLookupKey(freshEntry.viewColumn, freshEntry.globalRefClue)];
-
-      let matched = false;
-      for (const key of candidates) {
-        if (!matchedOldKeys.has(key) && oldLookup.has(key)) {
-          matchedOldKeys.add(key);
-          const oldEntry = oldLookup.get(key)!;
-          oldTabToFreshTab.set(oldEntry.tab, freshTab);
-          reconciled.set(freshTab, { ...oldEntry, tab: freshTab });
-          matched = true;
-          break;
-        }
-      }
-      // Unmatched fresh entries are genuinely new — handled by stages.
-      if (!matched) {
-        this._log.info(
-          `  no old match for "${freshTab.label}" @ vc${freshEntry.viewColumn}`
-        );
-      }
-    }
-
-    // Keep old entries with no fresh match (e.g. tabs from closed groups)
-    for (const [oldTab, oldEntry] of session.snapshot) {
-      const key = createLookupKey(oldEntry.viewColumn, oldEntry.globalRefClue);
-      if (!matchedOldKeys.has(key)) {
-        reconciled.set(oldTab, oldEntry);
-      }
-    }
-
     session.snapshot = reconciled;
 
-    // Reconcile batch-start snapshot with the same Tab-ref mapping.
-    // Use a pre-built lookup instead of scanning the full batch per entry (O(n) vs O(n²)).
+    // Reconcile batch-start snapshot with the same duplicate-aware mapping so
+    // lifecycle donors stay aligned when identical global clues repeat.
     if (session.batchStartSnapshot) {
-      const batchLookup =
-        session.computationCache.entriesByViewColumnAndGlobalRef(
-          session.batchStartSnapshot
-        );
+      const { reconciled: reconciledBatch } = this._reconcileEntriesByGlobalRef(
+        session.batchStartSnapshot,
+        reconciled
+      );
 
-      const reconciledBatch = new Map<Tab, TabEntrySnapshot>();
-      const matchedBatchKeys = new Set<string>();
-
-      for (const [freshTab, reconciledEntry] of reconciled) {
-        const key = createLookupKey(
-          reconciledEntry.viewColumn,
-          reconciledEntry.globalRefClue
-        );
-        const batchEntry = batchLookup.get(key);
-        if (batchEntry) {
-          reconciledBatch.set(freshTab, { ...batchEntry, tab: freshTab });
-          matchedBatchKeys.add(key);
-        }
-      }
-
-      // Keep unmatched batch entries (closed tabs)
-      for (const [oldTab, batchEntry] of session.batchStartSnapshot) {
-        const key = createLookupKey(
-          batchEntry.viewColumn,
-          batchEntry.globalRefClue
-        );
-        if (!matchedBatchKeys.has(key)) {
-          reconciledBatch.set(oldTab, batchEntry);
-        }
-      }
       session.batchStartSnapshot = reconciledBatch;
     }
 
@@ -676,6 +577,154 @@ export class TabChangeResolver {
 
       session.preMatchedMoveChains = reconciledChains;
     }
+  }
+
+  private _reconcileEntriesByGlobalRef(
+    previousByRef: Map<Tab, TabEntrySnapshot>,
+    nextByRef: Map<Tab, TabEntrySnapshot>,
+    logUnmatchedFresh = false
+  ): {
+    newVCtoOldVC: Map<number, number>;
+    reconciled: Map<Tab, TabEntrySnapshot>;
+    oldTabToFreshTab: Map<Tab, Tab>;
+  } {
+    const { newVCtoOldVC, oldVCtoNewVC } =
+      this._buildViewColumnFingerprintMapping(previousByRef, nextByRef);
+    const previousByGlobalRef = this._groupEntriesByGlobalRef(previousByRef);
+    const nextByGlobalRef = this._groupEntriesByGlobalRef(nextByRef);
+    const reconciled = new Map<Tab, TabEntrySnapshot>();
+    const oldTabToFreshTab = new Map<Tab, Tab>();
+    const matchedPreviousTabs = new Set<Tab>();
+    const matchedNextTabs = new Set<Tab>();
+
+    for (const [globalRefClue, nextEntries] of nextByGlobalRef) {
+      const previousEntries = previousByGlobalRef.get(globalRefClue);
+
+      if (!previousEntries || previousEntries.length === 0) {
+        continue;
+      }
+
+      const sortedPreviousEntries = [...previousEntries].sort((left, right) =>
+        this._compareEntriesByReconciledAddress(oldVCtoNewVC, left, right)
+      );
+      const sortedNextEntries = [...nextEntries].sort(
+        TabChangeResolver._compareEntriesByAddress
+      );
+      const pairCount = Math.min(
+        sortedPreviousEntries.length,
+        sortedNextEntries.length
+      );
+
+      for (let index = 0; index < pairCount; index++) {
+        const previousEntry = sortedPreviousEntries[index];
+        const nextEntry = sortedNextEntries[index];
+
+        matchedPreviousTabs.add(previousEntry.tab);
+        matchedNextTabs.add(nextEntry.tab);
+        oldTabToFreshTab.set(previousEntry.tab, nextEntry.tab);
+        reconciled.set(nextEntry.tab, { ...previousEntry, tab: nextEntry.tab });
+      }
+    }
+
+    if (logUnmatchedFresh) {
+      for (const [freshTab, freshEntry] of nextByRef) {
+        if (!matchedNextTabs.has(freshTab)) {
+          this._log.info(
+            `  no old match for "${freshTab.label}" @ vc${freshEntry.viewColumn}`
+          );
+        }
+      }
+    }
+
+    for (const [previousTab, previousEntry] of previousByRef) {
+      if (!matchedPreviousTabs.has(previousTab)) {
+        reconciled.set(previousTab, previousEntry);
+      }
+    }
+
+    return {
+      newVCtoOldVC,
+      reconciled,
+      oldTabToFreshTab
+    };
+  }
+
+  private _buildViewColumnFingerprintMapping(
+    previousByRef: Map<Tab, TabEntrySnapshot>,
+    nextByRef: Map<Tab, TabEntrySnapshot>
+  ): {
+    newVCtoOldVC: Map<number, number>;
+    oldVCtoNewVC: Map<number, number>;
+  } {
+    const nextFingerprints =
+      this._session.computationCache.groupFingerprintCluesByViewColumn(nextByRef);
+
+    const oldVCsByFingerprint = new Map(
+      [
+        ...this._session.computationCache.viewColumnsByGroupFingerprintClue(
+          previousByRef
+        )
+      ].map(([fingerprint, viewColumns]) => [fingerprint, [...viewColumns]])
+    );
+    const newVCtoOldVC = new Map<number, number>();
+    const oldVCtoNewVC = new Map<number, number>();
+
+    for (const [newVC, fingerprint] of nextFingerprints) {
+      const oldVCs = oldVCsByFingerprint.get(fingerprint);
+      const oldVC = oldVCs?.shift();
+
+      if (oldVC !== undefined) {
+        newVCtoOldVC.set(newVC, oldVC);
+        oldVCtoNewVC.set(oldVC, newVC);
+      }
+    }
+
+    return {
+      newVCtoOldVC,
+      oldVCtoNewVC
+    };
+  }
+
+  private _groupEntriesByGlobalRef(
+    byRef: Map<Tab, TabEntrySnapshot>
+  ): Map<string, TabEntrySnapshot[]> {
+    const grouped = new Map<string, TabEntrySnapshot[]>();
+
+    for (const [, entry] of byRef) {
+      const entries = grouped.get(entry.globalRefClue) ?? [];
+
+      entries.push(entry);
+      grouped.set(entry.globalRefClue, entries);
+    }
+
+    return grouped;
+  }
+
+  private _compareEntriesByReconciledAddress(
+    oldVCtoNewVC: Map<number, number>,
+    left: TabEntrySnapshot,
+    right: TabEntrySnapshot
+  ): number {
+    const leftViewColumn = oldVCtoNewVC.get(left.viewColumn) ?? left.viewColumn;
+    const rightViewColumn =
+      oldVCtoNewVC.get(right.viewColumn) ?? right.viewColumn;
+
+    return (
+      leftViewColumn - rightViewColumn ||
+      left.index - right.index ||
+      left.exactKeyClue.localeCompare(right.exactKeyClue)
+    );
+  }
+
+  private static _compareEntriesByAddress(
+    left: TabEntrySnapshot,
+    right: TabEntrySnapshot
+  ): number {
+    return (
+      left.viewColumn - right.viewColumn ||
+      left.index - right.index ||
+      left.exactKeyClue.localeCompare(right.exactKeyClue)
+    );
   }
 
   private _buildResolvedTabDeltas(

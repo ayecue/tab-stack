@@ -11,6 +11,7 @@ import {
   window
 } from 'vscode';
 
+import { getLogger, ScopedLogger } from '../services/logger';
 import type { TabActiveStateStore } from '../stores/tab-active-state';
 import type { AssociatedInstanceRegistry } from '../types/tab-active-state';
 import {
@@ -27,17 +28,28 @@ import { isTrackedTabInfoEqual } from '../utils/tracked-tab-equality';
 
 export class TabInstanceBindingService implements AssociatedInstanceRegistry {
   readonly associatedInstances = new Map<AssociatedTabInstance, TabInfoId>();
+  private readonly _log: ScopedLogger;
 
   constructor(
     private readonly _tabActiveStateStore: TabActiveStateStore,
     private readonly _associatedTabs: Map<string, TabInfoId>
-  ) {}
+  ) {
+    this._log = getLogger().child('TabInstanceBinding');
+  }
 
   registerAssociatedInstance(
     instance: AssociatedTabInstance,
     tabId: TabInfoId
   ): void {
+    const previousTabId = this.associatedInstances.get(instance);
+
     this.associatedInstances.set(instance, tabId);
+
+    if (previousTabId != null && previousTabId !== tabId) {
+      this._log.debug(
+        `rewired registered instance ${this._describeAssociatedInstance(instance)} ${this._describeTrackedTab(previousTabId)} -> ${this._describeTrackedTab(tabId)}`
+      );
+    }
   }
 
   pruneAssociatedInstances(liveTabIds: Set<TabInfoId>): void {
@@ -198,10 +210,22 @@ export class TabInstanceBindingService implements AssociatedInstanceRegistry {
 
     const nextTabId = findNextTabId();
     if (nextTabId == null) {
+      if (currentTabId != null) {
+        this._log.debug(
+          `released associated instance ${this._describeAssociatedInstance(instance)} from ${this._describeTrackedTab(currentTabId)} because no matching tracked tab was found`
+        );
+      }
       return null;
     }
 
     this.associatedInstances.set(instance, nextTabId);
+
+    if (currentTabId != null && currentTabId !== nextTabId) {
+      this._log.debug(
+        `rewired associated instance ${this._describeAssociatedInstance(instance)} ${this._describeTrackedTab(currentTabId)} -> ${this._describeTrackedTab(nextTabId)}`
+      );
+    }
+
     return nextTabId;
   }
 
@@ -493,5 +517,27 @@ export class TabInstanceBindingService implements AssociatedInstanceRegistry {
     }
 
     return this._tabActiveStateStore.getSnapshot().context.tabs[tabId] ?? null;
+  }
+
+  private _describeTrackedTab(tabId: TabInfoId): string {
+    const tabInfo = this._getTrackedTabInfo(tabId);
+
+    if (tabInfo == null) {
+      return `trackedTab=${tabId}`;
+    }
+
+    return `trackedTab=${tabId} label="${tabInfo.label}" kind=${tabInfo.kind} meta=${tabInfo.meta.type} vc=${tabInfo.viewColumn ?? 'na'} idx=${tabInfo.index ?? 'na'}`;
+  }
+
+  private _describeAssociatedInstance(instance: AssociatedTabInstance): string {
+    if ('document' in instance) {
+      return `textEditor:${instance.document.uri.toString()}`;
+    }
+
+    if ('notebook' in instance) {
+      return `notebookEditor:${instance.notebook.uri.toString()}`;
+    }
+
+    return `terminal:${instance.name}`;
   }
 }

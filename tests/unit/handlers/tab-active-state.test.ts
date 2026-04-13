@@ -975,6 +975,119 @@ describe('TabActiveStateHandler', () => {
       });
     });
 
+    it('keeps terminal metadata on the correct tracked tab when duplicate terminal labels merge into one group', () => {
+      const oldFileA = createVSCodeTab({ filePath: '/workspace/a.ts' });
+      const oldFileB = createVSCodeTab({ filePath: '/workspace/b.ts' });
+      const oldVc1Terminal = createVSCodeTab({
+        kind: 'terminal',
+        label: 'zsh'
+      });
+      const oldVc2Terminal = createVSCodeTab({
+        kind: 'terminal',
+        label: 'zsh',
+        isActive: true
+      });
+      const oldGroup1 = createVSCodeTabGroup({
+        viewColumn: 1,
+        tabs: [oldFileA, oldFileB, oldVc1Terminal],
+        isActive: true,
+        activeTab: oldFileA
+      });
+      const oldGroup2 = createVSCodeTabGroup({
+        viewColumn: 2,
+        tabs: [oldVc2Terminal],
+        activeTab: oldVc2Terminal
+      });
+      setWindowTabGroups([oldGroup1, oldGroup2], oldGroup1);
+
+      handler.rehydrateTabs();
+
+      const oldVc1Entry = TabObserverService.snapshotTab(oldVc1Terminal, 1, 2);
+      const oldVc2Entry = TabObserverService.snapshotTab(oldVc2Terminal, 2, 0);
+      const oldVc1TabId = getAssociatedTabs().get(oldVc1Entry.exactKeyClue)!;
+      const oldVc2TabId = getAssociatedTabs().get(oldVc2Entry.exactKeyClue)!;
+
+      (handler as any)._tabActiveStateStore.send({
+        type: 'UPDATE_TAB',
+        payload: {
+          ...getTrackedTabs()[oldVc1TabId],
+          meta: {
+            type: 'terminal',
+            terminalName: 'zsh',
+            cwd: 'file:///workspace/vc1'
+          }
+        }
+      });
+      (handler as any)._tabActiveStateStore.send({
+        type: 'UPDATE_TAB',
+        payload: {
+          ...getTrackedTabs()[oldVc2TabId],
+          meta: {
+            type: 'terminal',
+            terminalName: 'zsh',
+            cwd: 'file:///workspace/vc2'
+          }
+        }
+      });
+
+      const beforeSnapshot = TabObserverService.capture();
+      const resolver = new TabChangeResolver();
+      resolver.seedSnapshot(beforeSnapshot);
+
+      const newFileA = createVSCodeTab({ filePath: '/workspace/a.ts' });
+      const newFileB = createVSCodeTab({ filePath: '/workspace/b.ts' });
+      const newVc1Terminal = createVSCodeTab({
+        kind: 'terminal',
+        label: 'zsh'
+      });
+      const movedTerminal = createVSCodeTab({
+        kind: 'terminal',
+        label: 'zsh',
+        isActive: true
+      });
+      const newGroup1 = createVSCodeTabGroup({
+        viewColumn: 1,
+        tabs: [newFileA, newFileB, newVc1Terminal, movedTerminal],
+        isActive: true,
+        activeTab: movedTerminal
+      });
+      setWindowTabGroups([newGroup1], newGroup1);
+
+      const afterSnapshot = TabObserverService.capture();
+      resolver.processGroupChanges(
+        {
+          opened: [],
+          closed: [oldGroup2],
+          changed: [newGroup1]
+        },
+        afterSnapshot
+      );
+
+      const resolved = resolver.resolve();
+      handler.syncTabs({
+        ...resolved,
+        beforeSnapshot,
+        afterSnapshot
+      });
+
+      const newVc1Entry = TabObserverService.snapshotTab(newVc1Terminal, 1, 2);
+      const movedEntry = TabObserverService.snapshotTab(movedTerminal, 1, 3);
+      const trackedTabs = getTrackedTabs();
+
+      expect(getAssociatedTabs().get(newVc1Entry.exactKeyClue)).toBe(oldVc1TabId);
+      expect(getAssociatedTabs().get(movedEntry.exactKeyClue)).toBe(oldVc2TabId);
+      expect(trackedTabs[oldVc1TabId].meta).toEqual({
+        type: 'terminal',
+        terminalName: 'zsh',
+        cwd: 'file:///workspace/vc1'
+      });
+      expect(trackedTabs[oldVc2TabId].meta).toEqual({
+        type: 'terminal',
+        terminalName: 'zsh',
+        cwd: 'file:///workspace/vc2'
+      });
+    });
+
     it('keeps all tracked tabs when groups rotate with duplicate files across columns', () => {
       const oldSmart1 = createVSCodeTab({
         filePath: '/workspace/smartappliance.src'

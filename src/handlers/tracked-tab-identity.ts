@@ -1,5 +1,6 @@
 import { window } from 'vscode';
 
+import { getLogger, ScopedLogger } from '../services/logger';
 import { TabObserverService } from '../services/tab-observer';
 import type { TabActiveStateStore } from '../stores/tab-active-state';
 import { transformTabToTabInfo } from '../transformers/tab';
@@ -13,11 +14,13 @@ import {
   TabRewireDelta,
   WindowSnapshot
 } from '../types/tab-change-proxy';
-import { TabInfo, TabInfoId } from '../types/tabs';
-import { createTabKey } from '../utils/tab-utils';
+import { TabInfo, TabInfoId, TabKind } from '../types/tabs';
+import { createTabKey, parseTabKey } from '../utils/tab-utils';
 import { isTrackedTabInfoEqual } from '../utils/tracked-tab-equality';
 
 export class TrackedTabIdentityHandler {
+  private readonly _log: ScopedLogger;
+
   constructor(
     private readonly _tabActiveStateStore: TabActiveStateStore,
     private readonly _recoveryResolver: TabRecoverabilityResolver,
@@ -25,7 +28,9 @@ export class TrackedTabIdentityHandler {
       AssociatedInstanceRegistry,
       'pruneAssociatedInstances'
     >
-  ) {}
+  ) {
+    this._log = getLogger().child('TrackedTabIdentity');
+  }
 
   syncTabs(
     event: ResolvedTabChangeEvent,
@@ -92,6 +97,12 @@ export class TrackedTabIdentityHandler {
       return associatedTabs;
     }
 
+    this._logAssociatedTabRekeys(
+      'rehydrate',
+      associatedTabs,
+      nextAssociatedTabs,
+      nextTabs
+    );
     this._associatedInstanceRegistry.pruneAssociatedInstances(liveTabIds);
     this._tabActiveStateStore.send({ type: 'SET_TABS', tabs: nextTabs });
 
@@ -244,11 +255,22 @@ export class TrackedTabIdentityHandler {
     entry: TabEntrySnapshot,
     tabsInState: Record<TabInfoId, TabInfo>,
     previousAssociatedTabs: Map<string, TabInfoId>,
+    duplicateTerminalTabIdsByEndKey: Map<string, TabInfoId>,
     carriedTabIdsByEndKey: Map<string, TabInfoId>,
     nonCarryEndKeys: Set<string>,
     claimedTabIds: Set<TabInfoId>
   ): TabInfoId | null {
     const exactKey = entry.exactKeyClue;
+    const duplicateTerminalTabId = duplicateTerminalTabIdsByEndKey.get(exactKey);
+
+    if (
+      duplicateTerminalTabId != null &&
+      tabsInState[duplicateTerminalTabId] != null &&
+      !claimedTabIds.has(duplicateTerminalTabId)
+    ) {
+      return duplicateTerminalTabId;
+    }
+
     const carriedTabId = carriedTabIdsByEndKey.get(exactKey);
 
     if (
@@ -297,6 +319,12 @@ export class TrackedTabIdentityHandler {
       return currentAssociatedTabs;
     }
 
+    this._logAssociatedTabRekeys(
+      source,
+      currentAssociatedTabs,
+      nextAssociatedTabs,
+      nextTabs
+    );
     this._associatedInstanceRegistry.pruneAssociatedInstances(liveTabIds);
     this._tabActiveStateStore.send({ type: 'SET_TABS', tabs: nextTabs });
 
@@ -355,17 +383,30 @@ export class TrackedTabIdentityHandler {
     const previousAssociatedTabs = new Map(associatedTabs);
     const nextAssociatedTabs = new Map<string, TabInfoId>();
     const claimedTabIds = new Set<TabInfoId>();
+    const duplicateTerminalTabIdsByEndKey =
+      this._buildDuplicateTerminalRewireLookup(
+        event,
+        previousAssociatedTabs,
+        tabsInState
+      );
     const { carriedTabIdsByEndKey, nonCarryEndKeys } =
       this._buildDeltaRewireLookup(
         event.tabRewireDeltas,
         previousAssociatedTabs
       );
 
+    this._logDeltaRewireDecisions(
+      event.tabRewireDeltas,
+      previousAssociatedTabs,
+      tabsInState
+    );
+
     for (const entry of event.afterSnapshot.tabs.values()) {
       const existingTabId = this._resolveDeltaTrackedTabId(
         entry,
         tabsInState,
         previousAssociatedTabs,
+        duplicateTerminalTabIdsByEndKey,
         carriedTabIdsByEndKey,
         nonCarryEndKeys,
         claimedTabIds
@@ -395,6 +436,200 @@ export class TrackedTabIdentityHandler {
       associatedTabs,
       nextAssociatedTabs,
       event.source
+    );
+  }
+
+  private _buildDuplicateTerminalRewireLookup(
+    event: ResolvedTabChangeEvent,
+    previousAssociatedTabs: Map<string, TabInfoId>,
+    tabsInState: Record<TabInfoId, TabInfo>
+  ): Map<string, TabInfoId> {
+    const beforeEntriesByGlobalRef = new Map<
+      string,
+      Array<{ entry: TabEntrySnapshot; tabId: TabInfoId }>
+    >();
+    const afterEntriesByGlobalRef = new Map<string, TabEntrySnapshot[]>();
+    const lookup = new Map<string, TabInfoId>();
+
+    for (const entry of event.beforeSnapshot.tabs.values()) {
+      if (!this._isTerminalEntry(entry)) {
+        continue;
+      }
+
+      const tabId = previousAssociatedTabs.get(entry.exactKeyClue);
+
+      if (tabId == null || tabsInState[tabId]?.kind !== TabKind.TabInputTerminal) {
+        continue;
+      }
+
+      const group = beforeEntriesByGlobalRef.get(entry.globalRefClue) ?? [];
+
+      group.push({ entry, tabId });
+      beforeEntriesByGlobalRef.set(entry.globalRefClue, group);
+    }
+
+    for (const entry of event.afterSnapshot.tabs.values()) {
+      if (!this._isTerminalEntry(entry)) {
+        continue;
+      }
+
+      const group = afterEntriesByGlobalRef.get(entry.globalRefClue) ?? [];
+
+      group.push(entry);
+      afterEntriesByGlobalRef.set(entry.globalRefClue, group);
+    }
+
+    for (const [globalRefClue, afterEntries] of afterEntriesByGlobalRef) {
+      const beforeEntries = beforeEntriesByGlobalRef.get(globalRefClue);
+
+      if (!beforeEntries) {
+        continue;
+      }
+
+      if (beforeEntries.length < 2 || afterEntries.length < 2) {
+        continue;
+      }
+
+      const sortedBeforeEntries = [...beforeEntries].sort((left, right) =>
+        TrackedTabIdentityHandler._compareEntryAddresses(left.entry, right.entry)
+      );
+      const sortedAfterEntries = [...afterEntries].sort(
+        TrackedTabIdentityHandler._compareEntryAddresses
+      );
+      const pairCount = Math.min(
+        sortedBeforeEntries.length,
+        sortedAfterEntries.length
+      );
+
+      for (let index = 0; index < pairCount; index++) {
+        lookup.set(
+          sortedAfterEntries[index].exactKeyClue,
+          sortedBeforeEntries[index].tabId
+        );
+      }
+    }
+
+    if (lookup.size > 0) {
+      this._log.debug(
+        `duplicate terminal continuity: ${lookup.size} terminal exact key(s) preserved via ordered duplicate matching`
+      );
+    }
+
+    return lookup;
+  }
+
+  private _logDeltaRewireDecisions(
+    tabRewireDeltas: readonly TabRewireDelta[],
+    previousAssociatedTabs: Map<string, TabInfoId>,
+    tabsInState: Record<TabInfoId, TabInfo>
+  ): void {
+    const interestingDeltas = tabRewireDeltas.filter(
+      (delta) =>
+        delta.stateTransfer.transferMetadata ||
+        delta.stateTransfer.transferInstanceBindings ||
+        delta.stateTransfer.releaseDetachedBindings
+    );
+
+    if (interestingDeltas.length === 0) {
+      return;
+    }
+
+    this._log.debug(
+      `delta rewire decisions: ${interestingDeltas.length} delta(s) touched metadata and/or instance bindings`
+    );
+
+    for (const delta of interestingDeltas) {
+      const entryKey = delta.entryExactKeyClue ?? delta.before?.exactKeyClue;
+      const endKey = delta.endExactKeyClue ?? delta.after?.exactKeyClue;
+      const trackedTabId =
+        (entryKey != null ? previousAssociatedTabs.get(entryKey) : null) ??
+        (endKey != null ? previousAssociatedTabs.get(endKey) : null) ??
+        null;
+      const trackedTabInfo =
+        trackedTabId != null ? tabsInState[trackedTabId] ?? null : null;
+
+      this._log.debug(
+        `  ${delta.kind}/${delta.stateTransfer.disposition}: ${this._describeTrackedTab(
+          trackedTabId,
+          trackedTabInfo
+        )} key ${entryKey ?? '<none>'} -> ${endKey ?? '<none>'} metadata=${delta.stateTransfer.transferMetadata} instances=${delta.stateTransfer.transferInstanceBindings} release=${delta.stateTransfer.releaseDetachedBindings} reason=${delta.stateTransfer.reason}`
+      );
+    }
+  }
+
+  private _logAssociatedTabRekeys(
+    source: ResolvedTabChangeEvent['source'] | 'rehydrate',
+    currentAssociatedTabs: Map<string, TabInfoId>,
+    nextAssociatedTabs: Map<string, TabInfoId>,
+    nextTabs: Record<TabInfoId, TabInfo>
+  ): void {
+    const previousKeysByTabId = new Map<TabInfoId, string>();
+
+    for (const [tabKey, tabId] of currentAssociatedTabs) {
+      if (!previousKeysByTabId.has(tabId)) {
+        previousKeysByTabId.set(tabId, tabKey);
+      }
+    }
+
+    const rewiredTabIds: Array<{
+      tabId: TabInfoId;
+      previousKey: string;
+      nextKey: string;
+    }> = [];
+
+    for (const [nextKey, tabId] of nextAssociatedTabs) {
+      const previousKey = previousKeysByTabId.get(tabId);
+
+      if (previousKey != null && previousKey !== nextKey) {
+        rewiredTabIds.push({ tabId, previousKey, nextKey });
+      }
+    }
+
+    if (rewiredTabIds.length === 0) {
+      return;
+    }
+
+    this._log.debug(
+      `${source} associated-tab rewires: ${rewiredTabIds.length} tracked tab(s) kept metadata under a new exact key`
+    );
+
+    for (const { tabId, previousKey, nextKey } of rewiredTabIds) {
+      this._log.debug(
+        `  ${this._describeTrackedTab(
+          tabId,
+          nextTabs[tabId] ?? null
+        )} key ${previousKey} -> ${nextKey}`
+      );
+    }
+  }
+
+  private _describeTrackedTab(
+    tabId: TabInfoId | null,
+    tabInfo: TabInfo | null
+  ): string {
+    if (tabId == null) {
+      return 'trackedTab=<none>';
+    }
+
+    if (tabInfo == null) {
+      return `trackedTab=${tabId}`;
+    }
+
+    return `trackedTab=${tabId} label="${tabInfo.label}" kind=${tabInfo.kind} meta=${tabInfo.meta.type} vc=${tabInfo.viewColumn ?? 'na'} idx=${tabInfo.index ?? 'na'}`;
+  }
+
+  private _isTerminalEntry(entry: TabEntrySnapshot): boolean {
+    return parseTabKey(entry.exactKeyClue).kind === TabKind.TabInputTerminal;
+  }
+
+  private static _compareEntryAddresses(
+    left: TabEntrySnapshot,
+    right: TabEntrySnapshot
+  ): number {
+    return (
+      left.viewColumn - right.viewColumn ||
+      left.index - right.index ||
+      left.exactKeyClue.localeCompare(right.exactKeyClue)
     );
   }
 }
