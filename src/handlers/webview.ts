@@ -10,18 +10,24 @@ import {
 } from 'vscode';
 
 import {
+  ExtensionCollectionsSyncMessage,
+  ExtensionConfigSyncMessage,
   ExtensionMessageType,
   ExtensionNotificationMessage,
-  ExtensionTabStateSyncMessage,
-  ExtensionCollectionsSyncMessage,
-  ExtensionConfigSyncMessage
+  ExtensionTabStateSyncMessage
 } from '../types/messages';
 
 export class WebviewHandler implements Disposable {
   static readonly DEBOUNCE_DELAY = 10 as const;
 
-  sendTabStateSync: (payload: Omit<ExtensionTabStateSyncMessage, 'type'>) => void;
-  sendCollectionsSync: (payload: Omit<ExtensionCollectionsSyncMessage, 'type'>) => void;
+  sendTabStateSync: (
+    payload: Omit<ExtensionTabStateSyncMessage, 'type'>
+  ) => void;
+
+  sendCollectionsSync: (
+    payload: Omit<ExtensionCollectionsSyncMessage, 'type'>
+  ) => void;
+
   sendConfigSync: (payload: Omit<ExtensionConfigSyncMessage, 'type'>) => void;
 
   private _view: WebviewView;
@@ -104,7 +110,9 @@ export class WebviewHandler implements Disposable {
     } satisfies ExtensionNotificationMessage);
   }
 
-  private _sendTabStateSync(payload: Omit<ExtensionTabStateSyncMessage, 'type'>) {
+  private _sendTabStateSync(
+    payload: Omit<ExtensionTabStateSyncMessage, 'type'>
+  ) {
     if (!this._view) {
       return;
     }
@@ -115,7 +123,9 @@ export class WebviewHandler implements Disposable {
     } satisfies ExtensionTabStateSyncMessage);
   }
 
-  private _sendCollectionsSync(payload: Omit<ExtensionCollectionsSyncMessage, 'type'>) {
+  private _sendCollectionsSync(
+    payload: Omit<ExtensionCollectionsSyncMessage, 'type'>
+  ) {
     if (!this._view) {
       return;
     }

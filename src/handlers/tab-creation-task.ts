@@ -1,20 +1,52 @@
-import { Tab, TabInputText, Uri, window, commands, TabInputTextDiff, TabInputCustom, TabInputNotebook, TabInputNotebookDiff, TabInputWebview, TabInputTerminal, TerminalLocation } from "vscode";
-import { AssociatedTabInstance, TabInfoBase, TabInfoCustom, TabInfoMetaNotebookEditor, TabInfoMetaTerminal, TabInfoMetaTextEditor, TabInfoNotebook, TabInfoNotebookDiff, TabInfoTerminal, TabInfoText, TabInfoTextDiff, TabKind } from "../types/tabs";
-import { focusGroup } from "../utils/commands";
-import { getLogger, ScopedLogger } from "../services/logger";
-import { delayNextTick } from "../utils/delay";
+import {
+  commands,
+  Tab,
+  TabInputCustom,
+  TabInputNotebook,
+  TabInputNotebookDiff,
+  TabInputTerminal,
+  TabInputText,
+  TabInputTextDiff,
+  TabInputWebview,
+  TerminalLocation,
+  Uri,
+  window
+} from 'vscode';
+
+import { getLogger, ScopedLogger } from '../services/logger';
+import {
+  AssociatedTabInstance,
+  TabInfoBase,
+  TabInfoCustom,
+  TabInfoMetaNotebookEditor,
+  TabInfoMetaTerminal,
+  TabInfoMetaTextEditor,
+  TabInfoNotebook,
+  TabInfoNotebookDiff,
+  TabInfoTerminal,
+  TabInfoText,
+  TabInfoTextDiff,
+  TabKind
+} from '../types/tabs';
+import { focusGroup } from '../utils/commands';
+import { delayNextTick } from '../utils/delay';
 
 export abstract class TabCreationTask {
   abstract getDescription(): string;
   abstract findRelatedTab(openedTabs: readonly Tab[]): Tab | null;
-  abstract addEditorListener(callback: (handle: AssociatedTabInstance) => void): { dispose: () => void };
+  abstract addEditorListener(
+    callback: (handle: AssociatedTabInstance) => void
+  ): { dispose: () => void };
+
   abstract executeCommand(): Promise<void>;
   findExistingTab(allTabs: readonly Tab[]): Tab | null {
     return null;
   }
+
   getMaxRuntime(): number {
     return 1000; // Default max runtime of 1 second, should be always greater than next tick delay
   }
+
   getNextTickDelay(): number {
     return 0;
   }
@@ -29,20 +61,26 @@ export class TabCreationTaskTabInputText extends TabCreationTask {
   }
 
   findExistingTab(allTabs: readonly Tab[]): Tab | null {
-    return allTabs.find(it =>
-      it.input instanceof TabInputText &&
-      it.input.uri.toString() === this._tabInfo.uri &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      allTabs.find(
+        (it) =>
+          it.input instanceof TabInputText &&
+          it.input.uri.toString() === this._tabInfo.uri &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
-    return tabs.find(it =>
-      it.label === this._tabInfo.label &&
-      it.input instanceof TabInputText &&
-      it.input.uri.toString() === this._tabInfo.uri &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      tabs.find(
+        (it) =>
+          it.label === this._tabInfo.label &&
+          it.input instanceof TabInputText &&
+          it.input.uri.toString() === this._tabInfo.uri &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   addEditorListener(callback: (handle: AssociatedTabInstance) => void) {
@@ -77,25 +115,33 @@ export class TabCreationTaskTabInputTextDiff extends TabCreationTask {
   }
 
   findExistingTab(allTabs: readonly Tab[]): Tab | null {
-    return allTabs.find(it =>
-      it.input instanceof TabInputTextDiff &&
-      it.input.original.toString() === this._tabInfo.originalUri &&
-      it.input.modified.toString() === this._tabInfo.modifiedUri &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      allTabs.find(
+        (it) =>
+          it.input instanceof TabInputTextDiff &&
+          it.input.original.toString() === this._tabInfo.originalUri &&
+          it.input.modified.toString() === this._tabInfo.modifiedUri &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
-    return tabs.find(it =>
-      it.label === this._tabInfo.label &&
-      it.input instanceof TabInputTextDiff &&
-      it.input.original.toString() === this._tabInfo.originalUri &&
-      it.input.modified.toString() === this._tabInfo.modifiedUri &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      tabs.find(
+        (it) =>
+          it.label === this._tabInfo.label &&
+          it.input instanceof TabInputTextDiff &&
+          it.input.original.toString() === this._tabInfo.originalUri &&
+          it.input.modified.toString() === this._tabInfo.modifiedUri &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
-  addEditorListener(callback: (handle: AssociatedTabInstance) => void): { dispose: () => void; } {
+  addEditorListener(callback: (handle: AssociatedTabInstance) => void): {
+    dispose: () => void;
+  } {
     return window.onDidChangeActiveTextEditor((handle) => {
       if (handle == null) return;
       if (handle.document.uri.toString() !== this._tabInfo.modifiedUri) return;
@@ -105,12 +151,18 @@ export class TabCreationTaskTabInputTextDiff extends TabCreationTask {
   }
 
   async executeCommand() {
-    await commands.executeCommand('vscode.diff', Uri.parse(this._tabInfo.originalUri), Uri.parse(this._tabInfo.modifiedUri), this._tabInfo.label, {
-      viewColumn: this._tabInfo.viewColumn,
-      preview: false,
-      preserveFocus: false,
-      selection: (this._tabInfo.meta as TabInfoMetaTextEditor).selection
-    });
+    await commands.executeCommand(
+      'vscode.diff',
+      Uri.parse(this._tabInfo.originalUri),
+      Uri.parse(this._tabInfo.modifiedUri),
+      this._tabInfo.label,
+      {
+        viewColumn: this._tabInfo.viewColumn,
+        preview: false,
+        preserveFocus: false,
+        selection: (this._tabInfo.meta as TabInfoMetaTextEditor).selection
+      }
+    );
   }
 
   getDescription() {
@@ -127,26 +179,36 @@ export class TabCreationTaskTabInputCustom extends TabCreationTask {
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
-    return tabs.find(it =>
-      it.label === this._tabInfo.label &&
-      it.input instanceof TabInputCustom &&
-      it.input.uri.toString() === this._tabInfo.uri &&
-      it.input.viewType === this._tabInfo.viewType &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      tabs.find(
+        (it) =>
+          it.label === this._tabInfo.label &&
+          it.input instanceof TabInputCustom &&
+          it.input.uri.toString() === this._tabInfo.uri &&
+          it.input.viewType === this._tabInfo.viewType &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
-  addEditorListener(_callback: (handle: AssociatedTabInstance) => void): { dispose: () => void; } {
+  addEditorListener(_callback: (handle: AssociatedTabInstance) => void): {
+    dispose: () => void;
+  } {
     // Custom editors don't have a specific event we can listen to, so we return a no-op disposable.
-    return { dispose: () => { } };
+    return { dispose: () => {} };
   }
 
   async executeCommand() {
-    await commands.executeCommand('vscode.openWith', Uri.parse(this._tabInfo.uri), this._tabInfo.viewType, {
-      viewColumn: this._tabInfo.viewColumn,
-      preview: false,
-      preserveFocus: false,
-    });
+    await commands.executeCommand(
+      'vscode.openWith',
+      Uri.parse(this._tabInfo.uri),
+      this._tabInfo.viewType,
+      {
+        viewColumn: this._tabInfo.viewColumn,
+        preview: false,
+        preserveFocus: false
+      }
+    );
   }
 
   getDescription() {
@@ -163,24 +225,32 @@ export class TabCreationTaskTabInputNotebook extends TabCreationTask {
   }
 
   findExistingTab(allTabs: readonly Tab[]): Tab | null {
-    return allTabs.find(it =>
-      it.input instanceof TabInputNotebook &&
-      it.input.uri.toString() === this._tabInfo.uri &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      allTabs.find(
+        (it) =>
+          it.input instanceof TabInputNotebook &&
+          it.input.uri.toString() === this._tabInfo.uri &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
-    return tabs.find(it =>
-      it.label === this._tabInfo.label &&
-      it.input instanceof TabInputNotebook &&
-      it.input.uri.toString() === this._tabInfo.uri &&
-      it.input.notebookType === this._tabInfo.notebookType &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      tabs.find(
+        (it) =>
+          it.label === this._tabInfo.label &&
+          it.input instanceof TabInputNotebook &&
+          it.input.uri.toString() === this._tabInfo.uri &&
+          it.input.notebookType === this._tabInfo.notebookType &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
-  addEditorListener(callback: (handle: AssociatedTabInstance) => void): { dispose: () => void; } {
+  addEditorListener(callback: (handle: AssociatedTabInstance) => void): {
+    dispose: () => void;
+  } {
     return window.onDidChangeActiveNotebookEditor((handle) => {
       if (handle == null) return;
       if (handle.notebook.uri.toString() !== this._tabInfo.uri) return;
@@ -190,12 +260,17 @@ export class TabCreationTaskTabInputNotebook extends TabCreationTask {
   }
 
   async executeCommand() {
-    await commands.executeCommand('vscode.openWith', Uri.parse(this._tabInfo.uri), this._tabInfo.notebookType, {
-      viewColumn: this._tabInfo.viewColumn,
-      preview: false,
-      preserveFocus: false,
-      selection: (this._tabInfo.meta as TabInfoMetaNotebookEditor).selection
-    });
+    await commands.executeCommand(
+      'vscode.openWith',
+      Uri.parse(this._tabInfo.uri),
+      this._tabInfo.notebookType,
+      {
+        viewColumn: this._tabInfo.viewColumn,
+        preview: false,
+        preserveFocus: false,
+        selection: (this._tabInfo.meta as TabInfoMetaNotebookEditor).selection
+      }
+    );
   }
 
   getDescription() {
@@ -212,26 +287,34 @@ export class TabCreationTaskTabInputNotebookDiff extends TabCreationTask {
   }
 
   findExistingTab(allTabs: readonly Tab[]): Tab | null {
-    return allTabs.find(it =>
-      it.input instanceof TabInputNotebookDiff &&
-      it.input.original.toString() === this._tabInfo.originalUri &&
-      it.input.modified.toString() === this._tabInfo.modifiedUri &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      allTabs.find(
+        (it) =>
+          it.input instanceof TabInputNotebookDiff &&
+          it.input.original.toString() === this._tabInfo.originalUri &&
+          it.input.modified.toString() === this._tabInfo.modifiedUri &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
-    return tabs.find(it =>
-      it.label === this._tabInfo.label &&
-      it.input instanceof TabInputNotebookDiff &&
-      it.input.original.toString() === this._tabInfo.originalUri &&
-      it.input.modified.toString() === this._tabInfo.modifiedUri &&
-      it.input.notebookType === this._tabInfo.notebookType &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      tabs.find(
+        (it) =>
+          it.label === this._tabInfo.label &&
+          it.input instanceof TabInputNotebookDiff &&
+          it.input.original.toString() === this._tabInfo.originalUri &&
+          it.input.modified.toString() === this._tabInfo.modifiedUri &&
+          it.input.notebookType === this._tabInfo.notebookType &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
-  addEditorListener(callback: (handle: AssociatedTabInstance) => void): { dispose: () => void; } {
+  addEditorListener(callback: (handle: AssociatedTabInstance) => void): {
+    dispose: () => void;
+  } {
     return window.onDidChangeActiveNotebookEditor((handle) => {
       if (handle == null) return;
       if (handle.notebook.uri.toString() !== this._tabInfo.modifiedUri) return;
@@ -241,12 +324,18 @@ export class TabCreationTaskTabInputNotebookDiff extends TabCreationTask {
   }
 
   async executeCommand() {
-    await commands.executeCommand('vscode.diff', Uri.parse(this._tabInfo.originalUri), Uri.parse(this._tabInfo.modifiedUri), this._tabInfo.label, {
-      viewColumn: this._tabInfo.viewColumn,
-      preview: false,
-      preserveFocus: false,
-      selection: (this._tabInfo.meta as TabInfoMetaNotebookEditor).selection
-    });
+    await commands.executeCommand(
+      'vscode.diff',
+      Uri.parse(this._tabInfo.originalUri),
+      Uri.parse(this._tabInfo.modifiedUri),
+      this._tabInfo.label,
+      {
+        viewColumn: this._tabInfo.viewColumn,
+        preview: false,
+        preserveFocus: false,
+        selection: (this._tabInfo.meta as TabInfoMetaNotebookEditor).selection
+      }
+    );
   }
 
   getDescription() {
@@ -264,10 +353,13 @@ export class TabCreationTaskTabInputTerminal extends TabCreationTask {
 
   findRelatedTab(tabs: readonly Tab[]) {
     const meta = this._tabInfo.meta as TabInfoMetaTerminal;
-    return tabs.find(it =>
-      it.input instanceof TabInputTerminal &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      tabs.find(
+        (it) =>
+          it.input instanceof TabInputTerminal &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   addEditorListener(callback: (handle: AssociatedTabInstance) => void) {
@@ -309,7 +401,13 @@ export class TabCreationTaskCustomCommand extends TabCreationTask {
   private _unique: boolean;
   private _log: ScopedLogger;
 
-  constructor(tabInfo: TabInfoBase, command: string, args: unknown[] = [], nextTickDelay: number = 0, unique: boolean = false) {
+  constructor(
+    tabInfo: TabInfoBase,
+    command: string,
+    args: unknown[] = [],
+    nextTickDelay: number = 0,
+    unique: boolean = false
+  ) {
     super();
     this._tabInfo = tabInfo;
     this._command = command;
@@ -321,10 +419,13 @@ export class TabCreationTaskCustomCommand extends TabCreationTask {
 
   findExistingTab(allTabs: readonly Tab[]): Tab | null {
     if (!this._unique) return null;
-    return allTabs.find(it =>
-      it.label === this._tabInfo.label &&
-      it.group.viewColumn === this._tabInfo.viewColumn
-    ) ?? null;
+    return (
+      allTabs.find(
+        (it) =>
+          it.label === this._tabInfo.label &&
+          it.group.viewColumn === this._tabInfo.viewColumn
+      ) ?? null
+    );
   }
 
   getNextTickDelay(): number {
@@ -336,31 +437,37 @@ export class TabCreationTaskCustomCommand extends TabCreationTask {
   }
 
   findRelatedTab(tabs: readonly Tab[]) {
-    return tabs.find(it =>
-      it.group.viewColumn === this._tabInfo.viewColumn &&
-      (
-        (it.input instanceof TabInputWebview && this._tabInfo.kind === TabKind.TabInputWebview) ||
-        (it.input instanceof TabInputTerminal && this._tabInfo.kind === TabKind.TabInputTerminal) ||
-        ((
-          !(it.input instanceof TabInputText) &&
-          !(it.input instanceof TabInputTextDiff) &&
-          !(it.input instanceof TabInputCustom) &&
-          !(it.input instanceof TabInputNotebook) &&
-          !(it.input instanceof TabInputNotebookDiff) &&
-          !(it.input instanceof TabInputWebview) &&
-          !(it.input instanceof TabInputTerminal)
-        ) && this._tabInfo.kind === TabKind.Unknown)
-      )
-    ) ?? null
+    return (
+      tabs.find(
+        (it) =>
+          it.group.viewColumn === this._tabInfo.viewColumn &&
+          ((it.input instanceof TabInputWebview &&
+            this._tabInfo.kind === TabKind.TabInputWebview) ||
+            (it.input instanceof TabInputTerminal &&
+              this._tabInfo.kind === TabKind.TabInputTerminal) ||
+            (!(it.input instanceof TabInputText) &&
+              !(it.input instanceof TabInputTextDiff) &&
+              !(it.input instanceof TabInputCustom) &&
+              !(it.input instanceof TabInputNotebook) &&
+              !(it.input instanceof TabInputNotebookDiff) &&
+              !(it.input instanceof TabInputWebview) &&
+              !(it.input instanceof TabInputTerminal) &&
+              this._tabInfo.kind === TabKind.Unknown))
+      ) ?? null
+    );
   }
 
-  addEditorListener(_callback: (handle: AssociatedTabInstance) => void): { dispose: () => void; } {
+  addEditorListener(_callback: (handle: AssociatedTabInstance) => void): {
+    dispose: () => void;
+  } {
     // For unknown tab types, we don't have a specific event to listen to, so we return a no-op disposable.
-    return { dispose: () => { } };
+    return { dispose: () => {} };
   }
 
   async executeCommand() {
-    this._log.debug(`executing recovery command: "${this._command}" for tab "${this._tabInfo.label}"`);
+    this._log.debug(
+      `executing recovery command: "${this._command}" for tab "${this._tabInfo.label}"`
+    );
     await focusGroup(this._tabInfo.viewColumn);
     await commands.executeCommand(this._command, ...this._args);
   }

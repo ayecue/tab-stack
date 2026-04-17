@@ -1,0 +1,1401 @@
+{
+  "scenario": "J: close last in group",
+  "events": {
+    "tabEvents": [
+      {
+        "seq": 2,
+        "timestamp": 1776007205205,
+        "opened": [],
+        "closed": [
+          {
+            "tabRefId": "tab-4",
+            "label": "README.md",
+            "kind": "text",
+            "viewColumn": 2,
+            "index": -1,
+            "isActive": false,
+            "isDirty": false,
+            "isPinned": false,
+            "isPreview": false,
+            "uri": "file:///workspace/README.md"
+          }
+        ],
+        "changed": []
+      }
+    ],
+    "groupEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007205203,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ]
+          }
+        ]
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007205205,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-3",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-3"
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": null,
+            "tabCount": 1,
+            "tabLabels": [
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-4"
+            ]
+          }
+        ]
+      },
+      {
+        "seq": 3,
+        "timestamp": 1776007205214,
+        "opened": [],
+        "closed": [
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": null,
+            "tabCount": 0,
+            "tabLabels": [],
+            "tabRefIds": []
+          }
+        ],
+        "changed": [
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-5",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-5"
+            ]
+          }
+        ]
+      }
+    ],
+    "snapshotDiffs": [
+      {
+        "seq": 0,
+        "timestamp": 1776007205203,
+        "trigger": "group",
+        "beforeVersion": 0,
+        "afterVersion": 1,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-2",
+            "tabCount": 1,
+            "tabLabels": [
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-2"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-2",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": "tab-2",
+            "tabCount": 1,
+            "tabLabels": [
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-2"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-2",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": true,
+            "oldValue": false
+          },
+          {
+            "path": [
+              1,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": false,
+            "oldValue": true
+          }
+        ]
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007205205,
+        "trigger": "group",
+        "beforeVersion": 1,
+        "afterVersion": 2,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": "tab-2",
+            "tabCount": 1,
+            "tabLabels": [
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-2"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-2",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-3",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-3"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": null,
+            "tabCount": 1,
+            "tabLabels": [
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-4",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-3",
+            "oldValue": "group-1"
+          },
+          {
+            "path": [
+              0,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-3",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-3",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-3",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              1,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-4",
+            "oldValue": "group-2"
+          },
+          {
+            "path": [
+              1,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": null,
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              1,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-4",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-4",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              0,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": false,
+            "oldValue": true
+          }
+        ]
+      },
+      {
+        "seq": 2,
+        "timestamp": 1776007205205,
+        "trigger": "tab",
+        "beforeVersion": 2,
+        "afterVersion": 3,
+        "before": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-3",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-3"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": null,
+            "tabCount": 1,
+            "tabLabels": [
+              "README.md"
+            ],
+            "tabRefIds": [
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-4",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-3",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-3"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": null,
+            "tabCount": 0,
+            "tabLabels": [],
+            "tabRefIds": [],
+            "tabs": []
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              1,
+              "tabCount"
+            ],
+            "type": "CHANGE",
+            "value": 0,
+            "oldValue": 1
+          },
+          {
+            "type": "REMOVE",
+            "path": [
+              1,
+              "tabLabels",
+              0
+            ],
+            "oldValue": "README.md"
+          },
+          {
+            "type": "REMOVE",
+            "path": [
+              1,
+              "tabRefIds",
+              0
+            ],
+            "oldValue": "tab-4"
+          },
+          {
+            "type": "REMOVE",
+            "path": [
+              1,
+              "tabs",
+              0
+            ],
+            "oldValue": {
+              "tabRefId": "tab-4",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            }
+          }
+        ]
+      },
+      {
+        "seq": 3,
+        "timestamp": 1776007205214,
+        "trigger": "group",
+        "beforeVersion": 3,
+        "afterVersion": 4,
+        "before": [
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-3",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-3"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 2,
+            "isActive": false,
+            "activeTabRefId": null,
+            "tabCount": 0,
+            "tabLabels": [],
+            "tabRefIds": [],
+            "tabs": []
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-5",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-5"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-5",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-5",
+            "oldValue": "group-3"
+          },
+          {
+            "path": [
+              0,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-5",
+            "oldValue": "tab-3"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-5",
+            "oldValue": "tab-3"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-5",
+            "oldValue": "tab-3"
+          },
+          {
+            "type": "REMOVE",
+            "path": [
+              1
+            ],
+            "oldValue": {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 0,
+              "tabLabels": [],
+              "tabRefIds": [],
+              "tabs": []
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "replay": {
+    "observedEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007205203,
+        "observedAtMs": 1776007205203,
+        "type": "group",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ]
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 0,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-2",
+              "tabCount": 1,
+              "tabLabels": [
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-2"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-2",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": "tab-2",
+              "tabCount": 1,
+              "tabLabels": [
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-2"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-2",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007205205,
+        "observedAtMs": 1776007205205,
+        "type": "group",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-3",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-3"
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 1,
+              "tabLabels": [
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-4"
+              ]
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": "tab-2",
+              "tabCount": 1,
+              "tabLabels": [
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-2"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-2",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 2,
+          "groups": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-3",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-3"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 1,
+              "tabLabels": [
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-4",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "seq": 2,
+        "timestamp": 1776007205205,
+        "observedAtMs": 1776007205205,
+        "type": "tab",
+        "event": {
+          "opened": [],
+          "closed": [
+            {
+              "tabRefId": "tab-4",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": -1,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            }
+          ],
+          "changed": []
+        },
+        "beforeSnapshot": {
+          "version": 2,
+          "groups": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-3",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-3"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 1,
+              "tabLabels": [
+                "README.md"
+              ],
+              "tabRefIds": [
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-4",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 3,
+          "groups": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-3",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-3"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 0,
+              "tabLabels": [],
+              "tabRefIds": [],
+              "tabs": []
+            }
+          ]
+        }
+      },
+      {
+        "seq": 3,
+        "timestamp": 1776007205214,
+        "observedAtMs": 1776007205214,
+        "type": "group",
+        "event": {
+          "opened": [],
+          "closed": [
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 0,
+              "tabLabels": [],
+              "tabRefIds": []
+            }
+          ],
+          "changed": [
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-5",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-5"
+              ]
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 3,
+          "groups": [
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-3",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-3"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 2,
+              "isActive": false,
+              "activeTabRefId": null,
+              "tabCount": 0,
+              "tabLabels": [],
+              "tabRefIds": [],
+              "tabs": []
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 4,
+          "groups": [
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-5",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-5"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-5",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "initialSnapshot": {
+      "version": 0,
+      "groups": [
+        {
+          "groupRefId": "group-1",
+          "viewColumn": 1,
+          "isActive": false,
+          "activeTabRefId": "tab-1",
+          "tabCount": 1,
+          "tabLabels": [
+            "package.json"
+          ],
+          "tabRefIds": [
+            "tab-1"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-1",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-2",
+          "viewColumn": 2,
+          "isActive": true,
+          "activeTabRefId": "tab-2",
+          "tabCount": 1,
+          "tabLabels": [
+            "README.md"
+          ],
+          "tabRefIds": [
+            "tab-2"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-2",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            }
+          ]
+        }
+      ]
+    },
+    "finalSnapshot": {
+      "version": 4,
+      "groups": [
+        {
+          "groupRefId": "group-5",
+          "viewColumn": 1,
+          "isActive": true,
+          "activeTabRefId": "tab-5",
+          "tabCount": 1,
+          "tabLabels": [
+            "package.json"
+          ],
+          "tabRefIds": [
+            "tab-5"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-5",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "layout": {
+    "before": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json"
+        ]
+      },
+      {
+        "viewColumn": 2,
+        "tabs": [
+          "README.md"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json"
+        ]
+      }
+    ]
+  }
+}

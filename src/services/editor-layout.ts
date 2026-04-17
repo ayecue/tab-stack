@@ -1,8 +1,8 @@
 import { Disposable, Event, EventEmitter } from 'vscode';
 
 import { Layout } from '../types/commands';
-import { getEditorLayout } from '../utils/commands';
 import { isLayoutEqual } from '../utils/is-layout-equal';
+import { getEditorLayout } from '../utils/layout';
 
 export class EditorLayoutService implements Disposable {
   static readonly DEFAULT_POLL_INTERVAL = 1000;

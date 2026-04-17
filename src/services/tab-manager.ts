@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import {
+  commands,
   Disposable,
   EventEmitter,
   ExtensionContext,
@@ -14,19 +15,19 @@ import { TabStateContainerHandler } from '../handlers/tab-state-container';
 import { PersistenceMediator } from '../mediators/persistence';
 import { transform as migrate } from '../transformers/migration';
 import {
+  toAbsoluteStateContainer,
   toAbsoluteTabStateFile,
-  toRelativeTabStateFile,
   toRelativeStateContainer,
-  toAbsoluteStateContainer
+  toRelativeTabStateFile
 } from '../transformers/tab-uris';
 import { GitIntegrationMode } from '../types/config';
 import {
-  ExtensionNotificationKind,
-  ExtensionNotificationMessage,
-  ExtensionTabStateSyncMessage,
+  CollectionTabSummary,
   ExtensionCollectionsSyncMessage,
   ExtensionConfigSyncMessage,
-  CollectionTabSummary
+  ExtensionNotificationKind,
+  ExtensionNotificationMessage,
+  ExtensionTabStateSyncMessage
 } from '../types/messages';
 import {
   createEmptyStateContainer,
@@ -41,13 +42,12 @@ import {
 import {
   closeAllEditors,
   focusTabInGroup,
-  getEditorLayout,
   moveTab,
   pinEditor,
-  setEditorLayout,
   unpinEditor
 } from '../utils/commands';
 import { isLayoutEqual } from '../utils/is-layout-equal';
+import { getEditorLayout, setEditorLayout } from '../utils/layout';
 import {
   closeTab,
   countTabs,
@@ -57,12 +57,13 @@ import {
 } from '../utils/tab-utils';
 import { ConfigService } from './config';
 import { EditorLayoutService } from './editor-layout';
-import { getLogger, ScopedLogger } from './logger';
 import {
   GitBranchChangeEvent,
   GitRepositoryOpenEvent,
   GitService
 } from './git';
+import { getLogger, ScopedLogger } from './logger';
+import { TabChangeProxyService } from './tab-change-proxy';
 import { TabRecoveryService } from './tab-recovery-resolver';
 
 export class TabManagerService implements ITabManagerService {
@@ -79,6 +80,7 @@ export class TabManagerService implements ITabManagerService {
   private _configService: ConfigService;
   private _gitService: GitService;
   private _tabRecoveryService: TabRecoveryService;
+  private _tabChangeProxy: TabChangeProxyService;
 
   private _renderCompleteEmitter: EventEmitter<void>;
 
@@ -119,6 +121,7 @@ export class TabManagerService implements ITabManagerService {
     this._configService = configService;
     this._gitService = gitService;
     this._tabRecoveryService = tabRecoveryService;
+    this._tabChangeProxy = new TabChangeProxyService();
     this._tabStateSyncEmitter = new EventEmitter<
       Omit<ExtensionTabStateSyncMessage, 'type'>
     >();
@@ -184,7 +187,8 @@ export class TabManagerService implements ITabManagerService {
     // Create new handlers
     this._activeStateHandler = new TabActiveStateHandler(
       this._layoutService,
-      this._tabRecoveryService
+      this._tabRecoveryService,
+      this._tabChangeProxy
     );
     this._stateContainerHandler = new TabStateContainerHandler();
     this._collectionHandler = new TabCollectionStateHandler();
@@ -226,7 +230,7 @@ export class TabManagerService implements ITabManagerService {
         : null;
 
     if (currentStateContainer == null) {
-      this._activeStateHandler.syncTabs();
+      this._activeStateHandler.rehydrateTabs();
       currentStateContainer = createEmptyStateContainer();
       currentStateContainer.state =
         this._activeStateHandler.getTabManagerState();
@@ -451,8 +455,8 @@ export class TabManagerService implements ITabManagerService {
       }
     }
 
-    this._stateContainerHandler?.unlockState();
     this._rendering = false;
+    this._stateContainerHandler?.unlockState();
     this._renderCompleteEmitter.fire();
 
     if (!this._stateContainerHandler || !this._activeStateHandler) {
@@ -469,7 +473,9 @@ export class TabManagerService implements ITabManagerService {
     const previousStateContainer =
       this._nextRenderingItem.rollbackStateContainer;
 
-    this._log.info(`render: applying state "${currentStateContainer.name}" (${currentStateContainer.id})`);
+    this._log.info(
+      `render: applying state "${currentStateContainer.name}" (${currentStateContainer.id})`
+    );
     this._nextRenderingItem = null;
 
     if (countTabs() > 0) {
@@ -562,11 +568,17 @@ export class TabManagerService implements ITabManagerService {
       );
       await window.tabGroups.close(tabsToClose, true);
     } catch (error) {
-      this.notify(ExtensionNotificationKind.Error, 'Failed to close other tabs');
+      this.notify(
+        ExtensionNotificationKind.Error,
+        'Failed to close other tabs'
+      );
     }
   }
 
-  async closeOtherTabsInGroup(viewColumn: number, index: number): Promise<void> {
+  async closeOtherTabsInGroup(
+    viewColumn: number,
+    index: number
+  ): Promise<void> {
     const targetTab = findTabByViewColumnAndIndex(viewColumn, index);
     const targetGroup = findTabGroupByViewColumn(viewColumn);
 
@@ -579,7 +591,158 @@ export class TabManagerService implements ITabManagerService {
       const tabsToClose = targetGroup.tabs.filter((tab) => tab !== targetTab);
       await window.tabGroups.close(tabsToClose, true);
     } catch (error) {
-      this.notify(ExtensionNotificationKind.Error, 'Failed to close other tabs in group');
+      this.notify(
+        ExtensionNotificationKind.Error,
+        'Failed to close other tabs in group'
+      );
+    }
+  }
+
+  async closeColumn(viewColumn: number): Promise<void> {
+    const targetGroup = findTabGroupByViewColumn(viewColumn);
+
+    if (!targetGroup) {
+      this.notify(ExtensionNotificationKind.Warning, 'Column not found');
+      return;
+    }
+
+    try {
+      await window.tabGroups.close(targetGroup.tabs, true);
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to close column');
+    }
+  }
+
+  async closeColumnTabs(viewColumn: number, indices: number[]): Promise<void> {
+    const targetGroup = findTabGroupByViewColumn(viewColumn);
+
+    if (!targetGroup) {
+      this.notify(ExtensionNotificationKind.Warning, 'Column not found');
+      return;
+    }
+
+    try {
+      const tabsToClose = indices
+        .map((i) => targetGroup.tabs[i])
+        .filter((tab): tab is (typeof targetGroup.tabs)[number] => tab != null);
+
+      if (tabsToClose.length > 0) {
+        await window.tabGroups.close(tabsToClose, true);
+      }
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to close tabs');
+    }
+  }
+
+  async moveColumn(
+    fromViewColumn: number,
+    toViewColumn: number
+  ): Promise<void> {
+    if (fromViewColumn === toViewColumn) return;
+
+    const fromGroup = findTabGroupByViewColumn(fromViewColumn);
+    const toGroup = findTabGroupByViewColumn(toViewColumn);
+
+    if (!fromGroup || !toGroup) {
+      this.notify(ExtensionNotificationKind.Warning, 'Column not found');
+      return;
+    }
+
+    try {
+      await this._activeStateHandler?.moveEditorGroup(
+        fromViewColumn,
+        toViewColumn
+      );
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to move column');
+    }
+  }
+
+  async mergeColumns(
+    fromViewColumn: number,
+    toViewColumn: number
+  ): Promise<void> {
+    if (fromViewColumn === toViewColumn) return;
+
+    const fromGroup = findTabGroupByViewColumn(fromViewColumn);
+    const toGroup = findTabGroupByViewColumn(toViewColumn);
+
+    if (!fromGroup || !toGroup) {
+      this.notify(ExtensionNotificationKind.Warning, 'Column not found');
+      return;
+    }
+
+    try {
+      const tabCount = fromGroup.tabs.length;
+      const toOffset = toGroup.tabs.length;
+
+      for (let i = 0; i < tabCount; i++) {
+        // Always move index 0 since tabs shift after each move
+        await moveTab(fromViewColumn, 0, toViewColumn, toOffset + i);
+      }
+    } catch (error) {
+      this.notify(ExtensionNotificationKind.Error, 'Failed to merge columns');
+    }
+  }
+
+  async moveTabsToNewColumn(
+    viewColumn: number,
+    indices: number[]
+  ): Promise<void> {
+    const targetGroup = findTabGroupByViewColumn(viewColumn);
+
+    if (!targetGroup) {
+      this.notify(ExtensionNotificationKind.Warning, 'Column not found');
+      return;
+    }
+
+    try {
+      // Sort descending so that removing from higher indices first
+      // doesn't shift lower indices
+      const sorted = [...indices].sort((a, b) => b - a);
+
+      // The new column will be created by moving the first tab to a new group
+      // We use moveEditorToNextGroup which creates a new group if last
+      const firstIndex = sorted.pop()!; // smallest index (last after sort desc)
+
+      // Move the first tab to create the new column
+      await focusTabInGroup(viewColumn, firstIndex);
+      const allGroups = window.tabGroups.all;
+      const currentGroupIndex = allGroups.findIndex(
+        (g) => g.viewColumn === viewColumn
+      );
+      const isLastGroup = currentGroupIndex === allGroups.length - 1;
+
+      if (isLastGroup) {
+        // Moving to next group will create a new one
+        await commands.executeCommand('workbench.action.moveEditorToNextGroup');
+      } else {
+        // Need to create a new group explicitly
+        await commands.executeCommand('workbench.action.newGroupRight');
+        await moveTab(
+          viewColumn,
+          firstIndex,
+          window.tabGroups.activeTabGroup.viewColumn,
+          0
+        );
+      }
+
+      const newViewColumn = window.tabGroups.activeTabGroup.viewColumn;
+
+      // Now move remaining tabs (indices adjusted for removals)
+      // Since we removed firstIndex, adjust remaining indices
+      let movedCount = 1;
+      for (const idx of sorted) {
+        // Adjust index: if idx > firstIndex, it shifted down by 1
+        const adjustedIdx = idx > firstIndex ? idx - 1 : idx;
+        await moveTab(viewColumn, adjustedIdx, newViewColumn, movedCount);
+        movedCount++;
+      }
+    } catch (error) {
+      this.notify(
+        ExtensionNotificationKind.Error,
+        'Failed to move tabs to new column'
+      );
     }
   }
 
@@ -667,8 +830,8 @@ export class TabManagerService implements ITabManagerService {
     const currentStateContainer =
       newContent.selectedGroup in newContent.groups
         ? newContent.groups[newContent.selectedGroup]
-        : this._stateContainerHandler.currentStateContainer ??
-          createEmptyStateContainer();
+        : (this._stateContainerHandler.currentStateContainer ??
+          createEmptyStateContainer());
     const previousStateContainer =
       newContent.previousSelectedGroup in newContent.groups
         ? newContent.groups[newContent.previousSelectedGroup]
@@ -785,11 +948,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   triggerTabStateSync() {
-    if (
-      !this._stateContainerHandler ||
-      !this._collectionHandler
-    )
-      return;
+    if (!this._stateContainerHandler || !this._collectionHandler) return;
     if (this._stateContainerHandler.currentStateContainer == null) return;
 
     const groups = this._collectionHandler.groups;
@@ -806,11 +965,7 @@ export class TabManagerService implements ITabManagerService {
   }
 
   triggerCollectionsSync() {
-    if (
-      !this._collectionHandler ||
-      !this._stateContainerHandler
-    )
-      return;
+    if (!this._collectionHandler || !this._stateContainerHandler) return;
 
     const groups = this._collectionHandler.groups;
 
@@ -830,8 +985,7 @@ export class TabManagerService implements ITabManagerService {
     if (!this._configService) return;
 
     this._configSyncEmitter.fire({
-      masterWorkspaceFolder:
-        this._configService.getMasterWorkspaceFolder(),
+      masterWorkspaceFolder: this._configService.getMasterWorkspaceFolder(),
       availableWorkspaceFolders: this._configService
         .getAvailableWorkspaceFolders()
         .map((folder) => ({
@@ -845,7 +999,9 @@ export class TabManagerService implements ITabManagerService {
     });
   }
 
-  private buildTabsByColumn(container: StateContainer): CollectionTabSummary[][] {
+  private buildTabsByColumn(
+    container: StateContainer
+  ): CollectionTabSummary[][] {
     const tabGroups = Object.values(container.state.tabState.tabGroups);
 
     return tabGroups.map((group) =>
@@ -861,75 +1017,81 @@ export class TabManagerService implements ITabManagerService {
     const groups = this._collectionHandler!.groups;
     const groupValues = Object.values(groups);
 
-    return groupValues.sort((a, b) => {
-      const timeA = a.lastSelectedAt || 0;
-      const timeB = b.lastSelectedAt || 0;
-      return timeB - timeA;
-    }).map((group) => {
-      const tabGroupsArray = Object.values(group.state.tabState.tabGroups);
-      const tabCount = tabGroupsArray.reduce(
-        (sum, tabGroup) => sum + tabGroup.tabs.length,
-        0
-      );
-      return {
-        groupId: group.id,
-        name: group.name,
-        tabCount,
-        columnCount: tabGroupsArray.length,
-        layout: group.state.layout,
-        tabsByColumn: this.buildTabsByColumn(group)
-      };
-    });
+    return groupValues
+      .sort((a, b) => {
+        const timeA = a.lastSelectedAt || 0;
+        const timeB = b.lastSelectedAt || 0;
+        return timeB - timeA;
+      })
+      .map((group) => {
+        const tabGroupsArray = Object.values(group.state.tabState.tabGroups);
+        const tabCount = tabGroupsArray.reduce(
+          (sum, tabGroup) => sum + tabGroup.tabs.length,
+          0
+        );
+        return {
+          groupId: group.id,
+          name: group.name,
+          tabCount,
+          columnCount: tabGroupsArray.length,
+          layout: group.state.layout,
+          tabsByColumn: this.buildTabsByColumn(group)
+        };
+      });
   }
 
   private buildHistorySummaries() {
     const history = this._collectionHandler!.history;
     const historyValues = Object.values(history);
 
-    return historyValues.sort((a, b) => {
-      const timeA = a.lastSelectedAt || 0;
-      const timeB = b.lastSelectedAt || 0;
-      return timeB - timeA;
-    }).map((entry) => {
-      const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
-      const tabCount = tabGroupsArray.reduce(
-        (sum, group) => sum + group.tabs.length,
-        0
-      );
-      return {
-        historyId: entry.id,
-        name: entry.name,
-        tabCount,
-        columnCount: tabGroupsArray.length,
-        layout: entry.state.layout,
-        tabsByColumn: this.buildTabsByColumn(entry)
-      };
-    });
+    return historyValues
+      .sort((a, b) => {
+        const timeA = a.lastSelectedAt || 0;
+        const timeB = b.lastSelectedAt || 0;
+        return timeB - timeA;
+      })
+      .map((entry) => {
+        const tabGroupsArray = Object.values(entry.state.tabState.tabGroups);
+        const tabCount = tabGroupsArray.reduce(
+          (sum, group) => sum + group.tabs.length,
+          0
+        );
+        return {
+          historyId: entry.id,
+          name: entry.name,
+          tabCount,
+          columnCount: tabGroupsArray.length,
+          layout: entry.state.layout,
+          tabsByColumn: this.buildTabsByColumn(entry)
+        };
+      });
   }
 
   private buildAddonSummaries() {
     const addons = this._collectionHandler!.addons;
     const addonValues = Object.values(addons);
 
-    return addonValues.sort((a, b) => {
-      const timeA = a.lastSelectedAt || 0;
-      const timeB = b.lastSelectedAt || 0;
-      return timeB - timeA;
-    }).map((addon) => {
-      const tabGroupsArray = Object.values(addon.state.tabState.tabGroups);
-      const tabCount = tabGroupsArray.reduce(
-        (sum, group) => sum + group.tabs.length,
-        0
-      );
-      return {
-        addonId: addon.id,
-        name: addon.name,
-        tabCount,
-        columnCount: tabGroupsArray.length,
-        layout: addon.state.layout,
-        tabsByColumn: this.buildTabsByColumn(addon)
-      };
-    });
+    return addonValues
+      .sort((a, b) => {
+        const timeA = a.lastSelectedAt || 0;
+        const timeB = b.lastSelectedAt || 0;
+        return timeB - timeA;
+      })
+      .map((addon) => {
+        const tabGroupsArray = Object.values(addon.state.tabState.tabGroups);
+        const tabCount = tabGroupsArray.reduce(
+          (sum, group) => sum + group.tabs.length,
+          0
+        );
+        return {
+          addonId: addon.id,
+          name: addon.name,
+          tabCount,
+          columnCount: tabGroupsArray.length,
+          layout: addon.state.layout,
+          tabsByColumn: this.buildTabsByColumn(addon)
+        };
+      });
   }
 
   createAddon(name: string): void {
@@ -980,6 +1142,14 @@ export class TabManagerService implements ITabManagerService {
       preservePinnedTabs: true,
       preserveTabFocus: false
     });
+
+    if (this._stateContainerHandler) {
+      this._stateContainerHandler.updateTabState(
+        this._activeStateHandler.getTabManagerState()
+      );
+    }
+
+    this.triggerTabStateSync();
   }
 
   switchToGroup(groupId: string | null) {
@@ -1186,7 +1356,11 @@ export class TabManagerService implements ITabManagerService {
   }
 
   async resetState(): Promise<void> {
-    if (!this._collectionHandler || !this._stateContainerHandler || !this._persistenceMediator) {
+    if (
+      !this._collectionHandler ||
+      !this._stateContainerHandler ||
+      !this._persistenceMediator
+    ) {
       return;
     }
 

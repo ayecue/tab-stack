@@ -2,11 +2,13 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { commands } from 'vscode';
 import {
   closeAllEditors,
-  getEditorLayout,
-  setEditorLayout,
   pinCurrentEditor,
   unpinCurrentEditor
 } from '../../../src/utils/commands';
+import {
+  getEditorLayout,
+  setEditorLayout
+} from '../../../src/utils/layout';
 
 vi.mock('vscode', async () => {
   const actual = await vi.importActual('vscode');

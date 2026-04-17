@@ -8,8 +8,16 @@ import React, {
   useSyncExternalStore
 } from 'react';
 
-import { GitIntegrationConfig, StorageType, TabKindColors } from '../../types/config';
-import { GroupSummary, HistorySummary, AddonSummary } from '../../types/messages';
+import {
+  GitIntegrationConfig,
+  StorageType,
+  TabKindColors
+} from '../../types/config';
+import {
+  AddonSummary,
+  GroupSummary,
+  HistorySummary
+} from '../../types/messages';
 import { QuickSlotAssignments } from '../../types/tab-manager';
 import { TabState as TabStatePayload } from '../../types/tabs';
 import {
@@ -106,12 +114,15 @@ export const TabProvider: React.FC<TabProviderProps> = ({ children }) => {
     return () => document.removeEventListener('keydown', handleKeydown);
   }, [store, messagingService]);
 
-  const contextValue: TabContextValue = useMemo(() => ({
-    state,
-    messagingService,
-    messenger,
-    store
-  }), [state, messagingService, messenger, store]);
+  const contextValue: TabContextValue = useMemo(
+    () => ({
+      state,
+      messagingService,
+      messenger,
+      store
+    }),
+    [state, messagingService, messenger, store]
+  );
 
   return (
     <TabContext.Provider value={contextValue}>{children}</TabContext.Provider>

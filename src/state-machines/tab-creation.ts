@@ -1,10 +1,18 @@
-import { Tab, TabChangeEvent, window } from "vscode";
-import { setup, fromCallback, assign, or, and, enqueueActions, stopChild } from "xstate";
+import { schedule } from 'non-blocking-schedule';
+import { Tab, TabChangeEvent, window } from 'vscode';
+import {
+  and,
+  assign,
+  enqueueActions,
+  fromCallback,
+  or,
+  setup,
+  stopChild
+} from 'xstate';
 
-import { TabCreationEvent } from "../types/tab-creation";
-import { AssociatedTabInstance } from "../types/tabs";
-import { schedule } from "non-blocking-schedule";
-import { TabCreationTask } from "../handlers/tab-creation-task";
+import { TabCreationTask } from '../handlers/tab-creation-task';
+import { TabCreationEvent } from '../types/tab-creation';
+import { AssociatedTabInstance } from '../types/tabs';
 
 export const tabCreationMachine = setup({
   types: {
@@ -19,7 +27,7 @@ export const tabCreationMachine = setup({
       task: TabCreationTask;
     },
     input: {} as { task: TabCreationTask },
-    events: {} as TabCreationEvent,
+    events: {} as TabCreationEvent
   },
   guards: {
     shouldComplete({ context }) {
@@ -31,37 +39,50 @@ export const tabCreationMachine = setup({
     }
   },
   actors: {
-    tabListener: fromCallback<TabCreationEvent, TabCreationTask>(({ sendBack, input }) => {
-      const disposable = window.tabGroups.onDidChangeTabs((e: TabChangeEvent) => {
-        const tab = input.findRelatedTab(e.opened);
-        if (tab) sendBack({ type: 'TAB_FOUND', tab });
-      });
-      return () => disposable.dispose();
-    }),
-    editorListener: fromCallback<TabCreationEvent, TabCreationTask>(({ sendBack, input }) => {
-      const disposable = input.addEditorListener((handle) => {
-        sendBack({ type: 'EDITOR_FOUND', handle });
-      });
-      return () => disposable.dispose();
-    }),
-    commandRunner: fromCallback<TabCreationEvent, TabCreationTask>(({ sendBack, input }) => {
-      input.executeCommand().then(
-        () => {
-          const delay = input.getNextTickDelay();
-          if (delay > 0) {
-            setTimeout(() => sendBack({ type: 'NEXT_TICK' }), delay);
-            return;
+    tabListener: fromCallback<TabCreationEvent, TabCreationTask>(
+      ({ sendBack, input }) => {
+        const disposable = window.tabGroups.onDidChangeTabs(
+          (e: TabChangeEvent) => {
+            const tab = input.findRelatedTab(e.opened);
+            if (tab) sendBack({ type: 'TAB_FOUND', tab });
           }
-          schedule(() => sendBack({ type: 'NEXT_TICK' }));
-        },
-        (error: any) => sendBack({ type: 'COMMAND_FAILED', error })
-      );
-    }),
-    timeoutTimer: fromCallback<TabCreationEvent, TabCreationTask>(({ sendBack, input }) => {
-      const timer = setTimeout(() => sendBack({ type: 'TIMEOUT' }), input.getMaxRuntime());
-      return () => clearTimeout(timer);
-    }),
-  },
+        );
+        return () => disposable.dispose();
+      }
+    ),
+    editorListener: fromCallback<TabCreationEvent, TabCreationTask>(
+      ({ sendBack, input }) => {
+        const disposable = input.addEditorListener((handle) => {
+          sendBack({ type: 'EDITOR_FOUND', handle });
+        });
+        return () => disposable.dispose();
+      }
+    ),
+    commandRunner: fromCallback<TabCreationEvent, TabCreationTask>(
+      ({ sendBack, input }) => {
+        input.executeCommand().then(
+          () => {
+            const delay = input.getNextTickDelay();
+            if (delay > 0) {
+              setTimeout(() => sendBack({ type: 'NEXT_TICK' }), delay);
+              return;
+            }
+            schedule(() => sendBack({ type: 'NEXT_TICK' }));
+          },
+          (error: any) => sendBack({ type: 'COMMAND_FAILED', error })
+        );
+      }
+    ),
+    timeoutTimer: fromCallback<TabCreationEvent, TabCreationTask>(
+      ({ sendBack, input }) => {
+        const timer = setTimeout(
+          () => sendBack({ type: 'TIMEOUT' }),
+          input.getMaxRuntime()
+        );
+        return () => clearTimeout(timer);
+      }
+    )
+  }
 }).createMachine({
   id: 'tabCreation',
   initial: 'running',
@@ -73,27 +94,47 @@ export const tabCreationMachine = setup({
     finalized: false,
     failed: false,
     error: null,
-    task: input.task,
+    task: input.task
   }),
   states: {
     running: {
       invoke: [
-        { id: 'tabListener', src: 'tabListener', input: ({ context }) => context.task },
-        { id: 'editorListener', src: 'editorListener', input: ({ context }) => context.task },
-        { id: 'commandRunner', src: 'commandRunner', input: ({ context }) => context.task },
-        { id: 'timeoutTimer', src: 'timeoutTimer', input: ({ context }) => context.task },
+        {
+          id: 'tabListener',
+          src: 'tabListener',
+          input: ({ context }) => context.task
+        },
+        {
+          id: 'editorListener',
+          src: 'editorListener',
+          input: ({ context }) => context.task
+        },
+        {
+          id: 'commandRunner',
+          src: 'commandRunner',
+          input: ({ context }) => context.task
+        },
+        {
+          id: 'timeoutTimer',
+          src: 'timeoutTimer',
+          input: ({ context }) => context.task
+        }
       ],
       always: {
         guard: 'shouldComplete',
-        target: 'done',
+        target: 'done'
       },
       on: {
         TAB_FOUND: { actions: assign({ tab: ({ event }) => event.tab }) },
-        EDITOR_FOUND: { actions: assign({ editor: ({ event }) => event.handle }) },
+        EDITOR_FOUND: {
+          actions: assign({ editor: ({ event }) => event.handle })
+        },
         NEXT_TICK: { actions: assign({ reachedNextTick: true }) },
         TIMEOUT: { actions: assign({ exceeded: true }) },
-        COMMAND_FAILED: { actions: assign({ failed: true, error: ({ event }) => event.error }) },
-      },
+        COMMAND_FAILED: {
+          actions: assign({ failed: true, error: ({ event }) => event.error })
+        }
+      }
     },
     done: {
       type: 'final',
@@ -102,8 +143,8 @@ export const tabCreationMachine = setup({
         stopChild('tabListener'),
         stopChild('editorListener'),
         stopChild('commandRunner'),
-        stopChild('timeoutTimer'),
-      ],
-    },
-  },
+        stopChild('timeoutTimer')
+      ]
+    }
+  }
 });

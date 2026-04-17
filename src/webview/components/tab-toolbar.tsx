@@ -164,7 +164,10 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
               onClick={() => onViewModeChange('flat')}
               aria-label="List view"
             >
-              <i className="codicon codicon-list-unordered" aria-hidden="true" />
+              <i
+                className="codicon codicon-list-unordered"
+                aria-hidden="true"
+              />
             </button>
           </Tooltip>
         </div>
@@ -225,9 +228,7 @@ export const TabToolbar: React.FC<TabToolbarProps> = ({
             className="type-select"
             aria-label="Filter by tab type"
             value={filters?.type ?? 'all'}
-            onChange={(e) =>
-              onFiltersChange?.({ type: e.target.value as any })
-            }
+            onChange={(e) => onFiltersChange?.({ type: e.target.value as any })}
           >
             <option value="all">All types</option>
             <option value="text">Text</option>

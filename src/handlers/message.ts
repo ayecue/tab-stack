@@ -4,6 +4,9 @@ import {
   BaseWebviewMessage,
   WebviewApplyAddonMessage,
   WebviewAssignQuickSlotMessage,
+  WebviewCloseColumnFilteredTabsMessage,
+  WebviewCloseColumnMessage,
+  WebviewCloseColumnNonFilteredTabsMessage,
   WebviewCloseOtherEditorsInGroupMessage,
   WebviewCloseOtherEditorsMessage,
   WebviewCreateAddonMessage,
@@ -11,7 +14,10 @@ import {
   WebviewDeleteGroupMessage,
   WebviewDeleteHistoryMessage,
   WebviewExportGroupMessage,
+  WebviewMergeColumnsMessage,
   WebviewMessageType,
+  WebviewMoveColumnMessage,
+  WebviewMoveTabsToNewColumnMessage,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
   WebviewRenameAddonMessage,
@@ -59,8 +65,44 @@ export class MessageHandler implements Disposable {
         break;
       }
       case WebviewMessageType.CloseOtherEditorsInGroup: {
-        const { columnView, index } = data as WebviewCloseOtherEditorsInGroupMessage;
+        const { columnView, index } =
+          data as WebviewCloseOtherEditorsInGroupMessage;
         await tabManager.closeOtherTabsInGroup(columnView, index);
+        break;
+      }
+      case WebviewMessageType.CloseColumn: {
+        const { viewColumn } = data as WebviewCloseColumnMessage;
+        await tabManager.closeColumn(viewColumn);
+        break;
+      }
+      case WebviewMessageType.CloseColumnFilteredTabs: {
+        const { viewColumn, indices } =
+          data as WebviewCloseColumnFilteredTabsMessage;
+        await tabManager.closeColumnTabs(viewColumn, indices);
+        break;
+      }
+      case WebviewMessageType.CloseColumnNonFilteredTabs: {
+        const { viewColumn, indices } =
+          data as WebviewCloseColumnNonFilteredTabsMessage;
+        await tabManager.closeColumnTabs(viewColumn, indices);
+        break;
+      }
+      case WebviewMessageType.MoveColumn: {
+        const { fromViewColumn, toViewColumn } =
+          data as WebviewMoveColumnMessage;
+        await tabManager.moveColumn(fromViewColumn, toViewColumn);
+        break;
+      }
+      case WebviewMessageType.MergeColumns: {
+        const { fromViewColumn, toViewColumn } =
+          data as WebviewMergeColumnsMessage;
+        await tabManager.mergeColumns(fromViewColumn, toViewColumn);
+        break;
+      }
+      case WebviewMessageType.MoveTabsToNewColumn: {
+        const { viewColumn, indices } =
+          data as WebviewMoveTabsToNewColumnMessage;
+        await tabManager.moveTabsToNewColumn(viewColumn, indices);
         break;
       }
       case WebviewMessageType.TabTogglePin: {
@@ -201,9 +243,7 @@ export class MessageHandler implements Disposable {
           filters: { 'Tab Stack Group': ['tabstack'] },
           saveLabel: 'Export Group',
           title: 'Export Tab Group',
-          defaultUri: group
-            ? Uri.file(`${group.name}.tabstack`)
-            : undefined
+          defaultUri: group ? Uri.file(`${group.name}.tabstack`) : undefined
         });
         if (saveUri) {
           await tabManager.exportGroup(groupId, saveUri.toString());

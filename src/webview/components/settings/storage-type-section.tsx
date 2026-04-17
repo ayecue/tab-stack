@@ -22,8 +22,8 @@ export const StorageTypeSection: React.FC = () => {
       </label>
       <p className="settings-description">
         Choose where to store tab state. File storage saves to
-        .vscode/tmstate.json (visible, git-trackable). Workspace state
-        uses VS Code's internal storage (hidden, not in git).
+        .vscode/tmstate.json (visible, git-trackable). Workspace state uses VS
+        Code's internal storage (hidden, not in git).
       </p>
 
       {state.storageType != null ? (

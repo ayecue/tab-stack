@@ -20,7 +20,7 @@ function getCompiledRegex(rule: TabKindColorRule): RegExp | null {
   return cached;
 }
 
-const DEFAULT_COLOR: string = "#cccccc"; // fallback color if no rules match and we want to ensure a color is returned
+const DEFAULT_COLOR: string = '#cccccc'; // fallback color if no rules match and we want to ensure a color is returned
 
 /**
  * Resolves the color for a tab by finding the first matching rule.

@@ -1,9 +1,9 @@
 .DS_Store
 .vscode-test
-docs
 coverage
 node_modules
 out
+plan/*
 test.src
 node_modules
 /webview.js
@@ -17,3 +17,6 @@ node_modules
 .vscode-test-web
 system.pem
 .vscode/tmstate.json
+.vscode/memory.jsonl
+tools/vscode-event-analyzer/output/*
+!tools/vscode-event-analyzer/output/.gitkeep

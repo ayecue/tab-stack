@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-import { TabProvider, useTabContext } from '../hooks/use-tab-context';
 import { useTabActions } from '../hooks/use-tab-actions';
+import { TabProvider, useTabContext } from '../hooks/use-tab-context';
 import { CollectionsPanel } from './collections-panel';
 import { ErrorBoundary } from './error-boundary';
 import { Header } from './header';

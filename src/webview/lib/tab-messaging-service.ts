@@ -4,6 +4,9 @@ import {
   WebviewAssignQuickSlotMessage,
   WebviewClearAllTabsMessage,
   WebviewClearWorkspaceFolderMessage,
+  WebviewCloseColumnFilteredTabsMessage,
+  WebviewCloseColumnMessage,
+  WebviewCloseColumnNonFilteredTabsMessage,
   WebviewCloseOtherEditorsInGroupMessage,
   WebviewCloseOtherEditorsMessage,
   WebviewCreateAddonMessage,
@@ -14,7 +17,10 @@ import {
   WebviewExportStateFileMessage,
   WebviewImportGroupMessage,
   WebviewImportStateFileMessage,
+  WebviewMergeColumnsMessage,
   WebviewMessageType,
+  WebviewMoveColumnMessage,
+  WebviewMoveTabsToNewColumnMessage,
   WebviewNewGroupMessage,
   WebviewRecoverStateMessage,
   WebviewRenameAddonMessage,
@@ -84,6 +90,59 @@ export class TabMessagingService {
       type: WebviewMessageType.CloseOtherEditorsInGroup,
       index,
       columnView
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  closeColumn(viewColumn: number): void {
+    const message: WebviewCloseColumnMessage = {
+      type: WebviewMessageType.CloseColumn,
+      viewColumn
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  closeColumnFilteredTabs(viewColumn: number, indices: number[]): void {
+    const message: WebviewCloseColumnFilteredTabsMessage = {
+      type: WebviewMessageType.CloseColumnFilteredTabs,
+      viewColumn,
+      indices
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  closeColumnNonFilteredTabs(viewColumn: number, indices: number[]): void {
+    const message: WebviewCloseColumnNonFilteredTabsMessage = {
+      type: WebviewMessageType.CloseColumnNonFilteredTabs,
+      viewColumn,
+      indices
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  moveColumn(fromViewColumn: number, toViewColumn: number): void {
+    const message: WebviewMoveColumnMessage = {
+      type: WebviewMessageType.MoveColumn,
+      fromViewColumn,
+      toViewColumn
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  mergeColumns(fromViewColumn: number, toViewColumn: number): void {
+    const message: WebviewMergeColumnsMessage = {
+      type: WebviewMessageType.MergeColumns,
+      fromViewColumn,
+      toViewColumn
+    };
+    this.messenger.sendMessage(message);
+  }
+
+  moveTabsToNewColumn(viewColumn: number, indices: number[]): void {
+    const message: WebviewMoveTabsToNewColumnMessage = {
+      type: WebviewMessageType.MoveTabsToNewColumn,
+      viewColumn,
+      indices
     };
     this.messenger.sendMessage(message);
   }

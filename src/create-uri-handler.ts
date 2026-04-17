@@ -30,46 +30,59 @@ function validateFilePath(value: string | null): string | null {
 const uriCommandMap: Record<string, UriRouteHandler> = {
   '/switch-group': async (params) => {
     const name = validateName(params.get('name'));
-    if (name) await commands.executeCommand(`${EXTENSION_NAME}.switchGroup`, name);
+    if (name)
+      await commands.executeCommand(`${EXTENSION_NAME}.switchGroup`, name);
   },
   '/create-group': async (params) => {
     const name = validateName(params.get('name'));
-    if (name) await commands.executeCommand(`${EXTENSION_NAME}.createGroup`, name);
+    if (name)
+      await commands.executeCommand(`${EXTENSION_NAME}.createGroup`, name);
   },
   '/delete-group': async (params) => {
     const name = validateName(params.get('name'));
-    if (name) await commands.executeCommand(`${EXTENSION_NAME}.deleteGroup`, name);
+    if (name)
+      await commands.executeCommand(`${EXTENSION_NAME}.deleteGroup`, name);
   },
   '/snapshot': async () => {
     await commands.executeCommand(`${EXTENSION_NAME}.snapshot`);
   },
   '/restore-snapshot': async (params) => {
     const name = validateName(params.get('name'));
-    if (name) await commands.executeCommand(`${EXTENSION_NAME}.restoreSnapshot`, name);
+    if (name)
+      await commands.executeCommand(`${EXTENSION_NAME}.restoreSnapshot`, name);
   },
   '/apply-addon': async (params) => {
     const name = validateName(params.get('name'));
-    if (name) await commands.executeCommand(`${EXTENSION_NAME}.applyAddon`, name);
+    if (name)
+      await commands.executeCommand(`${EXTENSION_NAME}.applyAddon`, name);
   },
   '/import-group': async (params) => {
     const file = validateFilePath(params.get('file'));
-    if (file) await commands.executeCommand(`${EXTENSION_NAME}.importGroup`, file);
+    if (file)
+      await commands.executeCommand(`${EXTENSION_NAME}.importGroup`, file);
   },
   '/export-group': async (params) => {
     const name = validateName(params.get('name'));
-    if (name) await commands.executeCommand(`${EXTENSION_NAME}.exportGroup`, name);
+    if (name)
+      await commands.executeCommand(`${EXTENSION_NAME}.exportGroup`, name);
   },
   '/quick-switch': async () => {
     await commands.executeCommand(`${EXTENSION_NAME}.quickSwitch`);
   },
   '/quick-slot': async (params) => {
     const slot = validateSlot(params.get('slot'));
-    if (slot) await commands.executeCommand(`${EXTENSION_NAME}.quickSlot${slot}`);
+    if (slot)
+      await commands.executeCommand(`${EXTENSION_NAME}.quickSlot${slot}`);
   },
   '/assign-quick-slot': async (params) => {
     const name = validateName(params.get('name'));
     const slot = validateSlot(params.get('slot'));
-    if (name && slot) await commands.executeCommand(`${EXTENSION_NAME}.assignQuickSlot`, name, slot);
+    if (name && slot)
+      await commands.executeCommand(
+        `${EXTENSION_NAME}.assignQuickSlot`,
+        name,
+        slot
+      );
   }
 };
 

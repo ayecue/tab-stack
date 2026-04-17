@@ -7,6 +7,8 @@ import {
 } from '../stores/tab-state-container';
 import { TabStateContainerStoreContext } from '../types/store';
 import { StateContainer, TabManagerState } from '../types/tab-manager';
+import { isLayoutEqual } from '../utils/is-layout-equal';
+import { isTabStateEqual } from '../utils/tab-utils';
 
 export class TabStateContainerHandler implements Disposable {
   private _tabStateContainerStore: TabStateContainerStore;
@@ -65,7 +67,9 @@ export class TabStateContainerHandler implements Disposable {
   }
 
   setCurrentStateContainer(stateContainer: StateContainer): void {
-    this._log.debug(`setCurrentStateContainer: ${stateContainer.name} (${stateContainer.id})`);
+    this._log.debug(
+      `setCurrentStateContainer: ${stateContainer.name} (${stateContainer.id})`
+    );
     this._tabStateContainerStore.send({
       type: 'SET_STATE',
       stateContainer: {
@@ -78,6 +82,13 @@ export class TabStateContainerHandler implements Disposable {
   updateTabState(newState: TabManagerState): void {
     const current = this.currentStateContainer;
     if (!current) return;
+
+    if (
+      isTabStateEqual(current.state.tabState, newState.tabState) &&
+      isLayoutEqual(current.state.layout, newState.layout)
+    ) {
+      return;
+    }
 
     const updatedContainer: StateContainer = {
       ...current,

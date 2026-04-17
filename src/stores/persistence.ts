@@ -68,7 +68,7 @@ export function createPersistenceStore(
   store.subscribe((snapshot) => {
     log.debug(
       `<< state updated — loading=${snapshot.context.isLoading}, ` +
-      `version=${snapshot.context.data?.version ?? 'unknown'}`
+        `version=${snapshot.context.data?.version ?? 'unknown'}`
     );
   });
 

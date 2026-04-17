@@ -122,11 +122,11 @@ export const SlotKeypad: React.FC<SlotKeypadProps> = ({
           aria-expanded={isOpen}
           aria-haspopup="grid"
         >
-        {assignedSlot ? (
-          <span className="slot-keypad-badge">{assignedSlot}</span>
-        ) : (
-          <i className="codicon codicon-bookmark" aria-hidden="true" />
-        )}
+          {assignedSlot ? (
+            <span className="slot-keypad-badge">{assignedSlot}</span>
+          ) : (
+            <i className="codicon codicon-bookmark" aria-hidden="true" />
+          )}
         </button>
       </Tooltip>
 
@@ -159,11 +159,11 @@ export const SlotKeypad: React.FC<SlotKeypadProps> = ({
                     onClick={(event) => handleSlotClick(event, slot)}
                     aria-label={`Slot ${slot}`}
                   >
-                  <span className="slot-key-number">{slot}</span>
-                  {status === 'occupied' && (
-                    <span className="slot-key-dot" aria-hidden="true" />
-                  )}
-                </button>
+                    <span className="slot-key-number">{slot}</span>
+                    {status === 'occupied' && (
+                      <span className="slot-key-dot" aria-hidden="true" />
+                    )}
+                  </button>
                 </Tooltip>
               );
             })}

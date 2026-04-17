@@ -241,9 +241,9 @@ export const createTabCollectionStateStore = (): TabCollectionStateStore => {
     const { groups, history, addons, quickSlots } = snapshot.context;
     log.debug(
       `<< state updated — ${Object.keys(groups).length} group(s), ` +
-      `${Object.keys(history).length} history, ` +
-      `${Object.keys(addons).length} addon(s), ` +
-      `${Object.keys(quickSlots).length} quick slot(s)`
+        `${Object.keys(history).length} history, ` +
+        `${Object.keys(addons).length} addon(s), ` +
+        `${Object.keys(quickSlots).length} quick slot(s)`
     );
   });
 

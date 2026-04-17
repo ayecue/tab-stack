@@ -137,7 +137,9 @@ export class TabCollectionStateHandler implements Disposable {
   }
 
   addHistory(stateContainer: StateContainer): void {
-    this._log.debug(`addHistory: ${stateContainer.name} (${stateContainer.id})`);
+    this._log.debug(
+      `addHistory: ${stateContainer.name} (${stateContainer.id})`
+    );
     this._tabCollectionStateStore.send({
       type: 'ADD_TO_HISTORY',
       stateContainer
@@ -215,14 +217,16 @@ export class TabCollectionStateHandler implements Disposable {
       return;
     }
 
-    Object.entries(snapshot.context.quickSlots).forEach(([assignedSlot, assignedGroupId]) => {
-      if (assignedGroupId !== groupId) return;
+    Object.entries(snapshot.context.quickSlots).forEach(
+      ([assignedSlot, assignedGroupId]) => {
+        if (assignedGroupId !== groupId) return;
 
-      this._tabCollectionStateStore.send({
-        type: 'CLEAR_QUICK_SLOT',
-        slot: assignedSlot as QuickSlotIndex
-      });
-    });
+        this._tabCollectionStateStore.send({
+          type: 'CLEAR_QUICK_SLOT',
+          slot: assignedSlot as QuickSlotIndex
+        });
+      }
+    );
 
     this._tabCollectionStateStore.send({
       type: 'SET_QUICK_SLOT',

@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 
+import { useColumnDragDrop } from '../hooks/use-column-drag-drop';
 import { useTabContext } from '../hooks/use-tab-context';
 import { useTabDragDrop } from '../hooks/use-tab-drag-drop';
 import { useTabFilter } from '../hooks/use-tab-filter';
@@ -33,13 +34,38 @@ export const TabList: React.FC<TabListProps> = ({
   const tabKindColors = state.tabKindColors;
 
   const moveTab = useCallback(
-    (fromIndex: number, fromViewColumn: number, toIndex: number, toViewColumn: number) => {
-      messagingService.moveTab(fromIndex, fromViewColumn, toIndex, toViewColumn);
+    (
+      fromIndex: number,
+      fromViewColumn: number,
+      toIndex: number,
+      toViewColumn: number
+    ) => {
+      messagingService.moveTab(
+        fromIndex,
+        fromViewColumn,
+        toIndex,
+        toViewColumn
+      );
+    },
+    [messagingService]
+  );
+
+  const moveColumn = useCallback(
+    (fromViewColumn: number, toViewColumn: number) => {
+      messagingService.moveColumn(fromViewColumn, toViewColumn);
+    },
+    [messagingService]
+  );
+
+  const mergeColumns = useCallback(
+    (fromViewColumn: number, toViewColumn: number) => {
+      messagingService.mergeColumns(fromViewColumn, toViewColumn);
     },
     [messagingService]
   );
 
   const dragDrop = useTabDragDrop(moveTab);
+  const columnDragDrop = useColumnDragDrop(moveColumn, mergeColumns);
 
   const { columns, flatList, totalVisibleTabs } = useTabFilter({
     tabGroups,
@@ -87,6 +113,7 @@ export const TabList: React.FC<TabListProps> = ({
       tabKindColors={tabKindColors}
       searchTerm={searchTerm}
       dragDrop={dragDrop}
+      columnDragDrop={columnDragDrop}
       messagingService={messagingService}
     />
   );

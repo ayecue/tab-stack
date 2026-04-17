@@ -6,10 +6,10 @@ import {
   window
 } from 'vscode';
 
-import { TabManagerService } from './tab-manager';
 import { EXTENSION_NAME } from '../types/extension';
-import { QuickSlotAssignments } from '../types/tab-manager';
 import { SyncGroup, UpdatePayload } from '../types/status-bar';
+import { QuickSlotAssignments } from '../types/tab-manager';
+import { TabManagerService } from './tab-manager';
 
 function getQuickSlotByGroupId(
   quickSlots: QuickSlotAssignments,
@@ -56,20 +56,22 @@ export class StatusBarService implements Disposable {
   }
 
   private updateFromState(): void {
-    const groups = Object.values(this._tabManager.state.groups).map<SyncGroup>((group) => {
-      const tabGroups = Object.values(group.state.tabState.tabGroups);
-      const tabCount = tabGroups.reduce(
-        (count, tabGroup) => count + tabGroup.tabs.length,
-        0
-      );
+    const groups = Object.values(this._tabManager.state.groups).map<SyncGroup>(
+      (group) => {
+        const tabGroups = Object.values(group.state.tabState.tabGroups);
+        const tabCount = tabGroups.reduce(
+          (count, tabGroup) => count + tabGroup.tabs.length,
+          0
+        );
 
-      return {
-        groupId: group.id,
-        name: group.name,
-        tabCount,
-        columnCount: tabGroups.length
-      };
-    });
+        return {
+          groupId: group.id,
+          name: group.name,
+          tabCount,
+          columnCount: tabGroups.length
+        };
+      }
+    );
 
     this.setLastPayload({
       selectedGroup: this._tabManager.state.stateContainer?.id ?? null,
@@ -83,7 +85,10 @@ export class StatusBarService implements Disposable {
     this.update();
   }
 
-  private getStatusBarPayload(): Pick<StatusBarItem, 'text' | 'tooltip' | 'command'> {
+  private getStatusBarPayload(): Pick<
+    StatusBarItem,
+    'text' | 'tooltip' | 'command'
+  > {
     if (this._lastPayload.groups.length === 0) {
       return {
         text: '$(layers) Save Group',
@@ -96,7 +101,7 @@ export class StatusBarService implements Disposable {
     }
 
     const selectedGroup = this._lastPayload.groups.find(
-      (group) => group.groupId ===this._lastPayload.selectedGroup
+      (group) => group.groupId === this._lastPayload.selectedGroup
     );
 
     if (!selectedGroup) {
@@ -104,7 +109,7 @@ export class StatusBarService implements Disposable {
         text: '$(layers) Unsaved',
         tooltip: this.buildTooltip(
           'Unsaved Layout',
-          'Current tabs don\'t match any saved group.\n\nClick to switch to a recent group.'
+          "Current tabs don't match any saved group.\n\nClick to switch to a recent group."
         ),
         command: `${EXTENSION_NAME}.recentGroups`
       };

@@ -1,0 +1,2277 @@
+{
+  "scenario": "AE2: open file in active group (3vc, populated)",
+  "events": {
+    "tabEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007286056,
+        "opened": [
+          {
+            "tabRefId": "tab-6",
+            "label": "ARCHITECTURE.md",
+            "kind": "text",
+            "viewColumn": 2,
+            "index": 2,
+            "isActive": false,
+            "isDirty": false,
+            "isPinned": false,
+            "isPreview": false,
+            "uri": "file:///workspace/ARCHITECTURE.md"
+          }
+        ],
+        "closed": [],
+        "changed": []
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007286057,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "tabRefId": "tab-6",
+            "label": "ARCHITECTURE.md",
+            "kind": "text",
+            "viewColumn": 2,
+            "index": 2,
+            "isActive": true,
+            "isDirty": false,
+            "isPinned": false,
+            "isPreview": false,
+            "uri": "file:///workspace/ARCHITECTURE.md"
+          }
+        ]
+      }
+    ],
+    "groupEvents": [
+      {
+        "seq": 2,
+        "timestamp": 1776007286057,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-7",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-7"
+            ]
+          },
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-8",
+            "tabCount": 3,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json",
+              "ARCHITECTURE.md"
+            ],
+            "tabRefIds": [
+              "tab-9",
+              "tab-10",
+              "tab-8"
+            ]
+          },
+          {
+            "groupRefId": "group-6",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-11",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-12",
+              "tab-11"
+            ]
+          }
+        ]
+      }
+    ],
+    "snapshotDiffs": [
+      {
+        "seq": 0,
+        "timestamp": 1776007286056,
+        "trigger": "tab",
+        "beforeVersion": 0,
+        "afterVersion": 1,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-2",
+            "tabCount": 2,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json"
+            ],
+            "tabRefIds": [
+              "tab-3",
+              "tab-2"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-2",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-4",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-5",
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-5",
+                "label": "CHANGELOG.md",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/CHANGELOG.md"
+              },
+              {
+                "tabRefId": "tab-4",
+                "label": "webview.html",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/webview.html"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-2",
+            "tabCount": 3,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json",
+              "ARCHITECTURE.md"
+            ],
+            "tabRefIds": [
+              "tab-3",
+              "tab-2",
+              "tab-6"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-2",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              },
+              {
+                "tabRefId": "tab-6",
+                "label": "ARCHITECTURE.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/ARCHITECTURE.md"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-4",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-5",
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-5",
+                "label": "CHANGELOG.md",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/CHANGELOG.md"
+              },
+              {
+                "tabRefId": "tab-4",
+                "label": "webview.html",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/webview.html"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              1,
+              "tabCount"
+            ],
+            "type": "CHANGE",
+            "value": 3,
+            "oldValue": 2
+          },
+          {
+            "type": "CREATE",
+            "path": [
+              1,
+              "tabLabels",
+              2
+            ],
+            "value": "ARCHITECTURE.md"
+          },
+          {
+            "type": "CREATE",
+            "path": [
+              1,
+              "tabRefIds",
+              2
+            ],
+            "value": "tab-6"
+          },
+          {
+            "type": "CREATE",
+            "path": [
+              1,
+              "tabs",
+              2
+            ],
+            "value": {
+              "tabRefId": "tab-6",
+              "label": "ARCHITECTURE.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 2,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/ARCHITECTURE.md"
+            }
+          }
+        ]
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007286057,
+        "trigger": "tab",
+        "beforeVersion": 1,
+        "afterVersion": 2,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-2",
+            "tabCount": 3,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json",
+              "ARCHITECTURE.md"
+            ],
+            "tabRefIds": [
+              "tab-3",
+              "tab-2",
+              "tab-6"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-2",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              },
+              {
+                "tabRefId": "tab-6",
+                "label": "ARCHITECTURE.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/ARCHITECTURE.md"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-4",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-5",
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-5",
+                "label": "CHANGELOG.md",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/CHANGELOG.md"
+              },
+              {
+                "tabRefId": "tab-4",
+                "label": "webview.html",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/webview.html"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-6",
+            "tabCount": 3,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json",
+              "ARCHITECTURE.md"
+            ],
+            "tabRefIds": [
+              "tab-3",
+              "tab-2",
+              "tab-6"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-2",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              },
+              {
+                "tabRefId": "tab-6",
+                "label": "ARCHITECTURE.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/ARCHITECTURE.md"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-4",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-5",
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-5",
+                "label": "CHANGELOG.md",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/CHANGELOG.md"
+              },
+              {
+                "tabRefId": "tab-4",
+                "label": "webview.html",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/webview.html"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              1,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-6",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              1,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": false,
+            "oldValue": true
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              2,
+              "isActive"
+            ],
+            "type": "CHANGE",
+            "value": true,
+            "oldValue": false
+          }
+        ]
+      },
+      {
+        "seq": 2,
+        "timestamp": 1776007286057,
+        "trigger": "group",
+        "beforeVersion": 2,
+        "afterVersion": 3,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-2",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-6",
+            "tabCount": 3,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json",
+              "ARCHITECTURE.md"
+            ],
+            "tabRefIds": [
+              "tab-3",
+              "tab-2",
+              "tab-6"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-3",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-2",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              },
+              {
+                "tabRefId": "tab-6",
+                "label": "ARCHITECTURE.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/ARCHITECTURE.md"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-3",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-4",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-5",
+              "tab-4"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-5",
+                "label": "CHANGELOG.md",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/CHANGELOG.md"
+              },
+              {
+                "tabRefId": "tab-4",
+                "label": "webview.html",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/webview.html"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-4",
+            "viewColumn": 1,
+            "isActive": false,
+            "activeTabRefId": "tab-7",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-7"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-7",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-5",
+            "viewColumn": 2,
+            "isActive": true,
+            "activeTabRefId": "tab-8",
+            "tabCount": 3,
+            "tabLabels": [
+              "README.md",
+              "tsconfig.json",
+              "ARCHITECTURE.md"
+            ],
+            "tabRefIds": [
+              "tab-9",
+              "tab-10",
+              "tab-8"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-9",
+                "label": "README.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/README.md"
+              },
+              {
+                "tabRefId": "tab-10",
+                "label": "tsconfig.json",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 1,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/tsconfig.json"
+              },
+              {
+                "tabRefId": "tab-8",
+                "label": "ARCHITECTURE.md",
+                "kind": "text",
+                "viewColumn": 2,
+                "index": 2,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/ARCHITECTURE.md"
+              }
+            ]
+          },
+          {
+            "groupRefId": "group-6",
+            "viewColumn": 3,
+            "isActive": false,
+            "activeTabRefId": "tab-11",
+            "tabCount": 2,
+            "tabLabels": [
+              "CHANGELOG.md",
+              "webview.html"
+            ],
+            "tabRefIds": [
+              "tab-12",
+              "tab-11"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-12",
+                "label": "CHANGELOG.md",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 0,
+                "isActive": false,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/CHANGELOG.md"
+              },
+              {
+                "tabRefId": "tab-11",
+                "label": "webview.html",
+                "kind": "text",
+                "viewColumn": 3,
+                "index": 1,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/webview.html"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-4",
+            "oldValue": "group-1"
+          },
+          {
+            "path": [
+              0,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-7",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-7",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-7",
+            "oldValue": "tab-1"
+          },
+          {
+            "path": [
+              1,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-5",
+            "oldValue": "group-2"
+          },
+          {
+            "path": [
+              1,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-8",
+            "oldValue": "tab-6"
+          },
+          {
+            "path": [
+              1,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-3"
+          },
+          {
+            "path": [
+              1,
+              "tabRefIds",
+              1
+            ],
+            "type": "CHANGE",
+            "value": "tab-10",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              1,
+              "tabRefIds",
+              2
+            ],
+            "type": "CHANGE",
+            "value": "tab-8",
+            "oldValue": "tab-6"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-9",
+            "oldValue": "tab-3"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              1,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-10",
+            "oldValue": "tab-2"
+          },
+          {
+            "path": [
+              1,
+              "tabs",
+              2,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-8",
+            "oldValue": "tab-6"
+          },
+          {
+            "path": [
+              2,
+              "groupRefId"
+            ],
+            "type": "CHANGE",
+            "value": "group-6",
+            "oldValue": "group-3"
+          },
+          {
+            "path": [
+              2,
+              "activeTabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-4"
+          },
+          {
+            "path": [
+              2,
+              "tabRefIds",
+              0
+            ],
+            "type": "CHANGE",
+            "value": "tab-12",
+            "oldValue": "tab-5"
+          },
+          {
+            "path": [
+              2,
+              "tabRefIds",
+              1
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-4"
+          },
+          {
+            "path": [
+              2,
+              "tabs",
+              0,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-12",
+            "oldValue": "tab-5"
+          },
+          {
+            "path": [
+              2,
+              "tabs",
+              1,
+              "tabRefId"
+            ],
+            "type": "CHANGE",
+            "value": "tab-11",
+            "oldValue": "tab-4"
+          }
+        ]
+      }
+    ]
+  },
+  "replay": {
+    "observedEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007286056,
+        "observedAtMs": 1776007286056,
+        "type": "tab",
+        "event": {
+          "opened": [
+            {
+              "tabRefId": "tab-6",
+              "label": "ARCHITECTURE.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 2,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/ARCHITECTURE.md"
+            }
+          ],
+          "closed": [],
+          "changed": []
+        },
+        "beforeSnapshot": {
+          "version": 0,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-2",
+              "tabCount": 2,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json"
+              ],
+              "tabRefIds": [
+                "tab-3",
+                "tab-2"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-2",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-4",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-5",
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-5",
+                  "label": "CHANGELOG.md",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/CHANGELOG.md"
+                },
+                {
+                  "tabRefId": "tab-4",
+                  "label": "webview.html",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/webview.html"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-2",
+              "tabCount": 3,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json",
+                "ARCHITECTURE.md"
+              ],
+              "tabRefIds": [
+                "tab-3",
+                "tab-2",
+                "tab-6"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-2",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                },
+                {
+                  "tabRefId": "tab-6",
+                  "label": "ARCHITECTURE.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/ARCHITECTURE.md"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-4",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-5",
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-5",
+                  "label": "CHANGELOG.md",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/CHANGELOG.md"
+                },
+                {
+                  "tabRefId": "tab-4",
+                  "label": "webview.html",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/webview.html"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "seq": 1,
+        "timestamp": 1776007286057,
+        "observedAtMs": 1776007286057,
+        "type": "tab",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "tabRefId": "tab-6",
+              "label": "ARCHITECTURE.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 2,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/ARCHITECTURE.md"
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-2",
+              "tabCount": 3,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json",
+                "ARCHITECTURE.md"
+              ],
+              "tabRefIds": [
+                "tab-3",
+                "tab-2",
+                "tab-6"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-2",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                },
+                {
+                  "tabRefId": "tab-6",
+                  "label": "ARCHITECTURE.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/ARCHITECTURE.md"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-4",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-5",
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-5",
+                  "label": "CHANGELOG.md",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/CHANGELOG.md"
+                },
+                {
+                  "tabRefId": "tab-4",
+                  "label": "webview.html",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/webview.html"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 2,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-6",
+              "tabCount": 3,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json",
+                "ARCHITECTURE.md"
+              ],
+              "tabRefIds": [
+                "tab-3",
+                "tab-2",
+                "tab-6"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-2",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                },
+                {
+                  "tabRefId": "tab-6",
+                  "label": "ARCHITECTURE.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/ARCHITECTURE.md"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-4",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-5",
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-5",
+                  "label": "CHANGELOG.md",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/CHANGELOG.md"
+                },
+                {
+                  "tabRefId": "tab-4",
+                  "label": "webview.html",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/webview.html"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "seq": 2,
+        "timestamp": 1776007286057,
+        "observedAtMs": 1776007286057,
+        "type": "group",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-7",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-7"
+              ]
+            },
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-8",
+              "tabCount": 3,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json",
+                "ARCHITECTURE.md"
+              ],
+              "tabRefIds": [
+                "tab-9",
+                "tab-10",
+                "tab-8"
+              ]
+            },
+            {
+              "groupRefId": "group-6",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-11",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-12",
+                "tab-11"
+              ]
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 2,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-2",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-6",
+              "tabCount": 3,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json",
+                "ARCHITECTURE.md"
+              ],
+              "tabRefIds": [
+                "tab-3",
+                "tab-2",
+                "tab-6"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-3",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-2",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                },
+                {
+                  "tabRefId": "tab-6",
+                  "label": "ARCHITECTURE.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/ARCHITECTURE.md"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-3",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-4",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-5",
+                "tab-4"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-5",
+                  "label": "CHANGELOG.md",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/CHANGELOG.md"
+                },
+                {
+                  "tabRefId": "tab-4",
+                  "label": "webview.html",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/webview.html"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 3,
+          "groups": [
+            {
+              "groupRefId": "group-4",
+              "viewColumn": 1,
+              "isActive": false,
+              "activeTabRefId": "tab-7",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-7"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-7",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-5",
+              "viewColumn": 2,
+              "isActive": true,
+              "activeTabRefId": "tab-8",
+              "tabCount": 3,
+              "tabLabels": [
+                "README.md",
+                "tsconfig.json",
+                "ARCHITECTURE.md"
+              ],
+              "tabRefIds": [
+                "tab-9",
+                "tab-10",
+                "tab-8"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-9",
+                  "label": "README.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/README.md"
+                },
+                {
+                  "tabRefId": "tab-10",
+                  "label": "tsconfig.json",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 1,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/tsconfig.json"
+                },
+                {
+                  "tabRefId": "tab-8",
+                  "label": "ARCHITECTURE.md",
+                  "kind": "text",
+                  "viewColumn": 2,
+                  "index": 2,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/ARCHITECTURE.md"
+                }
+              ]
+            },
+            {
+              "groupRefId": "group-6",
+              "viewColumn": 3,
+              "isActive": false,
+              "activeTabRefId": "tab-11",
+              "tabCount": 2,
+              "tabLabels": [
+                "CHANGELOG.md",
+                "webview.html"
+              ],
+              "tabRefIds": [
+                "tab-12",
+                "tab-11"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-12",
+                  "label": "CHANGELOG.md",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 0,
+                  "isActive": false,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/CHANGELOG.md"
+                },
+                {
+                  "tabRefId": "tab-11",
+                  "label": "webview.html",
+                  "kind": "text",
+                  "viewColumn": 3,
+                  "index": 1,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/webview.html"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "initialSnapshot": {
+      "version": 0,
+      "groups": [
+        {
+          "groupRefId": "group-1",
+          "viewColumn": 1,
+          "isActive": false,
+          "activeTabRefId": "tab-1",
+          "tabCount": 1,
+          "tabLabels": [
+            "package.json"
+          ],
+          "tabRefIds": [
+            "tab-1"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-1",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-2",
+          "viewColumn": 2,
+          "isActive": true,
+          "activeTabRefId": "tab-2",
+          "tabCount": 2,
+          "tabLabels": [
+            "README.md",
+            "tsconfig.json"
+          ],
+          "tabRefIds": [
+            "tab-3",
+            "tab-2"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-3",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            },
+            {
+              "tabRefId": "tab-2",
+              "label": "tsconfig.json",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 1,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/tsconfig.json"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-3",
+          "viewColumn": 3,
+          "isActive": false,
+          "activeTabRefId": "tab-4",
+          "tabCount": 2,
+          "tabLabels": [
+            "CHANGELOG.md",
+            "webview.html"
+          ],
+          "tabRefIds": [
+            "tab-5",
+            "tab-4"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-5",
+              "label": "CHANGELOG.md",
+              "kind": "text",
+              "viewColumn": 3,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/CHANGELOG.md"
+            },
+            {
+              "tabRefId": "tab-4",
+              "label": "webview.html",
+              "kind": "text",
+              "viewColumn": 3,
+              "index": 1,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/webview.html"
+            }
+          ]
+        }
+      ]
+    },
+    "finalSnapshot": {
+      "version": 3,
+      "groups": [
+        {
+          "groupRefId": "group-4",
+          "viewColumn": 1,
+          "isActive": false,
+          "activeTabRefId": "tab-7",
+          "tabCount": 1,
+          "tabLabels": [
+            "package.json"
+          ],
+          "tabRefIds": [
+            "tab-7"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-7",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-5",
+          "viewColumn": 2,
+          "isActive": true,
+          "activeTabRefId": "tab-8",
+          "tabCount": 3,
+          "tabLabels": [
+            "README.md",
+            "tsconfig.json",
+            "ARCHITECTURE.md"
+          ],
+          "tabRefIds": [
+            "tab-9",
+            "tab-10",
+            "tab-8"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-9",
+              "label": "README.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/README.md"
+            },
+            {
+              "tabRefId": "tab-10",
+              "label": "tsconfig.json",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 1,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/tsconfig.json"
+            },
+            {
+              "tabRefId": "tab-8",
+              "label": "ARCHITECTURE.md",
+              "kind": "text",
+              "viewColumn": 2,
+              "index": 2,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/ARCHITECTURE.md"
+            }
+          ]
+        },
+        {
+          "groupRefId": "group-6",
+          "viewColumn": 3,
+          "isActive": false,
+          "activeTabRefId": "tab-11",
+          "tabCount": 2,
+          "tabLabels": [
+            "CHANGELOG.md",
+            "webview.html"
+          ],
+          "tabRefIds": [
+            "tab-12",
+            "tab-11"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-12",
+              "label": "CHANGELOG.md",
+              "kind": "text",
+              "viewColumn": 3,
+              "index": 0,
+              "isActive": false,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/CHANGELOG.md"
+            },
+            {
+              "tabRefId": "tab-11",
+              "label": "webview.html",
+              "kind": "text",
+              "viewColumn": 3,
+              "index": 1,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/webview.html"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "layout": {
+    "before": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json"
+        ]
+      },
+      {
+        "viewColumn": 2,
+        "tabs": [
+          "README.md",
+          "tsconfig.json"
+        ]
+      },
+      {
+        "viewColumn": 3,
+        "tabs": [
+          "CHANGELOG.md",
+          "webview.html"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json"
+        ]
+      },
+      {
+        "viewColumn": 2,
+        "tabs": [
+          "README.md",
+          "tsconfig.json",
+          "ARCHITECTURE.md"
+        ]
+      },
+      {
+        "viewColumn": 3,
+        "tabs": [
+          "CHANGELOG.md",
+          "webview.html"
+        ]
+      }
+    ]
+  }
+}

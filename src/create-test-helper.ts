@@ -1,8 +1,9 @@
 import {
   commands,
   Disposable,
-  Uri,
-  window,
+  LogOutputChannel,
+  Tab,
+  TabGroup,
   TabInputCustom,
   TabInputNotebook,
   TabInputNotebookDiff,
@@ -10,20 +11,29 @@ import {
   TabInputText,
   TabInputTextDiff,
   TabInputWebview,
-  LogOutputChannel,
+  Uri,
+  window
 } from 'vscode';
 
 import { ViewManagerProvider } from './providers/view-manager';
+import { getLogger } from './services/logger';
+import { TabManagerService } from './services/tab-manager';
 import { EXTENSION_NAME } from './types/extension';
 import {
   ExtensionCollectionsSyncMessage,
   ExtensionNotificationMessage
 } from './types/messages';
-import { TabManagerService } from './services/tab-manager';
-import { getLogger } from './services/logger';
 
 type CapturedSync = Omit<ExtensionCollectionsSyncMessage, 'type'>;
 type CapturedNotify = Omit<ExtensionNotificationMessage, 'type'>;
+
+type RuntimeProcess = {
+  env?: Record<string, string | undefined>;
+};
+
+const runtimeProcess = globalThis as typeof globalThis & {
+  process?: RuntimeProcess;
+};
 
 function getTabInputKind(input: unknown): string {
   if (input instanceof TabInputText) return 'TabInputText';
@@ -38,7 +48,8 @@ function getTabInputKind(input: unknown): string {
 
 class LoggerInterceptor {
   private _channel: LogOutputChannel;
-  private _logMessages: { level: number, message: string; args: unknown[] }[] = [];
+  private _logMessages: { level: number; message: string; args: unknown[] }[] =
+    [];
 
   constructor() {
     // @ts-expect-error - accessing private member for testing purposes
@@ -70,7 +81,7 @@ class LoggerInterceptor {
       });
       return originalDebug.call(this._channel, message, ...args);
     };
-    
+
     this._channel.warn = (message: string, ...args: unknown[]) => {
       this._logMessages.push({
         level: 3,
@@ -135,8 +146,10 @@ class RuntimeTracker implements Disposable {
         this._lastRender++;
       }),
 
-      this._tabManagerService.onDidSyncCollections((p) => this._syncMessages.push(p)),
-      this._tabManagerService.onDidNotify((p) => this._notifications.push(p)),
+      this._tabManagerService.onDidSyncCollections((p) =>
+        this._syncMessages.push(p)
+      ),
+      this._tabManagerService.onDidNotify((p) => this._notifications.push(p))
     );
   }
 
@@ -172,11 +185,13 @@ class RuntimeTracker implements Disposable {
   }
 }
 
-export function createTestHelper(tabManagerService: TabManagerService): Disposable[] {
+export function createTestHelper(
+  tabManagerService: TabManagerService
+): Disposable[] {
   // Test-only helper commands (not contributed to menus):
   const testCommands: Disposable[] = [];
 
-  if (!process.env.VSCODE_TAB_STACK_TEST) {
+  if (!runtimeProcess.process?.env?.VSCODE_TAB_STACK_TEST) {
     return testCommands;
   }
 
@@ -195,12 +210,9 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   );
 
   testCommands.push(
-    commands.registerCommand(
-      `${EXTENSION_NAME}.__test__openView`,
-      async () => {
-        await commands.executeCommand('workbench.view.extension.tabStack');
-      }
-    )
+    commands.registerCommand(`${EXTENSION_NAME}.__test__openView`, async () => {
+      await commands.executeCommand('workbench.view.extension.tabStack');
+    })
   );
 
   testCommands.push(
@@ -223,52 +235,56 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
   );
 
   testCommands.push(
-    commands.registerCommand(
-      `${EXTENSION_NAME}.__test__getState`,
-      async () => {
-        const groups = tabManagerService.state?.groups ?? {};
-        const addons = tabManagerService.state?.addons ?? {};
-        const history = tabManagerService.state?.history ?? {};
-        const quickSlots = tabManagerService.state?.quickSlots ?? {};
-        const selectedGroupId =
-          tabManagerService.state?.stateContainer?.id ?? null;
-        return {
-          groups: Object.fromEntries(
-            Object.values(groups).map((g) => {
-              const tabGroupsArray = Object.values(g.state?.tabState?.tabGroups ?? {});
-              const tabCount = tabGroupsArray.reduce(
-                (sum, tg) => sum + tg.tabs.length, 0
-              );
-              const columnCount = tabGroupsArray.length;
-              const tabLabels = tabGroupsArray.flatMap((tg) => tg.tabs.map((t) => t.label));
-              return [
-                g.id,
-                { id: g.id, name: g.name, tabCount, columnCount, tabLabels }
-              ];
-            })
-          ),
-          addons: Object.fromEntries(
-            Object.values(addons).map((a) => [
-              a.id,
-              { id: a.id, name: a.name }
-            ])
-          ),
-          historyIds: Object.keys(history),
-          history: Object.fromEntries(
-            Object.values(history).map((h) => {
-              const tabGroupsArray = Object.values(h.state?.tabState?.tabGroups ?? {});
-              const tabCount = tabGroupsArray.reduce(
-                (sum, tg) => sum + tg.tabs.length, 0
-              );
-              const tabLabels = tabGroupsArray.flatMap((tg) => tg.tabs.map((t) => t.label));
-              return [h.id, { id: h.id, name: h.name, tabCount, tabLabels }];
-            })
-          ),
-          quickSlots,
-          selectedGroupId
-        };
-      }
-    )
+    commands.registerCommand(`${EXTENSION_NAME}.__test__getState`, async () => {
+      const groups = tabManagerService.state?.groups ?? {};
+      const addons = tabManagerService.state?.addons ?? {};
+      const history = tabManagerService.state?.history ?? {};
+      const quickSlots = tabManagerService.state?.quickSlots ?? {};
+      const selectedGroupId =
+        tabManagerService.state?.stateContainer?.id ?? null;
+      return {
+        groups: Object.fromEntries(
+          Object.values(groups).map((g) => {
+            const tabGroupsArray = Object.values(
+              g.state?.tabState?.tabGroups ?? {}
+            );
+            const tabCount = tabGroupsArray.reduce(
+              (sum, tg) => sum + tg.tabs.length,
+              0
+            );
+            const columnCount = tabGroupsArray.length;
+            const tabLabels = tabGroupsArray.flatMap((tg) =>
+              tg.tabs.map((t) => t.label)
+            );
+            return [
+              g.id,
+              { id: g.id, name: g.name, tabCount, columnCount, tabLabels }
+            ];
+          })
+        ),
+        addons: Object.fromEntries(
+          Object.values(addons).map((a) => [a.id, { id: a.id, name: a.name }])
+        ),
+        historyIds: Object.keys(history),
+        history: Object.fromEntries(
+          Object.values(history).map((h) => {
+            const tabGroupsArray = Object.values(
+              h.state?.tabState?.tabGroups ?? {}
+            );
+            const tabCount = tabGroupsArray.reduce(
+              (sum, tg) => sum + tg.tabs.length,
+              0
+            );
+            const tabLabels = tabGroupsArray.flatMap((tg) =>
+              tg.tabs.map((t) => t.label)
+            );
+            return [h.id, { id: h.id, name: h.name, tabCount, tabLabels }];
+          })
+        ),
+        quickSlots,
+        selectedGroupId
+      };
+    })
   );
 
   testCommands.push(
@@ -348,7 +364,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       }
     )
   );
-    
+
   testCommands.push(
     commands.registerCommand(
       `${EXTENSION_NAME}.__test__getLastRenderTime`,
@@ -361,7 +377,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       `${EXTENSION_NAME}.__test__waitForRender`,
       async (fromTimeParam?: string, maxTimeParam?: string) => {
         const fromTime = fromTimeParam ? Number(fromTimeParam) : Date.now();
-        
+
         if (isNaN(fromTime)) {
           throw new Error('Invalid fromTime parameter');
         }
@@ -385,7 +401,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
             setTimeout(check, 50);
           };
-          
+
           check();
         });
       }
@@ -404,7 +420,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
       `${EXTENSION_NAME}.__test__waitForSync`,
       (fromTimeParam?: string, maxTimeParam?: string) => {
         const fromTime = fromTimeParam ? Number(fromTimeParam) : Date.now();
-        
+
         if (isNaN(fromTime)) {
           throw new Error('Invalid fromTime parameter');
         }
@@ -428,7 +444,7 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
 
             setTimeout(check, 50);
           };
-          
+
           check();
         });
       }
@@ -470,9 +486,241 @@ export function createTestHelper(tabManagerService: TabManagerService): Disposab
         return {
           tabGroups,
           selection,
-          activeEditorUri:
-            activeEditor?.document?.uri?.toString() ?? null
+          activeEditorUri: activeEditor?.document?.uri?.toString() ?? null
         };
+      }
+    )
+  );
+
+  // --- Raw VS Code event capture for diagnostic tests ---
+  let rawEventCapture: {
+    seq: number;
+    tabEvents: Array<{
+      seq: number;
+      timestamp: number;
+      opened: Array<ReturnType<typeof serializeTab>>;
+      closed: Array<ReturnType<typeof serializeTab>>;
+      changed: Array<ReturnType<typeof serializeTab>>;
+    }>;
+    groupEvents: Array<{
+      seq: number;
+      timestamp: number;
+      opened: Array<ReturnType<typeof serializeTabGroup>>;
+      closed: Array<ReturnType<typeof serializeTabGroup>>;
+      changed: Array<ReturnType<typeof serializeTabGroup>>;
+    }>;
+    disposables: Disposable[];
+  } | null = null;
+
+  function serializeTab(tab: Tab) {
+    return {
+      label: tab.label,
+      kind: getTabInputKind(tab.input),
+      viewColumn: tab.group.viewColumn,
+      index: tab.group.tabs.indexOf(tab),
+      isActive: tab.isActive,
+      isDirty: tab.isDirty,
+      isPinned: tab.isPinned,
+      isPreview: tab.isPreview
+    };
+  }
+
+  function serializeTabGroup(group: TabGroup) {
+    return {
+      viewColumn: group.viewColumn,
+      isActive: group.isActive,
+      tabCount: group.tabs.length,
+      tabLabels: group.tabs.map((t) => t.label)
+    };
+  }
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__startRawEventCapture`,
+      () => {
+        if (rawEventCapture) {
+          rawEventCapture.disposables.forEach((d) => d.dispose());
+        }
+
+        rawEventCapture = {
+          seq: 0,
+          tabEvents: [],
+          groupEvents: [],
+          disposables: []
+        };
+
+        const capture = rawEventCapture;
+
+        capture.disposables.push(
+          window.tabGroups.onDidChangeTabs((e) => {
+            capture.tabEvents.push({
+              seq: capture.seq++,
+              timestamp: Date.now(),
+              opened: e.opened.map(serializeTab),
+              closed: e.closed.map(serializeTab),
+              changed: e.changed.map(serializeTab)
+            });
+          }),
+          window.tabGroups.onDidChangeTabGroups((e) => {
+            capture.groupEvents.push({
+              seq: capture.seq++,
+              timestamp: Date.now(),
+              opened: e.opened.map(serializeTabGroup),
+              closed: e.closed.map(serializeTabGroup),
+              changed: e.changed.map(serializeTabGroup)
+            });
+          })
+        );
+
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__stopRawEventCapture`,
+      () => {
+        if (rawEventCapture) {
+          rawEventCapture.disposables.forEach((d) => d.dispose());
+          rawEventCapture.disposables = [];
+        }
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__getRawEvents`,
+      (clear = false) => {
+        if (!rawEventCapture) {
+          return { tabEvents: [], groupEvents: [] };
+        }
+        const result = {
+          tabEvents: [...rawEventCapture.tabEvents],
+          groupEvents: [...rawEventCapture.groupEvents]
+        };
+        if (clear) {
+          rawEventCapture.tabEvents = [];
+          rawEventCapture.groupEvents = [];
+          rawEventCapture.seq = 0;
+        }
+        return result;
+      }
+    )
+  );
+
+  // --- Resolved proxy event capture for integration tests ---
+  let resolvedEventCapture: {
+    events: Array<{
+      seq: number;
+      timestamp: number;
+      created: Array<{ label: string; viewColumn: number; index: number }>;
+      closed: Array<{ label: string; viewColumn: number; index: number }>;
+      moved: Array<{
+        label: string;
+        fromViewColumn: number;
+        toViewColumn: number;
+        fromIndex: number;
+        toIndex: number;
+        changed: string[];
+      }>;
+      updated: Array<{
+        label: string;
+        changed: string[];
+      }>;
+    }>;
+    disposable: Disposable | null;
+  } | null = null;
+
+  const tabChangeProxy = (
+    tabManagerService as unknown as {
+      _tabChangeProxy: import('./services/tab-change-proxy').TabChangeProxyService;
+    }
+  )._tabChangeProxy;
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__startResolvedEventCapture`,
+      () => {
+        if (resolvedEventCapture?.disposable) {
+          resolvedEventCapture.disposable.dispose();
+        }
+
+        resolvedEventCapture = {
+          events: [],
+          disposable: null
+        };
+
+        const capture = resolvedEventCapture;
+        let seq = 0;
+
+        capture.disposable = tabChangeProxy.onDidChangeTabs((e) => {
+          capture.events.push({
+            seq: seq++,
+            timestamp: Date.now(),
+            created: e.created.map((t) => {
+              const entry = e.createdEntries.get(t);
+              return {
+                label: t.label,
+                viewColumn: entry?.viewColumn ?? t.group.viewColumn,
+                index: entry?.index ?? t.group.tabs.indexOf(t)
+              };
+            }),
+            closed: e.closed.map((t) => {
+              const entry = e.closedEntries.get(t);
+              return {
+                label: t.label,
+                viewColumn: entry?.viewColumn ?? t.group.viewColumn,
+                index: entry?.index ?? t.group.tabs.indexOf(t)
+              };
+            }),
+            moved: e.moved.map((m) => ({
+              label: m.tab.label,
+              fromViewColumn: m.fromViewColumn,
+              toViewColumn: m.toViewColumn,
+              fromIndex: m.fromIndex,
+              toIndex: m.toIndex,
+              changed: [...m.changed]
+            })),
+            updated: e.updated.map((u) => ({
+              label: u.tab.label,
+              changed: [...u.changed]
+            }))
+          });
+        });
+
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__stopResolvedEventCapture`,
+      () => {
+        if (resolvedEventCapture) {
+          resolvedEventCapture.disposable?.dispose();
+          resolvedEventCapture = null;
+        }
+        return true;
+      }
+    )
+  );
+
+  testCommands.push(
+    commands.registerCommand(
+      `${EXTENSION_NAME}.__test__getResolvedEvents`,
+      (clear = false) => {
+        if (!resolvedEventCapture) {
+          return { events: [] };
+        }
+        const result = { events: [...resolvedEventCapture.events] };
+        if (clear) {
+          resolvedEventCapture.events = [];
+        }
+        return result;
       }
     )
   );

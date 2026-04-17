@@ -51,6 +51,17 @@ That is it - from here you can start building up groups, snapshots, and add-ons 
 
 ---
 
+## AI workflow
+
+- Repo instructions and reusable prompts live under `.github/`
+- `ARCHITECTURE.md` is the Octocode-first architecture map for AI and contributors
+- Workspace MCP server configuration lives in `.vscode/mcp.json`
+- `AI_SETUP.md` documents the provided MCP servers, prompt files, and Octocode-backed research workflow
+- `npm run octo:index` refreshes the local Octocode index
+- `npm run octo:watch` keeps the Octocode index current during active work
+
+---
+
 ## Commands & keybindings
 
 Most functionality is available both through the **Tab Stack view** and the **Command Palette**.

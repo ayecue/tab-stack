@@ -1,0 +1,282 @@
+{
+  "scenario": "G: dirty a tab",
+  "events": {
+    "tabEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007201128,
+        "opened": [],
+        "closed": [],
+        "changed": [
+          {
+            "tabRefId": "tab-1",
+            "label": "package.json",
+            "kind": "text",
+            "viewColumn": 1,
+            "index": 0,
+            "isActive": true,
+            "isDirty": true,
+            "isPinned": false,
+            "isPreview": false,
+            "uri": "file:///workspace/package.json"
+          }
+        ]
+      }
+    ],
+    "groupEvents": [],
+    "snapshotDiffs": [
+      {
+        "seq": 0,
+        "timestamp": 1776007201128,
+        "trigger": "tab",
+        "beforeVersion": 0,
+        "afterVersion": 1,
+        "before": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": false,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "groupRefId": "group-1",
+            "viewColumn": 1,
+            "isActive": true,
+            "activeTabRefId": "tab-1",
+            "tabCount": 1,
+            "tabLabels": [
+              "package.json"
+            ],
+            "tabRefIds": [
+              "tab-1"
+            ],
+            "tabs": [
+              {
+                "tabRefId": "tab-1",
+                "label": "package.json",
+                "kind": "text",
+                "viewColumn": 1,
+                "index": 0,
+                "isActive": true,
+                "isDirty": true,
+                "isPinned": false,
+                "isPreview": false,
+                "uri": "file:///workspace/package.json"
+              }
+            ]
+          }
+        ],
+        "diff": [
+          {
+            "path": [
+              0,
+              "tabs",
+              0,
+              "isDirty"
+            ],
+            "type": "CHANGE",
+            "value": true,
+            "oldValue": false
+          }
+        ]
+      }
+    ]
+  },
+  "replay": {
+    "observedEvents": [
+      {
+        "seq": 0,
+        "timestamp": 1776007201128,
+        "observedAtMs": 1776007201128,
+        "type": "tab",
+        "event": {
+          "opened": [],
+          "closed": [],
+          "changed": [
+            {
+              "tabRefId": "tab-1",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": true,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        },
+        "beforeSnapshot": {
+          "version": 0,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": false,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            }
+          ]
+        },
+        "afterSnapshot": {
+          "version": 1,
+          "groups": [
+            {
+              "groupRefId": "group-1",
+              "viewColumn": 1,
+              "isActive": true,
+              "activeTabRefId": "tab-1",
+              "tabCount": 1,
+              "tabLabels": [
+                "package.json"
+              ],
+              "tabRefIds": [
+                "tab-1"
+              ],
+              "tabs": [
+                {
+                  "tabRefId": "tab-1",
+                  "label": "package.json",
+                  "kind": "text",
+                  "viewColumn": 1,
+                  "index": 0,
+                  "isActive": true,
+                  "isDirty": true,
+                  "isPinned": false,
+                  "isPreview": false,
+                  "uri": "file:///workspace/package.json"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "initialSnapshot": {
+      "version": 0,
+      "groups": [
+        {
+          "groupRefId": "group-1",
+          "viewColumn": 1,
+          "isActive": true,
+          "activeTabRefId": "tab-1",
+          "tabCount": 1,
+          "tabLabels": [
+            "package.json"
+          ],
+          "tabRefIds": [
+            "tab-1"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-1",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": false,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        }
+      ]
+    },
+    "finalSnapshot": {
+      "version": 1,
+      "groups": [
+        {
+          "groupRefId": "group-1",
+          "viewColumn": 1,
+          "isActive": true,
+          "activeTabRefId": "tab-1",
+          "tabCount": 1,
+          "tabLabels": [
+            "package.json"
+          ],
+          "tabRefIds": [
+            "tab-1"
+          ],
+          "tabs": [
+            {
+              "tabRefId": "tab-1",
+              "label": "package.json",
+              "kind": "text",
+              "viewColumn": 1,
+              "index": 0,
+              "isActive": true,
+              "isDirty": true,
+              "isPinned": false,
+              "isPreview": false,
+              "uri": "file:///workspace/package.json"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "layout": {
+    "before": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "viewColumn": 1,
+        "tabs": [
+          "package.json"
+        ]
+      }
+    ]
+  }
+}

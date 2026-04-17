@@ -1,0 +1,2397 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for A: open a single file 1`] = `
+{
+  "closed": [],
+  "created": [
+    "package.json",
+  ],
+  "moved": [],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AA1: duplicate-target move (2vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AA2: duplicate-target move (3vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "LICENSE",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AA3: duplicate-target move (5vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "CHANGELOG.md",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "LICENSE",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AB1: last-tab move-out (2vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 2,
+      "label": "vitest.config.ts",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AB2: last-tab move-out (3vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "vitest.config.ts",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 2,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AB3: last-tab move-out (5vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 5,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 5,
+      "label": "CHANGELOG.md",
+      "toIndex": 1,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 5,
+      "label": "webview.html",
+      "toIndex": 2,
+      "toViewColumn": 4,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AC1: last-tab duplicate-move (2vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AC2: last-tab duplicate-move (3vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 3,
+      "label": "vitest.config.ts",
+      "toIndex": 2,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AC3: last-tab duplicate-move (5vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 5,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 5,
+      "label": "CHANGELOG.md",
+      "toIndex": 1,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 5,
+      "label": "webview.html",
+      "toIndex": 2,
+      "toViewColumn": 4,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AD1: join all groups (2vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AD2: join all groups (3vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "LICENSE",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AD3: join all groups (5vc-duplicate) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "CHANGELOG.md",
+      "toIndex": 4,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "webview.html",
+      "toIndex": 5,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 4,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 5,
+      "label": "CHANGELOG.md",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 5,
+      "label": "webview.html",
+      "toIndex": 2,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AE1: open file in active group (1vc, populated) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "LICENSE",
+  ],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AE2: open file in active group (3vc, populated) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "ARCHITECTURE.md",
+  ],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AE3: reopen same file in active group (1vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AF1: close single tab (1vc, populated) 1`] = `
+{
+  "closed": [
+    "README.md",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AF2: close single tab (4vc, populated middle group) 1`] = `
+{
+  "closed": [
+    "tsconfig.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 2,
+      "fromViewColumn": 3,
+      "label": "vitest.config.ts",
+      "toIndex": 1,
+      "toViewColumn": 3,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AG1: split editor (1vc, populated) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "README.md",
+  ],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AG2: split editor (3vc, middle group) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "tsconfig.json",
+  ],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "CHANGELOG.md",
+      "toIndex": 1,
+      "toViewColumn": 4,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AH1: activate different tab (2vc, active group) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AH2: activate different tab (4vc, focused group) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AI1: preview promotion (1vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isPreview",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AI2: preview promotion (1vc, populated) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isPreview",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AI3: preview promotion (3vc, refocus) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isPreview",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AJ1: multi-tab cross-group approximation (2vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "CHANGELOG.md",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AJ2: multi-tab cross-group approximation (3vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 3,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 3,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 2,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "LICENSE",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "webview.html",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AJ3: multi-tab cross-group approximation (5vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 2,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "vitest.config.ts",
+      "toIndex": 3,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "vitest.config.ts",
+      "toIndex": 2,
+      "toViewColumn": 3,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "LICENSE",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "webview.html",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AK1: multi-tab new-group approximation (1vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AK2: multi-tab new-group approximation (3vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "CHANGELOG.md",
+      "toIndex": 1,
+      "toViewColumn": 4,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AK3: multi-tab new-group approximation (5vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 5,
+      "label": "CHANGELOG.md",
+      "toIndex": 0,
+      "toViewColumn": 6,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 5,
+      "label": "webview.html",
+      "toIndex": 1,
+      "toViewColumn": 6,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "LICENSE",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AL1: multi-tab split approximation (1vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "README.md",
+    "tsconfig.json",
+  ],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AL2: multi-tab split approximation (3vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "CHANGELOG.md",
+    "LICENSE",
+  ],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "CHANGELOG.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AL3: multi-tab split approximation (5vc, 2 tabs) 1`] = `
+{
+  "closed": [],
+  "created": [
+    "CHANGELOG.md",
+    "webview.html",
+  ],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "webview.html",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AM1: join two groups (2vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AM2: join two groups (3vc-middle-right) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AM3: join two groups (4vc-rightmost-duplicate) 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "package.json",
+      "toIndex": 1,
+      "toViewColumn": 3,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 3,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 0,
+      "fromViewColumn": 4,
+      "label": "CHANGELOG.md",
+      "toIndex": 2,
+      "toViewColumn": 3,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AN1: multi-tab same-group approximation (1vc-rightward-pair) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 3,
+      "fromViewColumn": 1,
+      "label": "LICENSE",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AN2: multi-tab same-group approximation (1vc-middle-triple-to-end) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 3,
+      "fromViewColumn": 1,
+      "label": "LICENSE",
+      "toIndex": 4,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 4,
+      "fromViewColumn": 1,
+      "label": "CHANGELOG.md",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 5,
+      "fromViewColumn": 1,
+      "label": "webview.html",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AN3: multi-tab same-group approximation (1vc-late-pair-to-front) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 4,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 3,
+      "fromViewColumn": 1,
+      "label": "LICENSE",
+      "toIndex": 5,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 4,
+      "fromViewColumn": 1,
+      "label": "CHANGELOG.md",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 5,
+      "fromViewColumn": 1,
+      "label": "webview.html",
+      "toIndex": 4,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for AO: rightward multi-step reorder 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 3,
+      "fromViewColumn": 1,
+      "label": "LICENSE",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 4,
+      "fromViewColumn": 1,
+      "label": "CHANGELOG.md",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 5,
+      "fromViewColumn": 1,
+      "label": "webview.html",
+      "toIndex": 4,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for B: close a single tab 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for C: move tab cross-column 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for D: reorder within group 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for E: group swap 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for F: pin a tab 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isPinned",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for G: dirty a tab 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isDirty",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for H: activate different tab 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for I: duplicate in another column 1`] = `
+{
+  "closed": [],
+  "created": [
+    "package.json",
+  ],
+  "moved": [],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for J: close last in group 1`] = `
+{
+  "closed": [
+    "README.md",
+  ],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for K: multi-step reorder 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 3,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 3,
+      "fromViewColumn": 1,
+      "label": "vitest.config.ts",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for L: 3-column group move 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for M: 4-col move vc1→vc4 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 4,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "vitest.config.ts",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 2,
+      "label": "LICENSE",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "CHANGELOG.md",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "webview.html",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 4,
+      "label": "webview.css",
+      "toIndex": 0,
+      "toViewColumn": 3,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 4,
+      "label": "webview.js",
+      "toIndex": 1,
+      "toViewColumn": 3,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for N: multi-hop tab move 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 3,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for O: group swap + close 1`] = `
+{
+  "closed": [
+    "package.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for P: group move + reorder 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 2,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "vitest.config.ts",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Q: close middle group 1`] = `
+{
+  "closed": [
+    "README.md",
+    "tsconfig.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "vitest.config.ts",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for R: split editor 1`] = `
+{
+  "closed": [],
+  "created": [
+    "package.json",
+  ],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for S: cross-group with index 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 2,
+      "label": "vitest.config.ts",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for T1: close other tabs (1vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+    "tsconfig.json",
+    "vitest.config.ts",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for T2: close other tabs (2vc) 1`] = `
+{
+  "closed": [
+    "package.json",
+    "tsconfig.json",
+    "vitest.config.ts",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for T3: close other tabs (4vc) 1`] = `
+{
+  "closed": [
+    "README.md",
+    "vitest.config.ts",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for U1: move tab to new group (1vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for U2: move tab to new group (3vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 3,
+      "label": "LICENSE",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for U3: move tab to new group (5vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 1,
+      "fromViewColumn": 5,
+      "label": "CHANGELOG.md",
+      "toIndex": 0,
+      "toViewColumn": 6,
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "fromIndex": 2,
+      "fromViewColumn": 5,
+      "label": "webview.html",
+      "toIndex": 1,
+      "toViewColumn": 5,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for V1: dirty then save (1vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isDirty",
+      ],
+      "label": "temp-dirty-save-1.txt",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for V2: dirty then save (2vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isDirty",
+      ],
+      "label": "temp-dirty-save-2.txt",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for V3: dirty then save (4vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isDirty",
+      ],
+      "label": "temp-dirty-save-3.txt",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for W1: pin then unpin (1vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isPinned",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for W2: pin then unpin (1vc-many) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 1,
+      "label": "package.json",
+      "toIndex": 1,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 1,
+      "label": "README.md",
+      "toIndex": 2,
+      "toViewColumn": 1,
+    },
+    {
+      "changed": [],
+      "fromIndex": 2,
+      "fromViewColumn": 1,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 1,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for W3: pin then unpin (3vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 2,
+      "label": "README.md",
+      "toIndex": 1,
+      "toViewColumn": 2,
+    },
+    {
+      "changed": [],
+      "fromIndex": 1,
+      "fromViewColumn": 2,
+      "label": "tsconfig.json",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for X1: group activation (2vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for X2: group activation (3vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "README.md",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for X3: group activation (5vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "vitest.config.ts",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Y1: close group (2vc, 1 tab) 1`] = `
+{
+  "closed": [
+    "README.md",
+  ],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Y2: close group (3vc, 2 tabs) 1`] = `
+{
+  "closed": [
+    "README.md",
+    "tsconfig.json",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 3,
+      "label": "vitest.config.ts",
+      "toIndex": 0,
+      "toViewColumn": 2,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Y3: close group (5vc, 3 tabs) 1`] = `
+{
+  "closed": [
+    "CHANGELOG.md",
+    "LICENSE",
+    "vitest.config.ts",
+  ],
+  "created": [],
+  "moved": [
+    {
+      "changed": [],
+      "fromIndex": 0,
+      "fromViewColumn": 5,
+      "label": "webview.html",
+      "toIndex": 0,
+      "toViewColumn": 4,
+    },
+  ],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Z1: new group creation (1vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "package.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Z2: new group creation (3vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`tab/group event pipeline analyzer fixtures > matches the normalized result snapshot for Z3: new group creation (5vc) 1`] = `
+{
+  "closed": [],
+  "created": [],
+  "moved": [],
+  "updated": [
+    {
+      "changed": [
+        "isActive",
+      ],
+      "label": "LICENSE",
+    },
+  ],
+}
+`;

@@ -1,25 +1,14 @@
-import {
-  commands,
-  Disposable,
-  FileType,
-  Uri,
-  window,
-  workspace
-} from 'vscode';
+import { commands, Disposable, FileType, Uri, window, workspace } from 'vscode';
 
 import { TabManagerService } from './services/tab-manager';
-import { EXTENSION_NAME } from './types/extension';
-import { QuickSlotAssignments, StateContainer } from './types/tab-manager';
-import {
-  TabInfo,
-  TabKind,
-  TabState
-} from './types/tabs';
 import {
   GroupQuickPickItem,
   HistoryQuickPickItem,
   SavedTabQuickPickItem
 } from './types/commands';
+import { EXTENSION_NAME } from './types/extension';
+import { QuickSlotAssignments, StateContainer } from './types/tab-manager';
+import { TabInfo, TabKind, TabState } from './types/tabs';
 
 const RECENT_GROUP_LIMIT = 5 as const;
 const RECENT_SNAPSHOT_LIMIT = 5 as const;
@@ -54,7 +43,10 @@ function getGroupStats(group: StateContainer): {
   const tabGroups = Object.values(group.state?.tabState.tabGroups ?? {});
 
   return {
-    tabCount: tabGroups.reduce((count, tabGroup) => count + tabGroup.tabs.length, 0),
+    tabCount: tabGroups.reduce(
+      (count, tabGroup) => count + tabGroup.tabs.length,
+      0
+    ),
     columnCount: tabGroups.length
   };
 }
@@ -114,7 +106,9 @@ function getGroupQuickPickItems(
   const currentGroupId = tabManagerService.state.stateContainer?.id ?? null;
 
   return Object.values(tabManagerService.state.groups)
-    .sort((left, right) => (right.lastSelectedAt ?? 0) - (left.lastSelectedAt ?? 0))
+    .sort(
+      (left, right) => (right.lastSelectedAt ?? 0) - (left.lastSelectedAt ?? 0)
+    )
     .slice(0, options?.limit)
     .map((group) => {
       const { tabCount, columnCount } = getGroupStats(group);
@@ -157,7 +151,9 @@ async function requestGroupSelection(
   });
 
   if (groupItems.length === 0) {
-    void window.showWarningMessage(options?.emptyMessage ?? 'No groups available.');
+    void window.showWarningMessage(
+      options?.emptyMessage ?? 'No groups available.'
+    );
     return null;
   }
 
@@ -256,7 +252,9 @@ async function requestSnapshotSelection(
     placeHolder?: string;
   }
 ): Promise<HistoryQuickPickItem | null> {
-  const items: HistoryQuickPickItem[] = Object.values(tabManagerService.state.history)
+  const items: HistoryQuickPickItem[] = Object.values(
+    tabManagerService.state.history
+  )
     .sort((left, right) => (right.createdAt ?? 0) - (left.createdAt ?? 0))
     .slice(0, options?.limit)
     .map((snapshot) => {
@@ -277,12 +275,14 @@ async function requestSnapshotSelection(
     return null;
   }
 
-  return (await window.showQuickPick(items, {
-    title: options?.title ?? 'Select snapshot to restore',
-    matchOnDescription: true,
-    matchOnDetail: true,
-    placeHolder: options?.placeHolder ?? 'Search snapshots'
-  })) ?? null;
+  return (
+    (await window.showQuickPick(items, {
+      title: options?.title ?? 'Select snapshot to restore',
+      matchOnDescription: true,
+      matchOnDetail: true,
+      placeHolder: options?.placeHolder ?? 'Search snapshots'
+    })) ?? null
+  );
 }
 
 async function requestSnapshotId(
@@ -341,8 +341,7 @@ async function requestSavedTabSelection(
       description: `${group.name}${slotLabel} • ${formatTabKind(tab.kind)}`,
       detail: getTabDetail(tab),
       groupId: group.id,
-      viewColumn:
-        typeof tab.viewColumn === 'number' ? tab.viewColumn : null,
+      viewColumn: typeof tab.viewColumn === 'number' ? tab.viewColumn : null,
       index: typeof tab.index === 'number' ? tab.index : null
     }));
   });
@@ -352,12 +351,14 @@ async function requestSavedTabSelection(
     return null;
   }
 
-  return (await window.showQuickPick(items, {
-    title: 'Find a saved tab',
-    matchOnDescription: true,
-    matchOnDetail: true,
-    placeHolder: 'Search tab labels, groups, kinds, or paths'
-  })) ?? null;
+  return (
+    (await window.showQuickPick(items, {
+      title: 'Find a saved tab',
+      matchOnDescription: true,
+      matchOnDetail: true,
+      placeHolder: 'Search tab labels, groups, kinds, or paths'
+    })) ?? null
+  );
 }
 
 export function createCommands(
@@ -406,7 +407,7 @@ export function createCommands(
     `${EXTENSION_NAME}.recentGroups`,
     async () => {
       const groupId = await requestRecentGroupId(tabManagerService);
-      
+
       if (!groupId) {
         return;
       }
@@ -446,7 +447,8 @@ export function createCommands(
   const createGroupCommand = commands.registerCommand(
     `${EXTENSION_NAME}.createGroup`,
     async (groupNameParam?: string) => {
-      const input = parseStringParam(groupNameParam) || (await requestNewGroupId());
+      const input =
+        parseStringParam(groupNameParam) || (await requestNewGroupId());
       const groupName = input?.trim();
 
       if (!groupName) {
@@ -529,7 +531,8 @@ export function createCommands(
   const createAddonCommand = commands.registerCommand(
     `${EXTENSION_NAME}.createAddon`,
     async (addonNameParam?: string) => {
-      const input = parseStringParam(addonNameParam) || (await requestNewAddonName());
+      const input =
+        parseStringParam(addonNameParam) || (await requestNewAddonName());
       const addonName = input?.trim();
 
       if (!addonName) {
@@ -650,9 +653,7 @@ export function createCommands(
         filters: { 'Tab Stack Group': ['tabstack'] },
         saveLabel: 'Export Group',
         title: 'Export Tab Group',
-        defaultUri: group
-          ? Uri.file(`${group.name}.tabstack`)
-          : undefined
+        defaultUri: group ? Uri.file(`${group.name}.tabstack`) : undefined
       });
 
       if (saveUri) {

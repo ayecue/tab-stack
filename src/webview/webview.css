@@ -429,13 +429,102 @@ body {
   padding: 3px 5px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background: var(--vscode-tab-inactiveBackground);
+  cursor: grab;
+}
+
+.tab-column-header:active {
+  cursor: grabbing;
 }
 
 .tab-column-title {
+  display: flex;
+  align-items: center;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--vscode-descriptionForeground);
+}
+
+.tab-column-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tab-column-actions .column-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+  padding: 0;
+}
+
+.tab-column-actions .column-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--vscode-foreground);
+}
+
+.tab-column-actions .column-action.danger:hover {
+  color: var(--vscode-errorForeground, #f14c4c);
+}
+
+.tab-column-actions .column-action i {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.tab-column-title .codicon-gripper {
+  font-size: 10px;
+  margin-right: 3px;
+  opacity: 0.4;
+}
+
+.tab-column-header:hover .tab-column-title .codicon-gripper {
+  opacity: 0.8;
+}
+
+.tab-column.column-dragging {
+  opacity: 0.5;
+}
+
+.tab-column.column-drop-reorder .tab-column-header {
+  background: rgba(102, 170, 255, 0.15);
+}
+
+.tab-column-drop-slot {
+  min-height: 100px;
+  border: 2px dashed var(--vscode-focusBorder);
+  background: var(--vscode-list-dropBackground, rgba(100, 150, 255, 0.12));
+}
+
+.tab-column-drop-slot .tab-column-header {
+  border-bottom-style: dashed;
+  background: transparent;
+}
+
+.tab-column-drop-slot .tab-column-title {
+  color: var(--vscode-focusBorder);
+}
+
+.tab-column-drop-slot .tab-list {
+  flex: 1;
+  background: transparent;
+}
+
+.tab-column.column-drop-merge {
+  outline: 2px dashed var(--vscode-focusBorder);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.tab-column.column-drop-merge .tab-list {
+  background: rgba(102, 170, 255, 0.08);
 }
 
 .tab-list {

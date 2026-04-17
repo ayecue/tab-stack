@@ -1,17 +1,7 @@
 import { commands, window } from 'vscode';
 
-import { Layout } from '../types/commands';
-
 export async function closeAllEditors(): Promise<void> {
   await commands.executeCommand('workbench.action.closeAllEditors');
-}
-
-export async function getEditorLayout(): Promise<Layout> {
-  return await commands.executeCommand('vscode.getEditorLayout');
-}
-
-export async function setEditorLayout(layout: Layout): Promise<void> {
-  await commands.executeCommand('vscode.setEditorLayout', layout);
 }
 
 export async function pinCurrentEditor(): Promise<void> {
@@ -137,7 +127,10 @@ export async function moveTab(
   }
 }
 
-export async function moveTabToEnd(viewColumn: number, index: number): Promise<void> {
+export async function moveTabToEnd(
+  viewColumn: number,
+  index: number
+): Promise<void> {
   await focusTabInGroup(viewColumn, index);
   await commands.executeCommand('workbench.action.moveEditorToEnd');
 }

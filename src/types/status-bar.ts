@@ -1,4 +1,4 @@
-import { QuickSlotAssignments } from "./tab-manager";
+import { QuickSlotAssignments } from './tab-manager';
 
 export type SyncGroup = {
   groupId: string;

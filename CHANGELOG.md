@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 12-04-2026
+
+### Improved
+
+- **Tab change pipeline**: Tab tracking and reconciliation are now more reliable during rapid open/close churn, cross-group moves, and editor-group reordering
+- **State continuity**: Saved tab identity, pin state, active state, and associated editor metadata are preserved more consistently after structural tab changes
+- **Tab group drag and drop**: Group reordering in the webview now shows the projected drop position while dragging, making the destination clearer before dropping
+- **Group drop targeting**: Reorder targets are more forgiving, with smoother hover behavior and a larger effective drop area for group moves
+
+### Fix
+
+- **Stale and duplicate tab state**: Fixed cases where complex tab churn could leave behind stale tab entries, duplicate update noise, or incorrect lifecycle classification
+- **Webview sync timing**: Fixed cases where the sidebar could remain stale after a render/apply cycle until a later tab or layout event forced another sync
+- **Projected group drop zone**: Dropping onto the projected insertion zone now actually reorders the tab group instead of only showing visual feedback
+
 ## [1.3.1] - 07-04-2026
 
 ### Added

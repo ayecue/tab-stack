@@ -3,6 +3,71 @@ const vscode = require('vscode');
 const path = require('path');
 const { CMD, waitUntil, sleep } = require('./core.cjs');
 
+const GROUP_FOCUS_COMMANDS = {
+  [vscode.ViewColumn.One]: 'workbench.action.focusFirstEditorGroup',
+  [vscode.ViewColumn.Two]: 'workbench.action.focusSecondEditorGroup',
+  [vscode.ViewColumn.Three]: 'workbench.action.focusThirdEditorGroup',
+  [vscode.ViewColumn.Four]: 'workbench.action.focusFourthEditorGroup',
+  [vscode.ViewColumn.Five]: 'workbench.action.focusFifthEditorGroup',
+  [vscode.ViewColumn.Six]: 'workbench.action.focusSixthEditorGroup',
+  [vscode.ViewColumn.Seven]: 'workbench.action.focusSeventhEditorGroup',
+  [vscode.ViewColumn.Eight]: 'workbench.action.focusEighthEditorGroup',
+  [vscode.ViewColumn.Nine]: 'workbench.action.focusNinthEditorGroup'
+};
+
+const OPEN_EDITOR_AT_INDEX_COMMANDS = {
+  0: 'workbench.action.openEditorAtIndex1',
+  1: 'workbench.action.openEditorAtIndex2',
+  2: 'workbench.action.openEditorAtIndex3',
+  3: 'workbench.action.openEditorAtIndex4',
+  4: 'workbench.action.openEditorAtIndex5',
+  5: 'workbench.action.openEditorAtIndex6',
+  6: 'workbench.action.openEditorAtIndex7',
+  7: 'workbench.action.openEditorAtIndex8',
+  8: 'workbench.action.openEditorAtIndex9'
+};
+
+async function focusEditorGroup(viewColumn) {
+  const command = GROUP_FOCUS_COMMANDS[viewColumn];
+  if (!command) {
+    return;
+  }
+
+  try {
+    await vscode.commands.executeCommand(command);
+  } catch (_) {
+    // Ignore when the requested group does not exist yet.
+  }
+}
+
+async function focusOpenTabInGroup(relativePath, viewColumn) {
+  if (viewColumn == null) {
+    return false;
+  }
+
+  const targetGroup = vscode.window.tabGroups.all.find(
+    (group) => group.viewColumn === viewColumn
+  );
+  if (!targetGroup) {
+    return false;
+  }
+
+  const baseName = path.basename(relativePath);
+  const targetIndex = targetGroup.tabs.findIndex((tab) => tab.label === baseName);
+  const command = OPEN_EDITOR_AT_INDEX_COMMANDS[targetIndex];
+  if (command == null) {
+    return false;
+  }
+
+  try {
+    await focusEditorGroup(viewColumn);
+    await vscode.commands.executeCommand(command);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 /**
  * Open a workspace file as an editor tab and wait for it to appear.
  */
@@ -97,20 +162,103 @@ async function openFileWithSelection(relativePath, line, character, opts = {}) {
   assert.ok(workspaceFolder, 'A workspace folder must be open');
   const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
   const doc = await vscode.workspace.openTextDocument(uri);
-  const editor = await vscode.window.showTextDocument(doc, {
-    viewColumn: opts.viewColumn ?? vscode.ViewColumn.Active,
-    preview: false,
-    preserveFocus: false
-  });
+  const requestedViewColumn = opts.viewColumn;
   const pos = new vscode.Position(line, character);
+  const selection = new vscode.Range(pos, pos);
+  const baseName = path.basename(relativePath);
+
+  const isTargetEditorActive = () => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor?.document.uri.toString() !== uri.toString()) {
+      return false;
+    }
+
+    if (requestedViewColumn == null) {
+      return true;
+    }
+
+    return activeEditor.viewColumn === requestedViewColumn;
+  };
+
+  const isTargetTabActive = () => {
+    if (requestedViewColumn == null) {
+      return false;
+    }
+
+    const activeGroup = vscode.window.tabGroups.activeTabGroup;
+    if (activeGroup?.viewColumn !== requestedViewColumn) {
+      return false;
+    }
+
+    return activeGroup.activeTab?.label === baseName;
+  };
+
+  const isTargetReady = () => isTargetEditorActive() || isTargetTabActive();
+
+  const openTargetEditor = async () => {
+    if (requestedViewColumn != null) {
+      await vscode.commands.executeCommand('vscode.open', uri, {
+        viewColumn: requestedViewColumn,
+        preview: false,
+        preserveFocus: false,
+        selection
+      });
+      return vscode.window.activeTextEditor;
+    }
+
+    return vscode.window.showTextDocument(doc, {
+      viewColumn: vscode.ViewColumn.Active,
+      preview: false,
+      preserveFocus: false
+    });
+  };
+
+  await focusOpenTabInGroup(relativePath, requestedViewColumn);
+  await focusEditorGroup(opts.viewColumn);
+
+  let editor = isTargetEditorActive()
+    ? vscode.window.activeTextEditor
+    : await openTargetEditor();
   editor.selection = new vscode.Selection(pos, pos);
   editor.revealRange(new vscode.Range(pos, pos));
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (isTargetReady()) {
+      break;
+    }
+
+    await focusOpenTabInGroup(relativePath, requestedViewColumn);
+    await focusEditorGroup(opts.viewColumn);
+    editor = isTargetEditorActive()
+      ? vscode.window.activeTextEditor
+      : await openTargetEditor();
+    editor.selection = new vscode.Selection(pos, pos);
+    editor.revealRange(new vscode.Range(pos, pos));
+    await sleep(100);
+  }
+
   // Wait for this file to be the active editor (not just visible)
-  const baseName = path.basename(relativePath);
-  await waitUntil(
-    () => vscode.window.activeTextEditor?.document.uri.path.endsWith(baseName),
-    `"${relativePath}" to become active editor`
-  );
+  try {
+    await waitUntil(
+      () => isTargetReady(),
+      `"${relativePath}" to become active editor`
+    );
+  } catch (error) {
+    const activeEditor = vscode.window.activeTextEditor;
+    const activeGroup = vscode.window.tabGroups.activeTabGroup;
+    const groups = vscode.window.tabGroups.all.map((group) => ({
+      viewColumn: group.viewColumn,
+      isActive: group.isActive,
+      activeTab: group.activeTab?.label ?? null,
+      tabLabels: group.tabs.map((tab) => tab.label)
+    }));
+    const activeEditorInfo = activeEditor == null
+      ? 'none'
+      : `${activeEditor.document.uri.toString()}@${activeEditor.viewColumn}`;
+    throw new Error(
+      `${error.message}. Active group=${activeGroup?.viewColumn ?? 'none'}. Active editor=${activeEditorInfo}. Groups=${JSON.stringify(groups)}`
+    );
+  }
 }
 
 /**

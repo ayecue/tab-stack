@@ -1,4 +1,4 @@
-import { QuickPickItem } from "vscode";
+import { QuickPickItem } from 'vscode';
 
 export interface LayoutGroup {
   size: number;
@@ -22,4 +22,12 @@ export interface SavedTabQuickPickItem extends QuickPickItem {
 
 export interface HistoryQuickPickItem extends QuickPickItem {
   historyId: string;
+}
+
+export interface MoveStep {
+  command: string;
+  moverRange: [number, number];
+  moverShift: number;
+  jumpedRange: [number, number];
+  jumpedShift: number;
 }

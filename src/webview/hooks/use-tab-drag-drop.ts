@@ -73,10 +73,7 @@ export interface UseTabDragDropResult {
   ) => (e: React.DragEvent) => void;
   isDragging: (index: number, viewColumn: number) => boolean;
   isDraggedOver: (index: number, viewColumn: number) => boolean;
-  getDropPosition: (
-    index: number,
-    viewColumn: number
-  ) => 'before' | undefined;
+  getDropPosition: (index: number, viewColumn: number) => 'before' | undefined;
 }
 
 export function useTabDragDrop(moveTab: MoveTabFn): UseTabDragDropResult {
@@ -107,7 +104,10 @@ export function useTabDragDrop(moveTab: MoveTabFn): UseTabDragDropResult {
         const relativeY = e.clientY - rect.top;
         const dropIndex = relativeY < rect.height / 2 ? index : index + 1;
 
-        dispatch({ type: 'updateDrop', target: { index: dropIndex, viewColumn } });
+        dispatch({
+          type: 'updateDrop',
+          target: { index: dropIndex, viewColumn }
+        });
       },
     []
   );

@@ -1,13 +1,11 @@
-import React, {
-  useCallback
-} from 'react';
+import React, { useCallback } from 'react';
 
 import { useCollectionCreate } from '../hooks/use-collection-create';
-import { Tooltip } from './common/tooltip';
 import { useCollectionRename } from '../hooks/use-collection-rename';
 import { useCollectionSearch } from '../hooks/use-collection-search';
 import { useTabContext } from '../hooks/use-tab-context';
 import { AddonItem } from './addon-item';
+import { Tooltip } from './common/tooltip';
 
 export const AddonsCollection: React.FC = () => {
   const { state, messagingService } = useTabContext();
@@ -36,8 +34,12 @@ export const AddonsCollection: React.FC = () => {
     []
   );
 
-  const { searchTerm, setSearchTerm, filteredItems: filteredAddons, clearSearch } =
-    useCollectionSearch({ items: state.addons, filterFn: filterAddon });
+  const {
+    searchTerm,
+    setSearchTerm,
+    filteredItems: filteredAddons,
+    clearSearch
+  } = useCollectionSearch({ items: state.addons, filterFn: filterAddon });
 
   return (
     <div className="collections-section addons-collection">
@@ -127,7 +129,14 @@ export const AddonsCollection: React.FC = () => {
       ) : (
         <ul className="section-list" role="list">
           {filteredAddons.map((addon) => {
-            const { addonId, name, tabCount, columnCount, layout, tabsByColumn } = addon;
+            const {
+              addonId,
+              name,
+              tabCount,
+              columnCount,
+              layout,
+              tabsByColumn
+            } = addon;
             const isEditing = rename.editingId === addonId;
             return (
               <AddonItem

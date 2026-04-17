@@ -112,7 +112,13 @@ export enum WebviewMessageType {
   ExportGroup = 'export-group',
   ImportGroup = 'import-group',
   CloseOtherEditors = 'close-other-editors',
-  CloseOtherEditorsInGroup = 'close-other-editors-in-group'
+  CloseOtherEditorsInGroup = 'close-other-editors-in-group',
+  CloseColumn = 'close-column',
+  CloseColumnFilteredTabs = 'close-column-filtered-tabs',
+  CloseColumnNonFilteredTabs = 'close-column-non-filtered-tabs',
+  MoveColumn = 'move-column',
+  MergeColumns = 'merge-columns',
+  MoveTabsToNewColumn = 'move-tabs-to-new-column'
 }
 
 export interface BaseWebviewMessage {
@@ -267,8 +273,46 @@ export interface WebviewCloseOtherEditorsMessage extends BaseWebviewMessage {
   columnView: number;
 }
 
-export interface WebviewCloseOtherEditorsInGroupMessage extends BaseWebviewMessage {
+export interface WebviewCloseOtherEditorsInGroupMessage
+  extends BaseWebviewMessage {
   type: WebviewMessageType.CloseOtherEditorsInGroup;
   index: number;
   columnView: number;
+}
+
+export interface WebviewCloseColumnMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.CloseColumn;
+  viewColumn: number;
+}
+
+export interface WebviewCloseColumnFilteredTabsMessage
+  extends BaseWebviewMessage {
+  type: WebviewMessageType.CloseColumnFilteredTabs;
+  viewColumn: number;
+  indices: number[];
+}
+
+export interface WebviewCloseColumnNonFilteredTabsMessage
+  extends BaseWebviewMessage {
+  type: WebviewMessageType.CloseColumnNonFilteredTabs;
+  viewColumn: number;
+  indices: number[];
+}
+
+export interface WebviewMoveColumnMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.MoveColumn;
+  fromViewColumn: number;
+  toViewColumn: number;
+}
+
+export interface WebviewMergeColumnsMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.MergeColumns;
+  fromViewColumn: number;
+  toViewColumn: number;
+}
+
+export interface WebviewMoveTabsToNewColumnMessage extends BaseWebviewMessage {
+  type: WebviewMessageType.MoveTabsToNewColumn;
+  viewColumn: number;
+  indices: number[];
 }

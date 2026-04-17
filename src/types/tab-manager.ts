@@ -104,6 +104,11 @@ export interface ITabManagerService extends Disposable {
   closeTab(viewColumn: number, index: number): Promise<void>;
   closeOtherTabs(viewColumn: number, index: number): Promise<void>;
   closeOtherTabsInGroup(viewColumn: number, index: number): Promise<void>;
+  closeColumn(viewColumn: number): Promise<void>;
+  closeColumnTabs(viewColumn: number, indices: number[]): Promise<void>;
+  moveColumn(fromViewColumn: number, toViewColumn: number): Promise<void>;
+  mergeColumns(fromViewColumn: number, toViewColumn: number): Promise<void>;
+  moveTabsToNewColumn(viewColumn: number, indices: number[]): Promise<void>;
   moveTab(
     fromViewColumn: number,
     fromIndex: number,

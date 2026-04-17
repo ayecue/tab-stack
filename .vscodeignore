@@ -1,27 +1,41 @@
+# This file specifies intentionally untracked files that Git should ignore. It is used to avoid committing build artifacts, dependencies, and other non-source files that are not needed for extension development or testing.
 .vscode
 .vscode-test-web
+.git
+.circleci
+.github
+
+# Ignore build output, dependencies, and other non-source files that are not needed for extension development or testing.
 out
 grammar
 src
-.git
-tsconfig.json
-.gitignore
-.eslintrc
-.npmignore
-.npmrc
-.circleci
-.env
+docker
+tools
 coverage
 tests
 docs
 package-lock.json
 assets
 node_modules
+plan
+
+# Ignore build scripts, config files, and other non-source assets that are not needed for extension development or testing.
 copy-assets.cjs
 build-node.cjs
 build-webview.cjs
 build-browser.cjs
 vitest.config.ts
+tsconfig.json
+AI_SETUP.md
+AGENTS.md
+ARCHITECTURE.md
+.gitignore
+.eslintrc
+.npmignore
+.npmrc
+.env
+
+# Ignore all files by default, then selectively include the ones we need for the extension and webview bundles, tests, and analysis.
 !webview.js
 !webview.html
 !webview.css

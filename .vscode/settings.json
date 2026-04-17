@@ -8,5 +8,8 @@
   },
   "tabStack.history.maxEntries": 5,
   "tabStack.gitIntegration.enabled": true,
-  "tabStack.gitIntegration.groupPrefix": "branch/"
+  "tabStack.gitIntegration.groupPrefix": "branch/",
+  "chat.promptFiles": true,
+  "chat.promptFilesRecommendations": true,
+  "chat.mcp.autoStart": true
 }

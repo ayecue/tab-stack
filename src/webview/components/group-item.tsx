@@ -66,7 +66,10 @@ export const GroupItem: React.FC<GroupItemProps> = ({
     (rawValue: string | null) => {
       if (rawValue === null) {
         if (assignedSlot) {
-          messagingService.assignQuickSlot(assignedSlot as QuickSlotIndex, null);
+          messagingService.assignQuickSlot(
+            assignedSlot as QuickSlotIndex,
+            null
+          );
         }
         return;
       }
@@ -213,7 +216,10 @@ export const GroupItem: React.FC<GroupItemProps> = ({
                     messagingService.exportGroup(groupId);
                   }}
                 >
-                  <i className="codicon codicon-cloud-upload" aria-hidden="true" />
+                  <i
+                    className="codicon codicon-cloud-upload"
+                    aria-hidden="true"
+                  />
                 </button>
               </Tooltip>
             )}

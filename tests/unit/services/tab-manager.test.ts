@@ -63,6 +63,8 @@ describe('TabManagerService', () => {
     vi.mocked(window.onDidChangeActiveTextEditor).mockReturnValue({ dispose: vi.fn() } as any);
     vi.mocked(window.onDidChangeActiveNotebookEditor).mockReturnValue({ dispose: vi.fn() } as any);
     vi.mocked(window.onDidChangeActiveTerminal).mockReturnValue({ dispose: vi.fn() } as any);
+    vi.mocked(window.onDidStartTerminalShellExecution).mockReturnValue({ dispose: vi.fn() } as any);
+    vi.mocked(window.onDidEndTerminalShellExecution).mockReturnValue({ dispose: vi.fn() } as any);
 
     service = new TabManagerService(
       context,
@@ -149,6 +151,34 @@ describe('TabManagerService', () => {
       // Forking should move current to previous
       expect(service.state.previousStateContainer?.id).toBe(originalId);
     });
+
+    it('emits a non-rendering tab sync after switching groups even when state sync is a no-op', async () => {
+      service.createGroup('group-a');
+      service.createGroup('group-b');
+
+      const groupA = Object.values(service.state.groups).find(
+        (group) => group.name === 'group-a'
+      );
+
+      expect(groupA).toBeDefined();
+
+      const updateTabStateSpy = vi
+        .spyOn((service as any)._stateContainerHandler, 'updateTabState')
+        .mockImplementation(() => {});
+      const tabStatePayloads: Array<{ rendering: boolean }> = [];
+
+      service.onDidSyncTabState((payload) => {
+        tabStatePayloads.push({ rendering: payload.rendering });
+      });
+
+      service.switchToGroup(groupA?.id ?? null);
+      await service.waitForRenderComplete();
+      await Promise.resolve();
+
+      expect(updateTabStateSpy).toHaveBeenCalled();
+      expect(tabStatePayloads.length).toBeGreaterThan(0);
+      expect(tabStatePayloads.at(-1)?.rendering).toBe(false);
+    });
   });
 
   describe('history operations', () => {
@@ -229,6 +259,21 @@ describe('TabManagerService', () => {
         // Applying an addon should trigger render
         await service.waitForRenderComplete();
       }
+    });
+
+    it('emits tab state sync when applying a no-op addon', async () => {
+      service.createAddon('sync-addon');
+      const addon = Object.values(service.state.addons).find(a => a.name === 'sync-addon');
+      expect(addon).toBeDefined();
+
+      const tabStateSpy = vi.fn();
+      service.onDidSyncTabState(tabStateSpy);
+
+      if (addon) {
+        await service.applyAddon(addon.id);
+      }
+
+      expect(tabStateSpy).toHaveBeenCalled();
     });
   });
 

@@ -1,7 +1,7 @@
+import type { Placement } from '@floating-ui/react';
 import React, { cloneElement, isValidElement } from 'react';
 
 import { useTooltip } from '../../hooks/use-tooltip';
-import type { Placement } from '@floating-ui/react';
 
 interface TooltipProps {
   content: React.ReactNode;
