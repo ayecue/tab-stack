@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Cursor plan restore**: Persist URI/viewType for unrecognized editor inputs (Cursor `markdownPlan` / canvas) and restore file-backed `*.plan.md` via `vscode.openWith` (`workbench.editor.markdownPlan`)
+- **Cursor canvas restore**: Same path for `cursor-canvas:` / `workbench.editor.canvas` when a URI is available
+- **Debug command**: `Tab Stack: Dump Open Tab Inputs (Debug)` to inspect open tab input shapes
+- Default `tabRecoveryMappings` entries for `.plan.md` and `cursor-canvas:` URIs
+
+### Fix
+
+- **Recovery match fields**: `match.uri` and `match.viewType` in `tabStack.tabRecoveryMappings` now work (previously only base TabInfo fields were readable)
+- **Virtual `cursor-plan:`**: Best-effort resolve to `~/.cursor/plans` or workspace `.cursor/plans` before openWith; skip cleanly if no file exists
+
 ## [1.3.1] - 07-04-2026
 
 ### Added

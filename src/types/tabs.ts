@@ -106,15 +106,22 @@ export interface TabInfoTerminal extends TabInfoBase {
   readonly kind: TabKind.TabInputTerminal;
 }
 
+/** Unrecognized editor input (e.g. Cursor markdownPlan / canvas) with optional reopen identity. */
+export interface TabInfoUnknown extends TabInfoBase {
+  readonly kind: TabKind.Unknown;
+  readonly uri?: string;
+  readonly viewType?: string;
+}
+
 export type TabInfo =
-  | TabInfoBase
   | TabInfoText
   | TabInfoTextDiff
   | TabInfoCustom
   | TabInfoWebview
   | TabInfoNotebook
   | TabInfoNotebookDiff
-  | TabInfoTerminal;
+  | TabInfoTerminal
+  | TabInfoUnknown;
 
 export interface TabGroupInfo {
   readonly tabs: TabInfo[];

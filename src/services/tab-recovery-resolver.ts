@@ -7,11 +7,12 @@ import {
   RecoveryCommandResult,
   TabRecoveryMapping
 } from '../types/config';
-import { TabInfo, TabInfoBase } from '../types/tabs';
+import { TabInfo } from '../types/tabs';
 import { CompiledArgTemplate, CompiledMapping, CompiledMatchField } from '../types/tab-recovery';
 
 export class TabRecoveryService implements Disposable {
-  static readonly tabInfoFields: Set<keyof TabInfoBase> = new Set([
+  /** Base TabInfo fields plus optional identity fields used by Unknown/Custom tabs. */
+  static readonly tabInfoFields: Set<string> = new Set([
     'id',
     'label',
     'kind',
@@ -20,7 +21,12 @@ export class TabRecoveryService implements Disposable {
     'isDirty',
     'index',
     'viewColumn',
-    'isRecoverable'
+    'isRecoverable',
+    'uri',
+    'viewType',
+    'originalUri',
+    'modifiedUri',
+    'notebookType'
   ]);
 
   private _configService: ConfigService;
@@ -152,12 +158,15 @@ export class TabRecoveryService implements Disposable {
     return false;
   }
 
-  private _extractField(tabInfo: TabInfo, field: string): TabInfoBase[keyof Omit<TabInfoBase, 'meta'>] | null {
-    if (!TabRecoveryService.tabInfoFields.has(field as keyof TabInfoBase)) {
-      this._log.warn(`invalid match field "${field}" in recovery mapping: not a valid TabInfo property`);
+  private _extractField(tabInfo: TabInfo, field: string): unknown {
+    if (!TabRecoveryService.tabInfoFields.has(field)) {
+      this._log.warn(
+        `invalid match field "${field}" in recovery mapping: not a valid TabInfo property`
+      );
       return null;
     }
-    return tabInfo[field as keyof Omit<TabInfoBase, 'meta'>] ?? null;
+    const value = (tabInfo as TabInfo & Record<string, unknown>)[field];
+    return value ?? null;
   }
 
   private _matchesFields(fields: CompiledMatchField[], tabInfo: TabInfo): boolean {
