@@ -210,6 +210,11 @@
         "icon": "$(search)"
       },
       {
+        "command": "tabStack.dumpOpenTabInputs",
+        "title": "Dump Open Tab Inputs (Debug)",
+        "category": "Tab Stack"
+      },
+      {
         "command": "tabStack.recentSnapshots",
         "title": "Restore Recent Snapshot",
         "category": "Tab Stack",
@@ -551,9 +556,41 @@
             "^Release Notes: [0-9.]+$": {
               "command": "update.showCurrentReleaseNotes",
               "unique": true
+            },
+            "cursorMarkdownPlanByUri": {
+              "command": "vscode.openWith",
+              "args": [
+                "{{uri}}",
+                "workbench.editor.markdownPlan",
+                {
+                  "viewColumn": "{{viewColumn}}",
+                  "preview": false
+                }
+              ],
+              "unique": true,
+              "match": {
+                "label": ".*",
+                "uri": ".*\\.plan\\.md(\\?.*)?$"
+              }
+            },
+            "cursorCanvasByUri": {
+              "command": "vscode.openWith",
+              "args": [
+                "{{uri}}",
+                "workbench.editor.canvas",
+                {
+                  "viewColumn": "{{viewColumn}}",
+                  "preview": false
+                }
+              ],
+              "unique": true,
+              "match": {
+                "label": ".*",
+                "uri": "^cursor-canvas:"
+              }
             }
           },
-          "description": "Mapping of identifiers to recovery commands for unknown tab types. Keys serve as identifiers (or as label regex patterns for backward compatibility). Values are either a command ID string (key is the label pattern) or an object with 'command', optional 'match' (regex criteria including 'label'), optional 'args', and optional 'nextTickDelay'.",
+          "description": "Mapping of identifiers to recovery commands for unknown tab types. Keys serve as identifiers (or as label regex patterns for backward compatibility). Values are either a command ID string (key is the label pattern) or an object with 'command', optional 'match' (regex criteria including 'label'), optional 'args', and optional 'nextTickDelay'. Cursor plan/canvas tabs are also restored in code via vscode.openWith when a URI is persisted.",
           "patternProperties": {
             ".*": {
               "oneOf": [

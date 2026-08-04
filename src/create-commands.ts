@@ -697,6 +697,64 @@ export function createCommands(
     quickSlotCommands.push(quickSlotCommand);
   }
 
+  const dumpOpenTabInputsCommand = commands.registerCommand(
+    `${EXTENSION_NAME}.dumpOpenTabInputs`,
+    async () => {
+      const { transformTabToTabInfo } = await import('./transformers/tab');
+      const { extractUnknownTabIdentity } = await import(
+        './utils/unknown-tab-identity'
+      );
+      const { inferCursorEditorViewType } = await import(
+        './utils/cursor-editors'
+      );
+      const rows: Record<string, unknown>[] = [];
+
+      for (const group of window.tabGroups.all) {
+        group.tabs.forEach((tab, index) => {
+          const input = tab.input as unknown;
+          const identity = extractUnknownTabIdentity(input);
+          const transformed = transformTabToTabInfo(tab, group, index);
+          const ctorName =
+            input && typeof input === 'object'
+              ? (input as { constructor?: { name?: string } }).constructor
+                  ?.name
+              : typeof input;
+          const transformedUri =
+            'uri' in transformed ? transformed.uri : undefined;
+          const transformedViewType =
+            'viewType' in transformed ? transformed.viewType : undefined;
+          rows.push({
+            label: tab.label,
+            viewColumn: group.viewColumn,
+            index,
+            inputConstructor: ctorName,
+            inputKeys:
+              input && typeof input === 'object'
+                ? Object.keys(input as object)
+                : [],
+            duckUri: identity.uri,
+            duckViewType: identity.viewType,
+            transformedKind: transformed.kind,
+            transformedUri,
+            transformedViewType,
+            inferredCursorEditor: inferCursorEditorViewType({
+              uri: transformedUri,
+              viewType: transformedViewType,
+              label: tab.label
+            })
+          });
+        });
+      }
+
+      const text = JSON.stringify(rows, null, 2);
+      const doc = await workspace.openTextDocument({
+        content: text,
+        language: 'json'
+      });
+      await window.showTextDocument(doc, { preview: false });
+    }
+  );
+
   return [
     refreshCommand,
     quickSwitchCommand,
@@ -718,6 +776,7 @@ export function createCommands(
     clearAllTabsCommand,
     exportGroupCommand,
     importGroupCommand,
+    dumpOpenTabInputsCommand,
     ...quickSlotCommands
   ];
 }

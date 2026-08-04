@@ -28,6 +28,7 @@ import {
   TabState
 } from '../types/tabs';
 import { focusTabInGroup, pinEditor } from '../utils/commands';
+import { inferCursorEditorViewType } from '../utils/cursor-editors';
 import { createSelectionRange, createTabKey, createTabKeyByViewColumn } from '../utils/tab-utils';
 import { updatedDiff } from 'deep-object-diff';
 import { TabFactory } from './tab-factory';
@@ -450,6 +451,25 @@ export class TabActiveStateHandler implements Disposable {
   }
 
   isTabRecoverable(tab: TabInfo): boolean {
+    // Cursor plan/canvas with a persisted URI can be reopened via openWith.
+    const uri = 'uri' in tab && typeof tab.uri === 'string' ? tab.uri : undefined;
+    const viewType =
+      'viewType' in tab && typeof tab.viewType === 'string'
+        ? tab.viewType
+        : undefined;
+    if (
+      inferCursorEditorViewType({
+        uri,
+        viewType,
+        label: tab.label
+      }) != null &&
+      uri
+    ) {
+      // Virtual cursor-plan: is best-effort; still mark recoverable so UI is honest
+      // that we will attempt restore (may no-op if file missing).
+      return true;
+    }
+
     // Check if tab kind is recoverable
     switch (tab.kind) {
       case TabKind.TabInputText:

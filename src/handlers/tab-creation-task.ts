@@ -369,3 +369,87 @@ export class TabCreationTaskCustomCommand extends TabCreationTask {
     return `unknown tab "${this._tabInfo.label}" in column ${this._tabInfo.viewColumn} using recovery command "${this._command}"`;
   }
 }
+
+/**
+ * Open Cursor plan/canvas (or similar) via vscode.openWith, with optional
+ * resolution of virtual cursor-plan: URIs to on-disk .plan.md files.
+ */
+export class TabCreationTaskCursorEditorOpenWith extends TabCreationTask {
+  private _label: string;
+  private _uri: string;
+  private _viewType: string;
+  private _viewColumn: number | undefined;
+  private _resolvePlanUri: boolean;
+  private _log: ScopedLogger;
+
+  constructor(options: {
+    label: string;
+    uri: string;
+    viewType: string;
+    viewColumn: number | undefined;
+    resolvePlanUri?: boolean;
+  }) {
+    super();
+    this._label = options.label;
+    this._uri = options.uri;
+    this._viewType = options.viewType;
+    this._viewColumn = options.viewColumn;
+    this._resolvePlanUri = options.resolvePlanUri ?? false;
+    this._log = getLogger().child('TabCreationTaskCursorEditorOpenWith');
+  }
+
+  findRelatedTab(tabs: readonly Tab[]) {
+    return (
+      tabs.find(
+        (it) =>
+          it.label === this._label &&
+          it.group.viewColumn === this._viewColumn
+      ) ?? null
+    );
+  }
+
+  findExistingTab(allTabs: readonly Tab[]): Tab | null {
+    return (
+      allTabs.find(
+        (it) =>
+          it.label === this._label &&
+          it.group.viewColumn === this._viewColumn
+      ) ?? null
+    );
+  }
+
+  addEditorListener(_callback: (handle: AssociatedTabInstance) => void): {
+    dispose: () => void;
+  } {
+    return { dispose: () => {} };
+  }
+
+  async executeCommand() {
+    const { resolvePlanOpenUri } = await import('../utils/cursor-editors');
+    let openUri = Uri.parse(this._uri);
+
+    if (this._resolvePlanUri) {
+      const resolved = await resolvePlanOpenUri(this._uri);
+      if (resolved == null) {
+        this._log.warn(
+          `cannot resolve plan uri "${this._uri}" to a file-backed location; skip restore (save plan to disk to enable restore)`
+        );
+        return;
+      }
+      openUri = resolved;
+    }
+
+    this._log.debug(
+      `openWith ${this._viewType} uri=${openUri.toString()} column=${this._viewColumn}`
+    );
+    await commands.executeCommand('vscode.openWith', openUri, this._viewType, {
+      viewColumn: this._viewColumn,
+      preview: false,
+      preserveFocus: false
+    });
+  }
+
+  getDescription() {
+    return `cursor editor "${this._label}" uri "${this._uri}" viewType "${this._viewType}" in column ${this._viewColumn}`;
+  }
+}
